@@ -1,0 +1,28 @@
+## Email Analysis Queries ##
+
+# Failed Login Attempts
+SecurityEvents
+| where EventID == 4625
+| where TimeGenerated > ago(24h)
+| summarize FailedAttempts = count() by Account, IPAddress
+| order by FailedAttempts desc
+
+## Suspicious Email Activity ##
+
+### Emails with Attachments from External Senders ###
+EmailEvents
+| where TimeGenerated > ago(30d)
+| where SenderFromAddress contains "@external.com"
+| extend HasAttachments = iff(AttachmentCount > 0, true, false)
+| where HasAttachments == true
+| project TimeGenerated, SenderFromAddress, RecipientEmailAddress, Subject, AttachmentCount
+| take 100
+
+#### High-Risk Email Patterns ####
+EmailEvents
+| where TimeGenerated > ago(7d)
+| where DeliveryAction == "Blocked"
+| summarize BlockedCount = count() by SenderFromAddress
+| where BlockedCount > 10
+| order by BlockedCount desc
+

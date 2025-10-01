@@ -1,0 +1,29 @@
+// This file contains intentional syntax errors for testing
+
+// Error: Query cannot start with pipe
+| where State == "TEXAS"
+
+// Error: Using SELECT instead of project (SQL mistake)
+SELECT * FROM StormEvents
+
+// Error: Unclosed parenthesis
+StormEvents
+| where State == "TEXAS"
+| project StartTime, EventType, (DamageProperty + 100
+| take 10
+
+// Error: Unclosed string
+StormEvents
+| where State == "TEXAS
+| take 10
+
+// Error: Unmatched closing bracket
+StormEvents
+| where State == "TEXAS"]
+| take 10
+
+// Error: Assignment without proper operator (should use extend)
+StormEvents
+NewField = DamageProperty * 2
+| take 10
+

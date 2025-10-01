@@ -1,0 +1,103 @@
+{
+  "name": "kql-assistant",
+  "displayName": "KQL Assistant",
+  "description": "Kusto Query Language (KQL) syntax checking and language support",
+  "version": "0.1.0",
+  "publisher": "kql-assistant",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/kql-assistant.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/kql-assistant/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/kql-assistant#readme",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "kql",
+    "kusto",
+    "azure data explorer",
+    "syntax checking",
+    "linter"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "kql",
+        "aliases": [
+          "KQL",
+          "Kusto Query Language"
+        ],
+        "extensions": [
+          ".kql",
+          ".kusto"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "kql",
+        "scopeName": "source.kql",
+        "path": "./syntaxes/kql.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "kql-assistant.checkSyntax",
+        "title": "KQL: Check Syntax"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "KQL Assistant",
+      "properties": {
+        "kqlAssistant.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable KQL syntax checking and diagnostics"
+        },
+        "kqlAssistant.diagnosticLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "information"
+          ],
+          "default": "error",
+          "description": "Severity level for syntax diagnostics"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.1.6",
+    "@vscode/vsce": "^2.19.0"
+  },
+  "dependencies": {}
+}
+

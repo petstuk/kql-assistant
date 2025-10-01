@@ -1,0 +1,73 @@
+// Sample KQL Query File
+// This file demonstrates various KQL syntax features
+
+// Simple query with filtering
+StormEvents
+| where State == "TEXAS"
+| project StartTime, EventType, DamageProperty
+| take 10
+
+// Aggregation query
+StormEvents
+| summarize EventCount = count(), TotalDamage = sum(DamageProperty) by State
+| order by TotalDamage desc
+| take 20
+
+// Time-based analysis
+StormEvents
+| where StartTime >= ago(30d)
+| extend Month = startofmonth(StartTime)
+| summarize EventCount = count() by Month, EventType
+| render timechart
+
+// Join example
+StormEvents
+| where State == "FLORIDA"
+| join kind=inner (
+    StormEvents
+    | where EventType == "Hurricane"
+) on State
+| project StartTime, EndTime, EventType, DamageProperty
+
+// Advanced aggregation with multiple functions
+StormEvents
+| summarize 
+    TotalEvents = count(),
+    AvgDamage = avg(DamageProperty),
+    MaxDamage = max(DamageProperty),
+    MinDamage = min(DamageProperty),
+    States = dcount(State)
+    by EventType
+| order by TotalEvents desc
+
+// String operations
+StormEvents
+| extend EventTypeLower = tolower(EventType)
+| extend EventTypeUpper = toupper(EventType)
+| where EventTypeLower contains "flood"
+| project StartTime, EventType, EventTypeLower, State
+
+// Date/Time operations
+StormEvents
+| extend 
+    Hour = hourofday(StartTime),
+    DayOfWeek = dayofweek(StartTime),
+    Year = getyear(StartTime)
+| summarize count() by Year, DayOfWeek
+| order by Year desc, DayOfWeek asc
+
+// Dynamic data
+StormEvents
+| extend Details = pack("State", State, "Damage", DamageProperty, "Type", EventType)
+| project StartTime, Details
+| take 10
+
+// Window functions
+StormEvents
+| partition by State (
+    order by DamageProperty desc
+    | extend Rank = row_number()
+)
+| where Rank <= 5
+| project State, EventType, DamageProperty, Rank
+

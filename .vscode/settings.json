@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.kql": "kql",
+    "*.kusto": "kql"
+  }
+}
+
