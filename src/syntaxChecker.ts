@@ -246,6 +246,12 @@ export class KqlSyntaxChecker {
     private checkCommonMistakes(line: string, lineNum: number, errors: SyntaxError[], inOperatorBlock: boolean): void {
         const trimmedLine = line.trim().toLowerCase();
 
+        // Skip markdown headers (lines that start with # and end with # or just have #)
+        const isMarkdownHeader = /^#{1,6}\s+.*/.test(trimmedLine);
+        if (isMarkdownHeader) {
+            return;
+        }
+
         // Check for common SQL keywords used incorrectly
         if (trimmedLine.includes('select ') && !trimmedLine.includes('//')) {
             const index = line.toLowerCase().indexOf('select');

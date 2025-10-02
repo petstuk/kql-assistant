@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { KqlDiagnosticsProvider } from './diagnostics';
 import { KqlCompletionProvider } from './completionProvider';
+import { KqlDocumentSymbolProvider } from './symbolProvider';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
@@ -20,6 +21,13 @@ export function activate(context: vscode.ExtensionContext) {
         ' '  // Trigger on space
     );
     context.subscriptions.push(completionProvider);
+
+    // Register document symbol provider for outline view
+    const symbolProvider = vscode.languages.registerDocumentSymbolProvider(
+        'kql',
+        new KqlDocumentSymbolProvider()
+    );
+    context.subscriptions.push(symbolProvider);
     
     // Register diagnostics on document open, change, and save
     context.subscriptions.push(

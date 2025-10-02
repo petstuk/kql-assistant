@@ -2,8 +2,8 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Kusto Query Language (KQL) syntax checking and language support",
-  "version": "0.1.0",
-  "publisher": "kql-assistant",
+  "version": "0.2.0",
+  "publisher": "petstuk",
   "repository": {
     "type": "git",
     "url": "https://github.com/petstuk/kql-assistant.git"
