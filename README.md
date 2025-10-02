@@ -24,7 +24,21 @@ A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax c
   - Comment toggling support
   - Code folding regions
 
+- **Document Outline**: 
+  - Markdown headers in KQL files appear in the Outline view
+  - Supports `#` through `######` header levels
+  - Navigate quickly through sections of your queries
+
 ## Installation
+
+### From VS Code Marketplace (Recommended)
+
+1. Open Visual Studio Code
+2. Go to the Extensions view (`Ctrl+Shift+X` or `Cmd+Shift+X` on Mac)
+3. Search for "KQL Assistant"
+4. Click "Install"
+
+Or install directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=petstuk.kql-assistant)
 
 ### From Source
 
@@ -49,7 +63,7 @@ A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax c
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.1.0.vsix
+     code --install-extension kql-assistant-0.2.0.vsix
      ```
 
 ## Usage
@@ -174,6 +188,14 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.2.0
+
+- **NEW**: Document outline support for markdown headers
+  - Headers (`#`, `##`, `###`, etc.) now appear in the Outline view
+  - Hierarchical navigation based on header levels
+- **IMPROVED**: Fixed false positive errors for "from" keyword in markdown headers
+- Better handling of markdown-style documentation in KQL files
 
 ### 0.1.0
 
