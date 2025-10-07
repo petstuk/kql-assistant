@@ -1,0 +1,355 @@
+{
+  "Time Range Filter": {
+    "prefix": "timerange",
+    "body": [
+      "${1:TableName}",
+      "| where TimeGenerated > ago(${2:24h})",
+      "| $0"
+    ],
+    "description": "Filter by time range using ago()"
+  },
+  "Time Range Between": {
+    "prefix": "timebetween",
+    "body": [
+      "${1:TableName}",
+      "| where TimeGenerated between (datetime(${2:2024-01-01}) .. datetime(${3:2024-01-31}))",
+      "| $0"
+    ],
+    "description": "Filter by specific date range"
+  },
+  "Simple Aggregation": {
+    "prefix": "agg",
+    "body": [
+      "${1:TableName}",
+      "| summarize ${2:count()} by ${3:FieldName}",
+      "| order by ${2:count_} desc",
+      "| $0"
+    ],
+    "description": "Basic aggregation with count by field"
+  },
+  "Time Series Aggregation": {
+    "prefix": "timeseries",
+    "body": [
+      "${1:TableName}",
+      "| where TimeGenerated > ago(${2:7d})",
+      "| summarize ${3:count()} by bin(TimeGenerated, ${4:1h})",
+      "| render timechart",
+      "$0"
+    ],
+    "description": "Time series aggregation with chart"
+  },
+  "Top N Results": {
+    "prefix": "topn",
+    "body": [
+      "${1:TableName}",
+      "| top ${2:10} by ${3:FieldName} ${4|desc,asc|}",
+      "$0"
+    ],
+    "description": "Get top N records"
+  },
+  "Inner Join": {
+    "prefix": "join",
+    "body": [
+      "${1:LeftTable}",
+      "| join kind=inner (",
+      "    ${2:RightTable}",
+      "    | where ${3:condition}",
+      ") on ${4:Key}",
+      "| project ${5:columns}",
+      "$0"
+    ],
+    "description": "Inner join two tables"
+  },
+  "Left Outer Join": {
+    "prefix": "leftjoin",
+    "body": [
+      "${1:LeftTable}",
+      "| join kind=leftouter (",
+      "    ${2:RightTable}",
+      "    | where ${3:condition}",
+      ") on ${4:Key}",
+      "| project ${5:columns}",
+      "$0"
+    ],
+    "description": "Left outer join"
+  },
+  "Let Statement Variable": {
+    "prefix": "let",
+    "body": [
+      "let ${1:variableName} = ${2:value};",
+      "$0"
+    ],
+    "description": "Define a scalar variable"
+  },
+  "Let Statement Table": {
+    "prefix": "lettable",
+    "body": [
+      "let ${1:TableName} = ${2:SourceTable}",
+      "| where ${3:condition}",
+      "| project ${4:columns};",
+      "$0"
+    ],
+    "description": "Define a table variable"
+  },
+  "Failed Login Attempts": {
+    "prefix": "failedlogins",
+    "body": [
+      "SecurityEvent",
+      "| where EventID == 4625",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| summarize FailedAttempts = count() by Account, IPAddress = IpAddress",
+      "| where FailedAttempts > ${2:5}",
+      "| order by FailedAttempts desc",
+      "$0"
+    ],
+    "description": "Security: Failed login attempts query"
+  },
+  "Successful Logins After Failed Attempts": {
+    "prefix": "suspiciouslogin",
+    "body": [
+      "let FailedLogins = SecurityEvent",
+      "| where EventID == 4625",
+      "| where TimeGenerated > ago(${1:1h})",
+      "| project Account, FailedTime = TimeGenerated, IpAddress;",
+      "SecurityEvent",
+      "| where EventID == 4624",
+      "| where TimeGenerated > ago(${1:1h})",
+      "| join kind=inner (FailedLogins) on Account",
+      "| where TimeGenerated > FailedTime",
+      "| project Account, SuccessTime = TimeGenerated, FailedTime, IpAddress",
+      "$0"
+    ],
+    "description": "Security: Suspicious login pattern detection"
+  },
+  "Parse JSON Field": {
+    "prefix": "parsejson",
+    "body": [
+      "${1:TableName}",
+      "| extend ${2:ParsedField} = parse_json(${3:JsonColumn})",
+      "| extend ${4:Property} = ${2:ParsedField}.${5:propertyName}",
+      "| $0"
+    ],
+    "description": "Parse JSON field and extract properties"
+  },
+  "Dynamic Array Expansion": {
+    "prefix": "mvexpand",
+    "body": [
+      "${1:TableName}",
+      "| mv-expand ${2:ArrayField}",
+      "| extend ${3:FieldName} = tostring(${2:ArrayField})",
+      "| $0"
+    ],
+    "description": "Expand multi-value array into rows"
+  },
+  "Distinct Values": {
+    "prefix": "distinct",
+    "body": [
+      "${1:TableName}",
+      "| distinct ${2:Column1}, ${3:Column2}",
+      "$0"
+    ],
+    "description": "Get distinct values"
+  },
+  "Error Count by Type": {
+    "prefix": "errorcount",
+    "body": [
+      "${1:TableName}",
+      "| where Level == \"Error\" or Severity == \"Error\"",
+      "| where TimeGenerated > ago(${2:24h})",
+      "| summarize ErrorCount = count() by ${3:ErrorType}",
+      "| order by ErrorCount desc",
+      "$0"
+    ],
+    "description": "Count errors by type"
+  },
+  "Percentile Analysis": {
+    "prefix": "percentile",
+    "body": [
+      "${1:TableName}",
+      "| summarize ",
+      "    P50 = percentile(${2:Metric}, 50),",
+      "    P95 = percentile(${2:Metric}, 95),",
+      "    P99 = percentile(${2:Metric}, 99)",
+      "    by ${3:Category}",
+      "| $0"
+    ],
+    "description": "Calculate percentiles for performance analysis"
+  },
+  "String Contains Filter": {
+    "prefix": "contains",
+    "body": [
+      "${1:TableName}",
+      "| where ${2:FieldName} contains \"${3:searchText}\"",
+      "| $0"
+    ],
+    "description": "Filter rows where field contains text"
+  },
+  "Multiple OR Conditions": {
+    "prefix": "wherein",
+    "body": [
+      "${1:TableName}",
+      "| where ${2:FieldName} in (\"${3:value1}\", \"${4:value2}\", \"${5:value3}\")",
+      "| $0"
+    ],
+    "description": "Filter with multiple OR conditions using in operator"
+  },
+  "Union Multiple Tables": {
+    "prefix": "union",
+    "body": [
+      "union ${1:Table1}, ${2:Table2}",
+      "| where ${3:condition}",
+      "| project ${4:columns}",
+      "$0"
+    ],
+    "description": "Combine multiple tables"
+  },
+  "Make Series Time Chart": {
+    "prefix": "makeseries",
+    "body": [
+      "${1:TableName}",
+      "| make-series ${2:Metric} = ${3:count()} default = 0 on TimeGenerated from ${4:ago(7d)} to ${5:now()} step ${6:1h}",
+      "| render timechart",
+      "$0"
+    ],
+    "description": "Create time series with make-series"
+  },
+  "Window Function - Row Number": {
+    "prefix": "rownumber",
+    "body": [
+      "${1:TableName}",
+      "| partition by ${2:PartitionField} (",
+      "    order by ${3:OrderField} ${4|desc,asc|}",
+      "    | extend RowNum = row_number()",
+      ")",
+      "| where RowNum <= ${5:10}",
+      "$0"
+    ],
+    "description": "Use row_number() window function"
+  },
+  "Extend Multiple Fields": {
+    "prefix": "extend",
+    "body": [
+      "${1:TableName}",
+      "| extend ",
+      "    ${2:NewField1} = ${3:expression1},",
+      "    ${4:NewField2} = ${5:expression2}",
+      "| $0"
+    ],
+    "description": "Add multiple computed columns"
+  },
+  "Project Specific Columns": {
+    "prefix": "project",
+    "body": [
+      "${1:TableName}",
+      "| project ${2:Column1}, ${3:Column2}, ${4:Column3}",
+      "$0"
+    ],
+    "description": "Select specific columns"
+  },
+  "Regex Extract": {
+    "prefix": "extract",
+    "body": [
+      "${1:TableName}",
+      "| extend ${2:ExtractedValue} = extract(\"${3:regex_pattern}\", ${4:1}, ${5:SourceField})",
+      "| $0"
+    ],
+    "description": "Extract data using regex"
+  },
+  "Parse Custom Log": {
+    "prefix": "parse",
+    "body": [
+      "${1:TableName}",
+      "| parse ${2:RawData} with * \"${3:prefix}\" ${4:Field1} \"${5:separator}\" ${6:Field2} *",
+      "| $0"
+    ],
+    "description": "Parse custom log format"
+  },
+  "IP Address Analysis": {
+    "prefix": "ipanalysis",
+    "body": [
+      "${1:TableName}",
+      "| where TimeGenerated > ago(${2:24h})",
+      "| extend IpParts = parse_ipv4(${3:IpAddress})",
+      "| summarize RequestCount = count() by ${3:IpAddress}",
+      "| where RequestCount > ${4:100}",
+      "| order by RequestCount desc",
+      "$0"
+    ],
+    "description": "Analyze IP addresses"
+  },
+  "Email Security Query": {
+    "prefix": "emailsecurity",
+    "body": [
+      "EmailEvents",
+      "| where TimeGenerated > ago(${1:7d})",
+      "| where DeliveryAction == \"${2:Blocked}\"",
+      "| summarize Count = count() by SenderFromAddress, ThreatTypes",
+      "| order by Count desc",
+      "$0"
+    ],
+    "description": "Email security analysis"
+  },
+  "Sign-in Analysis": {
+    "prefix": "signinanalysis",
+    "body": [
+      "SigninLogs",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where ResultType != 0",
+      "| summarize FailedAttempts = count() by UserPrincipalName, IPAddress, Location",
+      "| where FailedAttempts > ${2:3}",
+      "| order by FailedAttempts desc",
+      "$0"
+    ],
+    "description": "Azure AD sign-in failure analysis"
+  },
+  "Performance Counter Query": {
+    "prefix": "perfcounter",
+    "body": [
+      "Perf",
+      "| where TimeGenerated > ago(${1:1h})",
+      "| where ObjectName == \"${2:Processor}\" and CounterName == \"${3:% Processor Time}\"",
+      "| summarize AvgValue = avg(CounterValue) by Computer, bin(TimeGenerated, ${4:5m})",
+      "| render timechart",
+      "$0"
+    ],
+    "description": "Performance counter analysis"
+  },
+  "Heartbeat Availability": {
+    "prefix": "heartbeat",
+    "body": [
+      "Heartbeat",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| summarize LastHeartbeat = max(TimeGenerated) by Computer",
+      "| extend IsOnline = iff(LastHeartbeat > ago(${2:5m}), \"Online\", \"Offline\")",
+      "| project Computer, LastHeartbeat, IsOnline",
+      "| order by IsOnline asc, LastHeartbeat desc",
+      "$0"
+    ],
+    "description": "Check computer heartbeat/availability"
+  },
+  "Security Alert Summary": {
+    "prefix": "securityalerts",
+    "body": [
+      "SecurityAlert",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| summarize AlertCount = count() by AlertName, Severity",
+      "| order by Severity asc, AlertCount desc",
+      "$0"
+    ],
+    "description": "Summarize security alerts"
+  },
+  "Case Statement": {
+    "prefix": "case",
+    "body": [
+      "${1:TableName}",
+      "| extend ${2:Category} = case(",
+      "    ${3:Field} > ${4:100}, \"High\",",
+      "    ${3:Field} > ${5:50}, \"Medium\",",
+      "    \"Low\"",
+      ")",
+      "| $0"
+    ],
+    "description": "Multi-condition case statement"
+  }
+}
+

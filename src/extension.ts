@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { KqlDiagnosticsProvider } from './diagnostics';
 import { KqlCompletionProvider } from './completionProvider';
 import { KqlDocumentSymbolProvider } from './symbolProvider';
+import { KqlHoverProvider } from './hoverProvider';
+import { KqlSignatureHelpProvider } from './signatureHelpProvider';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
@@ -28,6 +30,22 @@ export function activate(context: vscode.ExtensionContext) {
         new KqlDocumentSymbolProvider()
     );
     context.subscriptions.push(symbolProvider);
+
+    // Register hover provider for documentation
+    const hoverProvider = vscode.languages.registerHoverProvider(
+        'kql',
+        new KqlHoverProvider()
+    );
+    context.subscriptions.push(hoverProvider);
+
+    // Register signature help provider for function parameter hints
+    const signatureHelpProvider = vscode.languages.registerSignatureHelpProvider(
+        'kql',
+        new KqlSignatureHelpProvider(),
+        '(',  // Trigger on opening parenthesis
+        ','   // Trigger on comma
+    );
+    context.subscriptions.push(signatureHelpProvider);
     
     // Register diagnostics on document open, change, and save
     context.subscriptions.push(

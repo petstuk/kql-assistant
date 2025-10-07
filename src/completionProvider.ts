@@ -22,11 +22,16 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         const afterBy = /\bby\s+\w*$/.test(linePrefix);
         const inExtend = /\|\s*extend\s/.test(linePrefix);
         const inLet = /^\s*let\s/.test(linePrefix);
+        const afterRender = /\|\s*render\s+\w*$/.test(linePrefix);
 
         if (startOfLine && !afterPipe) {
-            // At start of line - suggest let or table operators
+            // At start of line - suggest let, table names, or table operators
             completions.push(this.getLetCompletion());
+            completions.push(...this.getAzureTableCompletions());
             completions.push(...this.getOperatorCompletions());
+        } else if (afterRender) {
+            // After render operator - suggest chart types
+            completions.push(...this.getRenderChartCompletions());
         } else if (afterPipe) {
             // Right after pipe operator - suggest KQL operators only
             completions.push(...this.getOperatorCompletions());
@@ -195,7 +200,61 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
             { label: 'dayofweek()', detail: 'Day of week', doc: 'Returns the day of the week as a timespan.\n\nExample: dayofweek(Timestamp)' },
             { label: 'dayofmonth()', detail: 'Day of month', doc: 'Returns the day of the month (1-31).\n\nExample: dayofmonth(Timestamp)' },
             { label: 'getmonth()', detail: 'Get month', doc: 'Returns the month number (1-12).\n\nExample: getmonth(Timestamp)' },
-            { label: 'getyear()', detail: 'Get year', doc: 'Returns the year.\n\nExample: getyear(Timestamp)' }
+            { label: 'getyear()', detail: 'Get year', doc: 'Returns the year.\n\nExample: getyear(Timestamp)' },
+            { label: 'hash()', detail: 'Hash function', doc: 'Returns a hash value for the input.\n\nExample: hash(StringValue)' },
+            { label: 'hash_sha256()', detail: 'SHA256 hash', doc: 'Returns SHA256 hash of the input.\n\nExample: hash_sha256(StringValue)' },
+            { label: 'hash_md5()', detail: 'MD5 hash', doc: 'Returns MD5 hash of the input.\n\nExample: hash_md5(StringValue)' },
+            { label: 'parse_ipv4()', detail: 'Parse IPv4 address', doc: 'Parses an IPv4 address to long number.\n\nExample: parse_ipv4("192.168.1.1")' },
+            { label: 'parse_ipv4_mask()', detail: 'Parse IPv4 with mask', doc: 'Parses IPv4 address with network mask.\n\nExample: parse_ipv4_mask("192.168.1.0", 24)' },
+            { label: 'ipv4_is_private()', detail: 'Check if private IP', doc: 'Checks if IPv4 address is in private range.\n\nExample: ipv4_is_private("192.168.1.1")' },
+            { label: 'ipv4_is_in_range()', detail: 'Check IP in range', doc: 'Checks if IPv4 is in specified range.\n\nExample: ipv4_is_in_range("192.168.1.5", "192.168.1.0/24")' },
+            { label: 'ipv4_compare()', detail: 'Compare IPv4 addresses', doc: 'Compares two IPv4 addresses.\n\nExample: ipv4_compare("192.168.1.1", "192.168.1.2")' },
+            { label: 'parse_ipv6()', detail: 'Parse IPv6 address', doc: 'Parses an IPv6 address.\n\nExample: parse_ipv6("2001:0db8:85a3::8a2e:0370:7334")' },
+            { label: 'geo_distance_2points()', detail: 'Distance between points', doc: 'Calculates geographic distance between two points.\n\nExample: geo_distance_2points(lon1, lat1, lon2, lat2)' },
+            { label: 'geo_point_in_circle()', detail: 'Point in circle', doc: 'Checks if point is within circle.\n\nExample: geo_point_in_circle(lon, lat, centerLon, centerLat, radius)' },
+            { label: 'geo_point_to_s2cell()', detail: 'Convert to S2 cell', doc: 'Converts geographic point to S2 cell.\n\nExample: geo_point_to_s2cell(longitude, latitude)' },
+            { label: 'base64_encode_tostring()', detail: 'Base64 encode', doc: 'Encodes string to base64.\n\nExample: base64_encode_tostring("text")' },
+            { label: 'base64_decode_tostring()', detail: 'Base64 decode', doc: 'Decodes base64 string.\n\nExample: base64_decode_tostring("dGV4dA==")' },
+            { label: 'base64_encode_fromguid()', detail: 'Encode GUID to base64', doc: 'Encodes GUID to base64 string.\n\nExample: base64_encode_fromguid(guid)' },
+            { label: 'base64_decode_toguid()', detail: 'Decode base64 to GUID', doc: 'Decodes base64 to GUID.\n\nExample: base64_decode_toguid(base64String)' },
+            { label: 'url_encode()', detail: 'URL encode', doc: 'Encodes URL string.\n\nExample: url_encode("hello world")' },
+            { label: 'url_decode()', detail: 'URL decode', doc: 'Decodes URL encoded string.\n\nExample: url_decode("hello%20world")' },
+            { label: 'parse_url()', detail: 'Parse URL', doc: 'Parses URL into components.\n\nExample: parse_url("https://example.com/path")' },
+            { label: 'parse_urlquery()', detail: 'Parse URL query', doc: 'Parses URL query parameters.\n\nExample: parse_urlquery("key1=value1&key2=value2")' },
+            { label: 'parse_user_agent()', detail: 'Parse user agent', doc: 'Parses user agent string.\n\nExample: parse_user_agent(UserAgent)' },
+            { label: 'parse_version()', detail: 'Parse version', doc: 'Parses version string.\n\nExample: parse_version("1.2.3.4")' },
+            { label: 'parse_csv()', detail: 'Parse CSV', doc: 'Parses CSV formatted string.\n\nExample: parse_csv("a,b,c")' },
+            { label: 'parse_xml()', detail: 'Parse XML', doc: 'Parses XML string.\n\nExample: parse_xml(XmlString)' },
+            { label: 'parse_path()', detail: 'Parse file path', doc: 'Parses file path into components.\n\nExample: parse_path("/folder/file.txt")' },
+            { label: 'indexof()', detail: 'Find substring index', doc: 'Returns the index of substring.\n\nExample: indexof("hello world", "world")' },
+            { label: 'indexof_regex()', detail: 'Find regex match index', doc: 'Returns index of regex match.\n\nExample: indexof_regex("test123", @"\\d+")' },
+            { label: 'strcat_delim()', detail: 'Concatenate with delimiter', doc: 'Concatenates strings with delimiter.\n\nExample: strcat_delim(",", Name, Email)' },
+            { label: 'strcat_array()', detail: 'Concatenate array', doc: 'Concatenates array elements.\n\nExample: strcat_array(ArrayField, ",")' },
+            { label: 'trim_start()', detail: 'Trim start', doc: 'Removes leading whitespace or characters.\n\nExample: trim_start(" text")' },
+            { label: 'trim_end()', detail: 'Trim end', doc: 'Removes trailing whitespace or characters.\n\nExample: trim_end("text ")' },
+            { label: 'reverse()', detail: 'Reverse string', doc: 'Reverses string or array.\n\nExample: reverse("hello")' },
+            { label: 'repeat()', detail: 'Repeat string', doc: 'Repeats string N times.\n\nExample: repeat("*", 5)' },
+            { label: 'replace_regex()', detail: 'Replace with regex', doc: 'Replaces text using regex.\n\nExample: replace_regex(@"\\d+", "X", Text)' },
+            { label: 'translate()', detail: 'Translate characters', doc: 'Translates characters in string.\n\nExample: translate("abc", "123", Text)' },
+            { label: 'unicode_codepoints_from_string()', detail: 'Get Unicode codepoints', doc: 'Returns array of Unicode codepoints.\n\nExample: unicode_codepoints_from_string("text")' },
+            { label: 'unicode_codepoints_to_string()', detail: 'Codepoints to string', doc: 'Converts codepoints to string.\n\nExample: unicode_codepoints_to_string(array)' },
+            { label: 'todecimal()', detail: 'Convert to decimal', doc: 'Converts input to decimal.\n\nExample: todecimal(StringValue)' },
+            { label: 'totimespan()', detail: 'Convert to timespan', doc: 'Converts input to timespan.\n\nExample: totimespan("1.02:03:04")' },
+            { label: 'toguid()', detail: 'Convert to GUID', doc: 'Converts input to GUID.\n\nExample: toguid(StringValue)' },
+            { label: 'coalesce()', detail: 'Return first non-null', doc: 'Returns first non-null argument.\n\nExample: coalesce(Field1, Field2, "default")' },
+            { label: 'iif()', detail: 'Inline if (alias)', doc: 'Alias for iff(). Conditional expression.\n\nExample: iif(x > 5, "high", "low")' },
+            { label: 'array_concat()', detail: 'Concatenate arrays', doc: 'Concatenates multiple arrays.\n\nExample: array_concat(array1, array2)' },
+            { label: 'array_slice()', detail: 'Slice array', doc: 'Returns slice of array.\n\nExample: array_slice(Tags, 0, 5)' },
+            { label: 'array_split()', detail: 'Split array', doc: 'Splits array into chunks.\n\nExample: array_split(Tags, 10)' },
+            { label: 'array_index_of()', detail: 'Find index in array', doc: 'Returns index of element in array.\n\nExample: array_index_of(Tags, "value")' },
+            { label: 'array_sum()', detail: 'Sum array values', doc: 'Sums numeric array values.\n\nExample: array_sum(NumberArray)' },
+            { label: 'bag_keys()', detail: 'Get property bag keys', doc: 'Returns keys from property bag.\n\nExample: bag_keys(DynamicField)' },
+            { label: 'bag_merge()', detail: 'Merge property bags', doc: 'Merges property bags.\n\nExample: bag_merge(bag1, bag2)' },
+            { label: 'bag_remove_keys()', detail: 'Remove keys from bag', doc: 'Removes keys from property bag.\n\nExample: bag_remove_keys(bag, dynamic(["key1"]))' },
+            { label: 'treepath()', detail: 'Get tree path', doc: 'Returns path in hierarchy.\n\nExample: treepath(id, parentId)' },
+            { label: 'row_number()', detail: 'Row number', doc: 'Returns row number within partition.\n\nExample: extend RowNum = row_number()' },
+            { label: 'row_rank()', detail: 'Row rank', doc: 'Returns rank within partition.\n\nExample: extend Rank = row_rank()' },
+            { label: 'row_dense_rank()', detail: 'Dense rank', doc: 'Returns dense rank within partition.\n\nExample: extend DenseRank = row_dense_rank()' }
         ];
 
         return functions.map(func => {
@@ -263,6 +322,71 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
             item.detail = kw.detail;
             item.documentation = new vscode.MarkdownString(kw.doc);
             item.insertText = kw.label;
+            return item;
+        });
+    }
+
+    private getAzureTableCompletions(): vscode.CompletionItem[] {
+        const tables = [
+            { label: 'SecurityEvent', detail: 'Windows Security Events', doc: 'Security events from Windows machines.\n\nCommon fields: EventID, Account, Computer, Activity' },
+            { label: 'SigninLogs', detail: 'Azure AD Sign-in Logs', doc: 'Azure Active Directory sign-in logs.\n\nCommon fields: UserPrincipalName, IPAddress, Location, ResultType' },
+            { label: 'AuditLogs', detail: 'Azure AD Audit Logs', doc: 'Azure Active Directory audit logs.\n\nCommon fields: OperationName, Result, InitiatedBy' },
+            { label: 'Heartbeat', detail: 'Agent Heartbeat', doc: 'Heartbeat records from monitoring agents.\n\nCommon fields: Computer, OSType, Version' },
+            { label: 'Perf', detail: 'Performance Counters', doc: 'Performance counter data.\n\nCommon fields: Computer, ObjectName, CounterName, CounterValue' },
+            { label: 'Event', detail: 'Windows Event Logs', doc: 'Windows event log data.\n\nCommon fields: EventID, EventLog, Computer, RenderedDescription' },
+            { label: 'Syslog', detail: 'Linux Syslog', doc: 'Syslog data from Linux machines.\n\nCommon fields: Computer, Facility, SeverityLevel, SyslogMessage' },
+            { label: 'SecurityAlert', detail: 'Security Alerts', doc: 'Security alerts from Microsoft Defender.\n\nCommon fields: AlertName, AlertSeverity, CompromisedEntity' },
+            { label: 'SecurityIncident', detail: 'Security Incidents', doc: 'Security incidents.\n\nCommon fields: IncidentNumber, Title, Severity, Status' },
+            { label: 'EmailEvents', detail: 'Email Events', doc: 'Email events from Microsoft 365 Defender.\n\nCommon fields: SenderFromAddress, RecipientEmailAddress, Subject, DeliveryAction' },
+            { label: 'DeviceEvents', detail: 'Device Events', doc: 'Device events from Microsoft 365 Defender.\n\nCommon fields: DeviceName, ActionType, FileName, FolderPath' },
+            { label: 'DeviceFileEvents', detail: 'Device File Events', doc: 'File events from devices.\n\nCommon fields: DeviceName, FileName, FolderPath, FileSize' },
+            { label: 'DeviceNetworkEvents', detail: 'Device Network Events', doc: 'Network events from devices.\n\nCommon fields: DeviceName, RemoteIP, RemotePort, RemoteUrl' },
+            { label: 'DeviceProcessEvents', detail: 'Device Process Events', doc: 'Process events from devices.\n\nCommon fields: DeviceName, ProcessCommandLine, FileName' },
+            { label: 'DeviceLogonEvents', detail: 'Device Logon Events', doc: 'Logon events from devices.\n\nCommon fields: DeviceName, AccountName, LogonType' },
+            { label: 'IdentityLogonEvents', detail: 'Identity Logon Events', doc: 'Logon events from identity sources.\n\nCommon fields: AccountName, Application, Protocol' },
+            { label: 'CloudAppEvents', detail: 'Cloud App Events', doc: 'Events from cloud applications.\n\nCommon fields: Application, ActionType, AccountDisplayName' },
+            { label: 'AADNonInteractiveUserSignInLogs', detail: 'Azure AD Non-Interactive Sign-ins', doc: 'Non-interactive Azure AD sign-in logs.\n\nCommon fields: UserPrincipalName, AppId, ResourceDisplayName' },
+            { label: 'AADServicePrincipalSignInLogs', detail: 'Service Principal Sign-ins', doc: 'Service principal sign-in logs.\n\nCommon fields: ServicePrincipalName, AppId, IPAddress' },
+            { label: 'W3CIISLog', detail: 'IIS Web Server Logs', doc: 'IIS web server logs.\n\nCommon fields: sSiteName, csMethod, csUriStem, scStatus' },
+            { label: 'AppServiceHTTPLogs', detail: 'App Service HTTP Logs', doc: 'Azure App Service HTTP logs.\n\nCommon fields: CsMethod, CsUriStem, ScStatus' },
+            { label: 'AzureActivity', detail: 'Azure Activity Logs', doc: 'Azure subscription activity logs.\n\nCommon fields: OperationName, ResourceProvider, Caller' },
+            { label: 'AzureDiagnostics', detail: 'Azure Diagnostics', doc: 'Azure resource diagnostics.\n\nCommon fields: ResourceType, Category, OperationName' },
+            { label: 'CommonSecurityLog', detail: 'Common Event Format Logs', doc: 'CEF format security logs.\n\nCommon fields: DeviceVendor, DeviceProduct, DeviceEventClassID' },
+            { label: 'Update', detail: 'Update Management', doc: 'Update management data.\n\nCommon fields: Computer, Title, Classification, UpdateState' },
+            { label: 'UpdateSummary', detail: 'Update Summary', doc: 'Update management summary.\n\nCommon fields: Computer, TotalUpdatesMissing, CriticalUpdatesMissing' },
+            { label: 'ProtectionStatus', detail: 'Protection Status', doc: 'Antimalware protection status.\n\nCommon fields: Computer, ProtectionStatus, DetectionId' }
+        ];
+
+        return tables.map(table => {
+            const item = new vscode.CompletionItem(table.label, vscode.CompletionItemKind.Class);
+            item.detail = table.detail;
+            item.documentation = new vscode.MarkdownString(table.doc);
+            item.insertText = table.label;
+            return item;
+        });
+    }
+
+    private getRenderChartCompletions(): vscode.CompletionItem[] {
+        const charts = [
+            { label: 'timechart', detail: 'Time series chart', doc: 'Displays data as a time series chart.\n\nBest for: Time-based aggregations\n\nExample: | render timechart' },
+            { label: 'barchart', detail: 'Bar chart', doc: 'Displays data as a bar chart.\n\nBest for: Comparing categories\n\nExample: | render barchart' },
+            { label: 'columnchart', detail: 'Column chart', doc: 'Displays data as a column chart.\n\nBest for: Comparing categories vertically\n\nExample: | render columnchart' },
+            { label: 'piechart', detail: 'Pie chart', doc: 'Displays data as a pie chart.\n\nBest for: Showing proportions\n\nExample: | render piechart' },
+            { label: 'scatterchart', detail: 'Scatter chart', doc: 'Displays data as a scatter plot.\n\nBest for: Correlation analysis\n\nExample: | render scatterchart' },
+            { label: 'areachart', detail: 'Area chart', doc: 'Displays data as an area chart.\n\nBest for: Cumulative trends over time\n\nExample: | render areachart' },
+            { label: 'linechart', detail: 'Line chart', doc: 'Displays data as a line chart.\n\nBest for: Trends over time\n\nExample: | render linechart' },
+            { label: 'table', detail: 'Table view', doc: 'Displays data in table format.\n\nExample: | render table' },
+            { label: 'card', detail: 'Card view', doc: 'Displays a single value as a card.\n\nBest for: KPIs and metrics\n\nExample: | render card' },
+            { label: 'pivotchart', detail: 'Pivot chart', doc: 'Displays data as a pivot chart.\n\nExample: | render pivotchart' },
+            { label: 'ladderchart', detail: 'Ladder chart', doc: 'Displays data as a ladder chart.\n\nExample: | render ladderchart' },
+            { label: 'anomalychart', detail: 'Anomaly chart', doc: 'Displays data with anomaly detection.\n\nExample: | render anomalychart' }
+        ];
+
+        return charts.map(chart => {
+            const item = new vscode.CompletionItem(chart.label, vscode.CompletionItemKind.EnumMember);
+            item.detail = chart.detail;
+            item.documentation = new vscode.MarkdownString(chart.doc);
+            item.insertText = chart.label;
             return item;
         });
     }

@@ -29,6 +29,27 @@ A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax c
   - Supports `#` through `######` header levels
   - Navigate quickly through sections of your queries
 
+- **Code Snippets**: 
+  - 30+ pre-built query templates
+  - Common patterns: time filters, aggregations, joins, security queries
+  - Type shortcut and press Tab to insert
+
+- **Hover Documentation**: 
+  - Hover over functions and operators for instant documentation
+  - Detailed syntax, parameters, and examples
+  - No need to leave your editor
+
+- **Parameter Hints**: 
+  - IntelliSense shows function parameters as you type
+  - Highlights current parameter
+  - Supports 100+ KQL functions
+
+- **Enhanced Auto-completion**: 
+  - 27 common Azure tables (SecurityEvent, SigninLogs, etc.)
+  - 12 chart types for render operator
+  - 60+ additional scalar functions
+  - Context-aware suggestions
+
 ## Installation
 
 ### From VS Code Marketplace (Recommended)
@@ -63,7 +84,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.2.0.vsix
+     code --install-extension kql-assistant-0.3.0.vsix
      ```
 
 ## Usage
@@ -71,6 +92,32 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
 1. Open any file with `.kql` or `.kusto` extension
 2. The extension will automatically activate and provide syntax highlighting
 3. Syntax errors will be underlined in real-time as you type
+
+### Code Snippets
+
+Type a snippet prefix and press `Tab` to insert:
+- `timerange` - Filter by time range
+- `topn` - Get top N results
+- `failedlogins` - Security query for failed logins
+- `agg` - Basic aggregation pattern
+- `join` - Join two tables
+- And 25+ more!
+
+### Hover for Help
+
+Hover your mouse over any KQL function or operator to see:
+- Detailed description
+- Syntax and parameters
+- Usage examples
+
+### Parameter Hints
+
+When typing a function, you'll see parameter hints:
+```kql
+bin(TimeGenerated, 1h)
+    ^^^^^^^^^^^^^^  ^^^
+    Shows which parameter you're entering
+```
 
 ### Manual Syntax Check
 
@@ -188,6 +235,41 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.3.0
+
+**Major Feature Release** - Productivity Enhancements
+
+- **NEW**: 30+ Code Snippets
+  - Quick templates for common query patterns
+  - Security queries, time-based filters, aggregations, joins
+  - Type prefix and press Tab (e.g., `timerange`, `failedlogins`, `topn`)
+  
+- **NEW**: Hover Documentation
+  - Hover over any function or operator for instant help
+  - Detailed syntax, parameters, and examples
+  - Covers 100+ operators and functions
+
+- **NEW**: Signature Help (Parameter Hints)
+  - IntelliSense shows function parameters as you type
+  - Highlights the current parameter you're filling in
+  - Works with 100+ KQL functions
+
+- **NEW**: Azure Table Auto-completion
+  - 27 common Azure/Microsoft Sentinel tables
+  - Includes: SecurityEvent, SigninLogs, DeviceEvents, EmailEvents, etc.
+  - Shows table description and common fields
+
+- **NEW**: Render Chart Types
+  - Auto-complete chart types after `| render`
+  - 12 chart types: timechart, barchart, piechart, etc.
+  - Descriptions and use cases for each chart
+
+- **IMPROVED**: 60+ New Scalar Functions
+  - Network functions: `parse_ipv4()`, `ipv4_is_private()`, etc.
+  - Encoding: `base64_encode_tostring()`, `url_encode()`, etc.
+  - Geospatial: `geo_distance_2points()`, `geo_point_in_circle()`, etc.
+  - Array manipulation, parsing, hashing, and more
 
 ### 0.2.0
 

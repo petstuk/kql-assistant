@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Kusto Query Language (KQL) syntax checking and language support",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "petstuk",
   "repository": {
     "type": "git",
@@ -79,7 +79,13 @@
           "description": "Severity level for syntax diagnostics"
         }
       }
-    }
+    },
+    "snippets": [
+      {
+        "language": "kql",
+        "path": "./snippets/kql.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
