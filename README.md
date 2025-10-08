@@ -32,7 +32,8 @@ A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax c
 - **Code Snippets**: 
   - 30+ pre-built query templates
   - Common patterns: time filters, aggregations, joins, security queries
-  - Type shortcut and press Tab to insert
+  - Type prefix (e.g., `timerange`, `failedlogins`) and press Tab to insert
+  - See full list in Usage section below
 
 - **Hover Documentation**: 
   - Hover over functions and operators for instant documentation
@@ -84,7 +85,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.3.0.vsix
+     code --install-extension kql-assistant-0.3.1.vsix
      ```
 
 ## Usage
@@ -95,13 +96,57 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
 
 ### Code Snippets
 
-Type a snippet prefix and press `Tab` to insert:
-- `timerange` - Filter by time range
+Type a snippet prefix and press `Tab` to insert a template. Available snippets:
+
+**Time & Filtering:**
+- `timerange` - Filter by time range with ago()
+- `timebetween` - Filter by specific date range
 - `topn` - Get top N results
-- `failedlogins` - Security query for failed logins
-- `agg` - Basic aggregation pattern
-- `join` - Join two tables
-- And 25+ more!
+- `distinct` - Get distinct values
+- `wherein` - Multiple OR conditions using 'in'
+- `contains` - String contains filter
+
+**Aggregations & Analysis:**
+- `agg` - Basic aggregation with count by field
+- `timeseries` - Time series aggregation with chart
+- `percentile` - Percentile analysis (P50, P95, P99)
+- `errorcount` - Count errors by type
+
+**Joins & Unions:**
+- `join` - Inner join two tables
+- `leftjoin` - Left outer join
+- `union` - Combine multiple tables
+
+**Variables & Statements:**
+- `let` - Define scalar variable
+- `lettable` - Define table variable
+- `extend` - Add multiple computed columns
+- `project` - Select specific columns
+
+**Security Queries:**
+- `failedlogins` - Failed login attempts analysis
+- `suspiciouslogin` - Successful logins after failed attempts
+- `emailsecurity` - Email security analysis
+- `signinanalysis` - Azure AD sign-in failure analysis
+- `securityalerts` - Security alert summary
+
+**Parsing & Data Manipulation:**
+- `parsejson` - Parse JSON field and extract properties
+- `parse` - Parse custom log format
+- `mvexpand` - Expand multi-value array
+- `extract` - Extract data using regex
+
+**Azure-Specific:**
+- `perfcounter` - Performance counter analysis
+- `heartbeat` - Computer heartbeat/availability check
+- `ipanalysis` - IP address analysis
+
+**Advanced Patterns:**
+- `rownumber` - Window function with row_number()
+- `makeseries` - Create time series with make-series
+- `case` - Multi-condition case statement
+
+*Start typing any prefix and press Tab to insert the full query template!*
 
 ### Hover for Help
 
@@ -235,6 +280,14 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.3.1
+
+**Documentation Update**
+- **IMPROVED**: Comprehensive snippet reference in README
+  - Complete list of all 30+ code snippets organized by category
+  - Clear usage instructions for each snippet prefix
+  - Helps users discover all available templates
 
 ### 0.3.0
 
