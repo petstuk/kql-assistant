@@ -1,13 +1,18 @@
 import * as vscode from 'vscode';
 import { KqlSyntaxChecker } from './syntaxChecker';
+import { KqlSchemaValidator } from './schemaValidator';
 
 export class KqlDiagnosticsProvider {
     private diagnosticCollection: vscode.DiagnosticCollection;
     private syntaxChecker: KqlSyntaxChecker;
 
-    constructor() {
+    constructor(private context: vscode.ExtensionContext) {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('kql');
         this.syntaxChecker = new KqlSyntaxChecker();
+        
+        // Initialize schema validator
+        const schemaValidator = new KqlSchemaValidator(context);
+        this.syntaxChecker.setSchemaValidator(schemaValidator);
     }
 
     public updateDiagnostics(document: vscode.TextDocument): void {

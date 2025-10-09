@@ -10,8 +10,8 @@ let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 export function activate(context: vscode.ExtensionContext) {
     console.log('KQL Assistant extension is now active');
 
-    // Create diagnostics provider
-    diagnosticsProvider = new KqlDiagnosticsProvider();
+    // Create diagnostics provider with schema validation
+    diagnosticsProvider = new KqlDiagnosticsProvider(context);
     
     // Register completion provider for KQL
     const completionProvider = vscode.languages.registerCompletionItemProvider(

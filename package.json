@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Kusto Query Language (KQL) syntax checking and language support",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "petstuk",
   "repository": {
     "type": "git",
@@ -100,10 +100,11 @@
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^2.19.0",
     "eslint": "^8.45.0",
-    "typescript": "^5.1.6",
-    "@vscode/vsce": "^2.19.0"
+    "typescript": "^5.1.6"
   },
-  "dependencies": {}
+  "dependencies": {
+    "pdf-parse": "^2.2.2"
+  }
 }
-

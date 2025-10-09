@@ -1,3 +1,5 @@
+import { KqlSchemaValidator } from './schemaValidator';
+
 export interface SyntaxError {
     line: number;
     column: number;
@@ -6,6 +8,7 @@ export interface SyntaxError {
 }
 
 export class KqlSyntaxChecker {
+    private schemaValidator: KqlSchemaValidator | undefined;
     // KQL keywords and operators
     private readonly keywords = new Set([
         'and', 'as', 'by', 'consume', 'count', 'distinct', 'evaluate', 'extend',
@@ -31,6 +34,10 @@ export class KqlSyntaxChecker {
         'strlen', 'substring', 'timespan', 'tostring', 'tolower', 'toupper', 'trim',
         'trim_end', 'trim_start', 'toint', 'tolong', 'todouble', 'todecimal', 'tobool'
     ]);
+
+    public setSchemaValidator(validator: KqlSchemaValidator): void {
+        this.schemaValidator = validator;
+    }
 
     public check(text: string): SyntaxError[] {
         const errors: SyntaxError[] = [];
@@ -113,7 +120,190 @@ export class KqlSyntaxChecker {
         // Check overall query structure
         this.checkQueryStructure(text, errors);
 
+        // Check table and column names against schema (if validator is available)
+        if (this.schemaValidator) {
+            this.checkTableAndColumns(text, errors);
+        }
+
         return errors;
+    }
+
+    private checkTableAndColumns(text: string, errors: SyntaxError[]): void {
+        const lines = text.split('\n');
+        let currentTable: string | undefined;
+        
+        for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+            const line = lines[lineNum];
+            const trimmedLine = line.trim().toLowerCase();
+            
+            // Skip comments, empty lines, and markdown headers
+            if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || !trimmedLine || trimmedLine.startsWith('#')) {
+                continue;
+            }
+            
+            // Skip let statements
+            if (trimmedLine.startsWith('let ')) {
+                continue;
+            }
+            
+            // Check for table name at start of query or after union
+            const tableMatch = line.match(/^(\s*)([A-Z]\w+)(\s*\||$)/);
+            if (tableMatch) {
+                const tableName = tableMatch[2];
+                currentTable = tableName;
+                
+                if (!this.schemaValidator!.validateTableExists(tableName)) {
+                    const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
+                    const message = suggestion 
+                        ? `Unknown table '${tableName}'. Did you mean '${suggestion}'?`
+                        : `Unknown table '${tableName}'`;
+                    
+                    errors.push({
+                        line: lineNum,
+                        column: tableMatch[1].length,
+                        length: tableName.length,
+                        message: message
+                    });
+                    currentTable = undefined; // Don't validate columns if table is unknown
+                }
+            }
+            
+            // Check table names after union
+            const unionMatch = line.match(/union\s+([A-Z]\w+)/i);
+            if (unionMatch) {
+                const tableName = unionMatch[1];
+                if (!this.schemaValidator!.validateTableExists(tableName)) {
+                    const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
+                    const message = suggestion 
+                        ? `Unknown table '${tableName}'. Did you mean '${suggestion}'?`
+                        : `Unknown table '${tableName}'`;
+                    
+                    const index = line.indexOf(tableName);
+                    errors.push({
+                        line: lineNum,
+                        column: index,
+                        length: tableName.length,
+                        message: message
+                    });
+                }
+            }
+            
+            // Validate columns if we know the current table
+            if (currentTable && this.schemaValidator!.validateTableExists(currentTable)) {
+                this.validateColumnsInLine(line, lineNum, currentTable, errors);
+            }
+        }
+    }
+
+    private validateColumnsInLine(line: string, lineNum: number, tableName: string, errors: SyntaxError[]): void {
+        // Skip if line has comments
+        if (line.includes('//')) {
+            line = line.substring(0, line.indexOf('//'));
+        }
+        
+        // Patterns to find column references
+        // Match: where ColumnName, project ColumnName, extend ... = ColumnName, summarize by ColumnName
+        const columnPatterns = [
+            // where ColumnName ==
+            /\|\s*where\s+([A-Z_]\w*)\s*[=!<>]/i,
+            // project ColumnName,
+            /\|\s*project(?:-\w+)?\s+([A-Z_]\w*)(?:\s*,|\s*$)/i,
+            // extend NewCol = SourceCol or extend calculation using SourceCol
+            /\|\s*extend\s+\w+\s*=\s*([A-Z_]\w*)/i,
+            // summarize ... by ColumnName
+            /\bby\s+([A-Z_]\w*)/i,
+            // order by ColumnName
+            /\|\s*(?:order|sort)\s+by\s+([A-Z_]\w*)/i,
+        ];
+        
+        for (const pattern of columnPatterns) {
+            const matches = line.matchAll(new RegExp(pattern.source, 'gi'));
+            for (const match of matches) {
+                const columnName = match[1];
+                
+                // Skip if it's a keyword, function, or operator
+                if (this.isKqlKeywordOrFunction(columnName)) {
+                    continue;
+                }
+                
+                // Skip common table names (might be in extend statements)
+                if (this.schemaValidator!.validateTableExists(columnName)) {
+                    continue;
+                }
+                
+                // Validate column exists in table
+                if (!this.schemaValidator!.validateColumn(tableName, columnName)) {
+                    const suggestions = this.schemaValidator!.suggestColumns(tableName, columnName.substring(0, 3));
+                    const similarColumn = this.findSimilarColumn(tableName, columnName);
+                    
+                    const message = similarColumn
+                        ? `Unknown column '${columnName}' in table '${tableName}'. Did you mean '${similarColumn}'?`
+                        : `Unknown column '${columnName}' in table '${tableName}'`;
+                    
+                    const columnIndex = match.index! + match[0].indexOf(columnName);
+                    errors.push({
+                        line: lineNum,
+                        column: columnIndex,
+                        length: columnName.length,
+                        message: message
+                    });
+                }
+            }
+        }
+    }
+
+    private findSimilarColumn(tableName: string, columnName: string): string | undefined {
+        const columns = this.schemaValidator!.getColumns(tableName);
+        const lowerName = columnName.toLowerCase();
+        let bestMatch: string | undefined;
+        let minDistance = Infinity;
+        
+        for (const col of columns) {
+            // Check for simple typos (1-2 character difference)
+            const distance = this.levenshteinDistance(lowerName, col.toLowerCase());
+            if (distance < minDistance && distance <= 2) {
+                minDistance = distance;
+                bestMatch = col;
+            }
+        }
+        
+        return bestMatch;
+    }
+
+    private isKqlKeywordOrFunction(word: string): boolean {
+        const lower = word.toLowerCase();
+        return this.keywords.has(lower) || 
+               this.aggregationFunctions.has(lower) || 
+               this.scalarFunctions.has(lower) ||
+               ['bin', 'ago', 'now', 'datetime', 'timespan', 'case', 'iff'].includes(lower);
+    }
+
+    private levenshteinDistance(a: string, b: string): number {
+        const matrix: number[][] = [];
+        
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+        
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+        
+        return matrix[b.length][a.length];
     }
 
     private checkBracketBalance(line: string, lineNum: number, errors: SyntaxError[]): void {
