@@ -11,9 +11,9 @@ export class KqlSyntaxChecker {
     private schemaValidator: KqlSchemaValidator | undefined;
     // KQL keywords and operators
     private readonly keywords = new Set([
-        'and', 'as', 'by', 'consume', 'count', 'distinct', 'evaluate', 'extend',
+        'and', 'as', 'away', 'by', 'consume', 'count', 'distinct', 'evaluate', 'extend',
         'find', 'fork', 'getschema', 'invoke', 'join', 'limit', 'lookup', 'make-series',
-        'mv-apply', 'mv-expand', 'or', 'order', 'parse', 'partition', 'print', 'project',
+        'mv-apply', 'mv-expand', 'on', 'or', 'order', 'parse', 'partition', 'print', 'project',
         'project-away', 'project-keep', 'project-rename', 'project-reorder', 'range',
         'reduce', 'render', 'sample', 'sample-distinct', 'scan', 'search', 'serialize',
         'sort', 'summarize', 'take', 'top', 'top-hitters', 'top-nested', 'union', 'where'
@@ -142,6 +142,10 @@ export class KqlSyntaxChecker {
             
             // Skip comments, empty lines, and markdown headers
             if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || !trimmedLine || trimmedLine.startsWith('#')) {
+                // Reset multi-line operator context on empty lines or markdown headers (new query boundary)
+                if (!trimmedLine || trimmedLine.startsWith('#')) {
+                    inMultiLineOperator = false;
+                }
                 continue;
             }
             
@@ -151,7 +155,7 @@ export class KqlSyntaxChecker {
             }
             
             // Track multi-line operators
-            if (/\|\s*(?:project|summarize|extend)\b/i.test(line)) {
+            if (/\|\s*(?:project|summarize|extend|lookup|mv-expand|mv-apply)\b/i.test(line)) {
                 inMultiLineOperator = true;
             } else if (trimmedLine.startsWith('|') && !/^\s+/.test(line)) {
                 // New pipe operator resets multi-line context
@@ -267,12 +271,23 @@ export class KqlSyntaxChecker {
             cleanLine = line.substring(0, line.indexOf('//'));
         }
         
+        // Remove string literals (["column name"]) to avoid validating them as columns
+        cleanLine = cleanLine.replace(/\["[^"]+"\]/g, '__STRING_LITERAL__');
+        cleanLine = cleanLine.replace(/\['[^']+'\]/g, '__STRING_LITERAL__');
+        
         // Check for specific operators where we validate columns
         const hasWhere = /\|\s*where\b/i.test(cleanLine);
         const hasProject = /\|\s*project(?:-\w+)?\b/i.test(cleanLine);
         const hasLocalSummarize = /\|\s*summarize\b/i.test(cleanLine);
         const hasOrderBy = /\|\s*(?:order|sort)\s+by\b/i.test(cleanLine);
         const hasExtend = /\|\s*extend\b/i.test(cleanLine);
+        const hasLookup = /\|\s*lookup\b/i.test(cleanLine);
+        const hasMvExpand = /\|\s*mv-expand\b/i.test(cleanLine);
+        
+        // Skip validation for lookup and mv-expand lines (too complex for now)
+        if (hasLookup || hasMvExpand) {
+            return;
+        }
         
         // If line starts with just whitespace and identifiers (likely continuation of project/summarize)
         const isContinuationLine = /^\s+[A-Z_]\w*\s*[,\s]*$/i.test(cleanLine);

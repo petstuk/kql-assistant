@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.5.2.vsix
+     code --install-extension kql-assistant-0.5.4.vsix
      ```
 
 ## Usage
@@ -324,6 +324,27 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.5.4
+
+**Enhanced Operator Support:**
+- Added support for `lookup` operator (validation skipped for lookup lines)
+- Added support for `mv-expand` and `mv-apply` operators
+- Added support for string literals in column names: `["Events Recorded"]`, `['Column Name']`
+- Added keywords: `on`, `away` to prevent false positives
+- String literals in `summarize` statements no longer flagged as unknown columns
+
+**Technical Changes:**
+- Multi-line operator tracking now includes `lookup`, `mv-expand`, `mv-apply`
+- String literals removed from validation (`/\["[^"]+"\]/g` and `/\['[^']+'\]/g`)
+- Lookup and mv-expand lines skipped entirely (too complex for current validation)
+
+### 0.5.3
+
+**Critical Bug Fix - Multi-line Operator Context:**
+- Fixed context bleeding when multi-line operators (project/extend/summarize) weren't properly reset between queries
+- Empty lines and markdown headers now correctly reset the multi-line operator flag
+- This fixes the issue where columns from the first query were incorrectly validated against subsequent queries
 
 ### 0.5.2
 
