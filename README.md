@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.4.1.vsix
+     code --install-extension kql-assistant-0.4.2.vsix
      ```
 
 ## Usage
@@ -295,6 +295,15 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.4.2
+
+**Bug Fixes:**
+- Fixed column validation for multi-line `project` statements
+- Fixed validation to track columns created by `extend` and `summarize` operators
+- Fixed false positives when using aggregated columns (e.g., `TotalEmailsInPastThirtyDays`) in `sort by` after `summarize`
+- Enhanced query pipeline tracking to understand column schema changes through the query
+- Improved handling of continuation lines in project/summarize statements
 
 ### 0.4.1
 

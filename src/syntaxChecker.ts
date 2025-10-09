@@ -131,6 +131,8 @@ export class KqlSyntaxChecker {
     private checkTableAndColumns(text: string, errors: SyntaxError[]): void {
         const lines = text.split('\n');
         let currentTable: string | undefined;
+        let createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize
+        let hasSummarize = false; // Track if we've seen a summarize (creates new schema)
         
         for (let lineNum = 0; lineNum < lines.length; lineNum++) {
             const line = lines[lineNum];
@@ -151,6 +153,8 @@ export class KqlSyntaxChecker {
             if (tableMatch) {
                 const tableName = tableMatch[2];
                 currentTable = tableName;
+                createdColumns.clear();
+                hasSummarize = false;
                 
                 if (!this.schemaValidator!.validateTableExists(tableName)) {
                     const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
@@ -188,59 +192,116 @@ export class KqlSyntaxChecker {
                 }
             }
             
+            // Track columns created by extend: | extend NewCol = ...
+            if (/\|\s*extend\b/i.test(line)) {
+                const extendMatches = line.matchAll(/extend\s+([A-Z_]\w*)\s*=/gi);
+                for (const match of extendMatches) {
+                    createdColumns.add(match[1]);
+                }
+            }
+            
+            // Track if we hit a summarize - this creates entirely new columns
+            if (/\|\s*summarize\b/i.test(line)) {
+                hasSummarize = true;
+                // Extract new column names from summarize: ColumnName = aggregation()
+                const summarizeMatches = line.matchAll(/([A-Z_]\w*)\s*=\s*\w+\(/gi);
+                for (const match of summarizeMatches) {
+                    createdColumns.add(match[1]);
+                }
+            }
+            
             // Validate columns if we know the current table
             if (currentTable && this.schemaValidator!.validateTableExists(currentTable)) {
-                this.validateColumnsInLine(line, lineNum, currentTable, errors);
+                this.validateColumnsInLine(line, lineNum, currentTable, createdColumns, hasSummarize, errors);
             }
         }
     }
 
-    private validateColumnsInLine(line: string, lineNum: number, tableName: string, errors: SyntaxError[]): void {
+    private validateColumnsInLine(line: string, lineNum: number, tableName: string, createdColumns: Set<string>, hasSummarize: boolean, errors: SyntaxError[]): void {
         // Skip if line has comments
+        let cleanLine = line;
         if (line.includes('//')) {
-            line = line.substring(0, line.indexOf('//'));
+            cleanLine = line.substring(0, line.indexOf('//'));
         }
         
-        // Patterns to find column references
-        // Match: where ColumnName, project ColumnName, extend ... = ColumnName, summarize by ColumnName
-        const columnPatterns = [
-            // where ColumnName ==
-            /\|\s*where\s+([A-Z_]\w*)\s*[=!<>]/i,
-            // project ColumnName,
-            /\|\s*project(?:-\w+)?\s+([A-Z_]\w*)(?:\s*,|\s*$)/i,
-            // extend NewCol = SourceCol or extend calculation using SourceCol
-            /\|\s*extend\s+\w+\s*=\s*([A-Z_]\w*)/i,
-            // summarize ... by ColumnName
-            /\bby\s+([A-Z_]\w*)/i,
-            // order by ColumnName
-            /\|\s*(?:order|sort)\s+by\s+([A-Z_]\w*)/i,
-        ];
+        // Check for specific operators where we validate columns
+        const hasWhere = /\|\s*where\b/i.test(cleanLine);
+        const hasProject = /\|\s*project(?:-\w+)?\b/i.test(cleanLine);
+        const hasLocalSummarize = /\|\s*summarize\b/i.test(cleanLine);
+        const hasOrderBy = /\|\s*(?:order|sort)\s+by\b/i.test(cleanLine);
+        const hasExtend = /\|\s*extend\b/i.test(cleanLine);
         
-        for (const pattern of columnPatterns) {
-            const matches = line.matchAll(new RegExp(pattern.source, 'gi'));
-            for (const match of matches) {
-                const columnName = match[1];
+        // If line starts with just whitespace and identifiers (likely continuation of project/summarize)
+        const isContinuationLine = /^\s+[A-Z_]\w*\s*[,\s]*$/i.test(cleanLine);
+        
+        if (hasWhere) {
+            // Validate columns in where clause: where ColumnName ==, !=, <, >, etc.
+            const wherePattern = /\bwhere\s+([A-Z_]\w*)\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
+            this.validateColumnsWithPattern(cleanLine, wherePattern, line, lineNum, tableName, createdColumns, errors);
+        }
+        
+        if (hasProject || isContinuationLine) {
+            // Validate all column-like identifiers in project statements
+            // Match identifiers that are: start of word, optional comma before, optional comma/whitespace after
+            const projectPattern = /\b([A-Z_]\w*)(?:\s*[,\s]|$)/gi;
+            this.validateColumnsWithPattern(cleanLine, projectPattern, line, lineNum, tableName, createdColumns, errors);
+        }
+        
+        if (hasExtend) {
+            // In extend, validate columns on the right side of =
+            const extendPattern = /=\s*([A-Z_]\w*)/gi;
+            this.validateColumnsWithPattern(cleanLine, extendPattern, line, lineNum, tableName, createdColumns, errors);
+        }
+        
+        if (hasLocalSummarize) {
+            // Validate columns after 'by' keyword in summarize
+            const byPattern = /\bby\s+([A-Z_]\w*)/gi;
+            this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, tableName, createdColumns, errors);
+        }
+        
+        if (hasOrderBy) {
+            // For sort/order by after summarize, skip validation since columns are newly created
+            if (!hasSummarize) {
+                // Only validate if we haven't seen a summarize yet
+                const byPattern = /\bby\s+([A-Z_]\w*)/gi;
+                this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, tableName, createdColumns, errors);
+            }
+            // If after summarize, don't validate - those are aggregated columns
+        }
+    }
+    
+    private validateColumnsWithPattern(cleanLine: string, pattern: RegExp, originalLine: string, lineNum: number, tableName: string, createdColumns: Set<string>, errors: SyntaxError[]): void {
+        const matches = cleanLine.matchAll(pattern);
+        for (const match of matches) {
+            const columnName = match[1];
+            
+            if (!columnName) continue;
+            
+            // Skip if it's a keyword, function, or operator
+            if (this.isKqlKeywordOrFunction(columnName)) {
+                continue;
+            }
+            
+            // Skip common table names (might be in extend statements)
+            if (this.schemaValidator!.validateTableExists(columnName)) {
+                continue;
+            }
+            
+            // Skip if this column was created by extend or summarize
+            if (createdColumns.has(columnName)) {
+                continue;
+            }
+            
+            // Validate column exists in table
+            if (!this.schemaValidator!.validateColumn(tableName, columnName)) {
+                const similarColumn = this.findSimilarColumn(tableName, columnName);
                 
-                // Skip if it's a keyword, function, or operator
-                if (this.isKqlKeywordOrFunction(columnName)) {
-                    continue;
-                }
+                const message = similarColumn
+                    ? `Unknown column '${columnName}' in table '${tableName}'. Did you mean '${similarColumn}'?`
+                    : `Unknown column '${columnName}' in table '${tableName}'`;
                 
-                // Skip common table names (might be in extend statements)
-                if (this.schemaValidator!.validateTableExists(columnName)) {
-                    continue;
-                }
-                
-                // Validate column exists in table
-                if (!this.schemaValidator!.validateColumn(tableName, columnName)) {
-                    const suggestions = this.schemaValidator!.suggestColumns(tableName, columnName.substring(0, 3));
-                    const similarColumn = this.findSimilarColumn(tableName, columnName);
-                    
-                    const message = similarColumn
-                        ? `Unknown column '${columnName}' in table '${tableName}'. Did you mean '${similarColumn}'?`
-                        : `Unknown column '${columnName}' in table '${tableName}'`;
-                    
-                    const columnIndex = match.index! + match[0].indexOf(columnName);
+                const columnIndex = originalLine.indexOf(columnName);
+                if (columnIndex !== -1) {
                     errors.push({
                         line: lineNum,
                         column: columnIndex,
