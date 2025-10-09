@@ -251,9 +251,50 @@ export class KqlSyntaxChecker {
             if (/\|\s*summarize\b/i.test(line)) {
                 hasSummarize = true;
                 // Extract new column names from summarize: ColumnName = aggregation()
+                // Also handle ["Column Name"] = aggregation()
                 const summarizeMatches = line.matchAll(/([A-Z_]\w*)\s*=\s*\w+\(/gi);
                 for (const match of summarizeMatches) {
                     createdColumns.add(match[1]);
+                }
+                
+                // Handle string literal columns: ["Column Name"] = ...
+                const stringLiteralMatches = line.matchAll(/\["([^"]+)"\]\s*=/gi);
+                for (const match of stringLiteralMatches) {
+                    // Store the actual column name without quotes/brackets
+                    createdColumns.add(match[1].replace(/ /g, '_'));
+                }
+                
+                // If summarize contains count() without assignment, it creates count_
+                if (/\bcount\(\)/i.test(line)) {
+                    createdColumns.add('count_');
+                }
+                
+                // Common aggregation patterns that create default column names
+                if (/\bsum\([^)]+\)/i.test(line) && !/\w+\s*=\s*sum\(/i.test(line)) {
+                    createdColumns.add('sum_');
+                }
+                if (/\bavg\([^)]+\)/i.test(line) && !/\w+\s*=\s*avg\(/i.test(line)) {
+                    createdColumns.add('avg_');
+                }
+                if (/\bmax\([^)]+\)/i.test(line) && !/\w+\s*=\s*max\(/i.test(line)) {
+                    createdColumns.add('max_');
+                }
+                if (/\bmin\([^)]+\)/i.test(line) && !/\w+\s*=\s*min\(/i.test(line)) {
+                    createdColumns.add('min_');
+                }
+            }
+            
+            // Track mv-expand which creates new columns from arrays
+            if (/\|\s*mv-expand\b/i.test(line)) {
+                // Extract column names from mv-expand: ColName = ArrayCol
+                const mvExpandMatches = line.matchAll(/([A-Z_]\w*)\s*=\s*([A-Z_]\w*)/gi);
+                for (const match of mvExpandMatches) {
+                    createdColumns.add(match[1]); // The new expanded column name
+                }
+                // Also handle simple mv-expand ArrayCol (keeps same name)
+                const simpleMvExpand = line.match(/mv-expand\s+([A-Z_]\w*)(?:\s|$)/i);
+                if (simpleMvExpand) {
+                    createdColumns.add(simpleMvExpand[1]);
                 }
             }
             
@@ -278,14 +319,15 @@ export class KqlSyntaxChecker {
         // Check for specific operators where we validate columns
         const hasWhere = /\|\s*where\b/i.test(cleanLine);
         const hasProject = /\|\s*project(?:-\w+)?\b/i.test(cleanLine);
+        const hasProjectAway = /\|\s*project-away\b/i.test(cleanLine);
         const hasLocalSummarize = /\|\s*summarize\b/i.test(cleanLine);
         const hasOrderBy = /\|\s*(?:order|sort)\s+by\b/i.test(cleanLine);
         const hasExtend = /\|\s*extend\b/i.test(cleanLine);
         const hasLookup = /\|\s*lookup\b/i.test(cleanLine);
         const hasMvExpand = /\|\s*mv-expand\b/i.test(cleanLine);
         
-        // Skip validation for lookup and mv-expand lines (too complex for now)
-        if (hasLookup || hasMvExpand) {
+        // Skip validation for lookup, mv-expand, and project-away lines (too complex for now)
+        if (hasLookup || hasMvExpand || hasProjectAway) {
             return;
         }
         
@@ -604,7 +646,7 @@ export class KqlSyntaxChecker {
         }
 
         // Check for assignment without proper operator
-        // Only flag if we're not inside a summarize/extend/project/let block
+        // Only flag if we're not inside a summarize/extend/project/let/mv-expand block
         // Exclude common parameters like kind=, on=, hint.*, etc.
         const assignmentMatch = line.match(/\b(\w+)\s*=\s*(?![=>])/);
         if (assignmentMatch) {
@@ -618,7 +660,10 @@ export class KqlSyntaxChecker {
             // Check if it starts with hint. (e.g., hint.strategy=)
             const isHintParameter = variableName.startsWith('hint');
             
-            if (!isParameter && !isHintParameter && !inOperatorBlock && !trimmedLine.includes('extend') && !trimmedLine.includes('summarize') && !trimmedLine.includes('project') && !trimmedLine.includes('let')) {
+            // Check if we're in an mv-expand, mv-apply, or lookup statement
+            const isMvOperator = trimmedLine.includes('mv-expand') || trimmedLine.includes('mv-apply') || trimmedLine.includes('lookup');
+            
+            if (!isParameter && !isHintParameter && !inOperatorBlock && !isMvOperator && !trimmedLine.includes('extend') && !trimmedLine.includes('summarize') && !trimmedLine.includes('project') && !trimmedLine.includes('let')) {
                 const index = line.indexOf(assignmentMatch[0]);
                 errors.push({
                     line: lineNum,

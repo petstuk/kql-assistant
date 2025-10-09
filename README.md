@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.5.4.vsix
+     code --install-extension kql-assistant-0.5.6.vsix
      ```
 
 ## Usage
@@ -324,6 +324,29 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.5.6
+
+**Final MV-Expand Assignment Fix:**
+- Fixed false positive "Assignment requires extend, summarize..." error in `mv-expand` statements
+- Assignments in `mv-expand` (e.g., `DeviceName = DeviceNames`) now properly recognized
+- Added `mv-expand`, `mv-apply`, and `lookup` to assignment validation exceptions
+
+### 0.5.5
+
+**Comprehensive Summarize & MV-Expand Fixes:**
+- Fixed `count_` column recognition (created by `count()` without assignment)
+- Fixed string literal columns in summarize: `["Events Recorded"] = count()`
+- Fixed tracking of columns created by `make_set()`, `make_list()` in summarize
+- Fixed `mv-expand` column tracking: both `ColName = ArrayCol` and simple `mv-expand ArrayCol`
+- Fixed `project-away` operator - now skips validation entirely
+- Added automatic column name detection for unassigned aggregations: `sum_`, `avg_`, `max_`, `min_`
+
+**Technical Details:**
+- Enhanced summarize parsing to detect default column names (`count_`, `sum_`, etc.)
+- Added string literal column extraction: `/\["([^"]+)"\]\s*=/gi`
+- Improved mv-expand column tracking with assignment and simple forms
+- project-away now skips validation like lookup and mv-expand
 
 ### 0.5.4
 
