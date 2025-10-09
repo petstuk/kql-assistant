@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.5.1.vsix
+     code --install-extension kql-assistant-0.5.2.vsix
      ```
 
 ## Usage
@@ -111,24 +111,30 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
 
 When working with multiple queries in a single `.kql` or `.kusto` file, the extension tracks each query's context separately. To ensure proper validation, **separate your queries** using one of these methods:
 
-- **Blank line** - Leave an empty line between queries
+- **Markdown headers** ⭐ **Recommended** - Use `## Header ##` to organize query sections
 - **Comment line** - Use `//` comments to separate queries  
-- **Markdown headers** - Use `# Header` or `## Header` to organize query sections
+- **Blank line** - Leave an empty line between queries
 
-**Example:**
+**Best Practice Example:**
 ```kql
 ## User Identity Query ##
+
 IdentityInfo
 | where AccountUPN contains "user@domain.com"
 | project AccountUPN, AccountDisplayName
 
+
 ## Security Log Query ##
+
 CommonSecurityLog
 | where TimeGenerated > ago(1d)
 | project TimeGenerated, SourceIP, DestinationIP
 ```
 
-> **💡 Tip:** Each query automatically resets its table and column context, so you won't get false errors about columns from previous queries!
+> **💡 Pro Tips:**
+> - Always use markdown headers (`##`) for file titles and section names
+> - Each query automatically resets its table and column context
+> - Never start your file with plain text (use `## Title ##` instead)
 
 ### Code Snippets
 
@@ -318,6 +324,19 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.5.2
+
+**Critical Bug Fix:**
+- Fixed false detection of random text as table names (e.g., "Useful" in "Useful KQL Queries")
+- Table names now require either: valid schema match OR pipe operator following them
+- Improved file organization: markdown headers now properly recommended as best practice
+- Updated documentation with clear examples of proper query separation
+
+**Documentation Updates:**
+- Added "Best Practice" example showing proper file organization with markdown headers
+- Emphasized using `## Header ##` format for file titles and section names
+- Added pro tips: never start files with plain text, always use markdown headers
 
 ### 0.5.1
 

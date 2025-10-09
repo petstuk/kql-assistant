@@ -160,9 +160,10 @@ export class KqlSyntaxChecker {
             
             // Check for table name at start of query ONLY (not continuation lines)
             // A new table indicates a new query if:
-            // 1. It's the first line (lineNum === 0)
+            // 1. It's the first line (lineNum === 0) OR
             // 2. Previous line was empty/comment/markdown header (starts new query block)
             // 3. Not inside a multi-line operator
+            // 4. Must be followed by pipe operator (to distinguish from random text)
             const tableMatch = line.match(/^([^\S\r\n]{0,2})([A-Z]\w+)(\s*\||$)/);
             
             const previousLineEmpty = lineNum === 0 || 
@@ -173,27 +174,34 @@ export class KqlSyntaxChecker {
             if (tableMatch && !inMultiLineOperator && previousLineEmpty) {
                 const tableName = tableMatch[2];
                 
-                // This is a NEW query - reset all context
-                currentTable = tableName;
-                joinedTables.clear();
-                joinedTables.add(tableName);
-                createdColumns.clear();
-                hasSummarize = false;
-                inMultiLineOperator = false;
+                // Only treat as table if it's actually a valid table (not random text like "Useful")
+                // OR if it's followed by a pipe operator (strong indicator it's a query)
+                const hasPipe = tableMatch[3].trim().startsWith('|');
+                const isValidTable = this.schemaValidator!.validateTableExists(tableName);
                 
-                if (!this.schemaValidator!.validateTableExists(tableName)) {
-                    const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
-                    const message = suggestion 
-                        ? `Unknown table '${tableName}'. Did you mean '${suggestion}'?`
-                        : `Unknown table '${tableName}'`;
+                if (isValidTable || hasPipe) {
+                    // This is a NEW query - reset all context
+                    currentTable = tableName;
+                    joinedTables.clear();
+                    joinedTables.add(tableName);
+                    createdColumns.clear();
+                    hasSummarize = false;
+                    inMultiLineOperator = false;
                     
-                    errors.push({
-                        line: lineNum,
-                        column: tableMatch[1].length,
-                        length: tableName.length,
-                        message: message
-                    });
-                    currentTable = undefined; // Don't validate columns if table is unknown
+                    if (!isValidTable) {
+                        const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
+                        const message = suggestion 
+                            ? `Unknown table '${tableName}'. Did you mean '${suggestion}'?`
+                            : `Unknown table '${tableName}'`;
+                        
+                        errors.push({
+                            line: lineNum,
+                            column: tableMatch[1].length,
+                            length: tableName.length,
+                            message: message
+                        });
+                        currentTable = undefined; // Don't validate columns if table is unknown
+                    }
                 }
             }
             
