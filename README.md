@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.5.0.vsix
+     code --install-extension kql-assistant-0.5.1.vsix
      ```
 
 ## Usage
@@ -106,6 +106,29 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
 1. Open any file with `.kql` or `.kusto` extension
 2. The extension will automatically activate and provide syntax highlighting
 3. Syntax errors will be underlined in real-time as you type
+
+### 📋 Organizing Multiple Queries in One File
+
+When working with multiple queries in a single `.kql` or `.kusto` file, the extension tracks each query's context separately. To ensure proper validation, **separate your queries** using one of these methods:
+
+- **Blank line** - Leave an empty line between queries
+- **Comment line** - Use `//` comments to separate queries  
+- **Markdown headers** - Use `# Header` or `## Header` to organize query sections
+
+**Example:**
+```kql
+## User Identity Query ##
+IdentityInfo
+| where AccountUPN contains "user@domain.com"
+| project AccountUPN, AccountDisplayName
+
+## Security Log Query ##
+CommonSecurityLog
+| where TimeGenerated > ago(1d)
+| project TimeGenerated, SourceIP, DestinationIP
+```
+
+> **💡 Tip:** Each query automatically resets its table and column context, so you won't get false errors about columns from previous queries!
 
 ### Code Snippets
 
@@ -295,6 +318,14 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.5.1
+
+**Critical Bug Fix:**
+- Fixed query context bleeding across multiple queries in the same file
+- Each query now properly resets table/column context when separated by blank lines or markdown headers
+- Previously, columns from the first query's table were incorrectly validated against subsequent queries' tables
+- Improved detection of new query starts: now recognizes queries after empty lines, comments, or markdown headers
 
 ### 0.5.0
 

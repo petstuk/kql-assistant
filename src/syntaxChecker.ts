@@ -159,15 +159,27 @@ export class KqlSyntaxChecker {
             }
             
             // Check for table name at start of query ONLY (not continuation lines)
-            // Table names must be at the start of the line (no leading whitespace) or after minimal indent
+            // A new table indicates a new query if:
+            // 1. It's the first line (lineNum === 0)
+            // 2. Previous line was empty/comment/markdown header (starts new query block)
+            // 3. Not inside a multi-line operator
             const tableMatch = line.match(/^([^\S\r\n]{0,2})([A-Z]\w+)(\s*\||$)/);
-            if (tableMatch && !inMultiLineOperator && lineNum === 0 || (tableMatch && !inMultiLineOperator && lines[lineNum - 1]?.trim() === '')) {
+            
+            const previousLineEmpty = lineNum === 0 || 
+                                      lines[lineNum - 1]?.trim() === '' || 
+                                      lines[lineNum - 1]?.trim().startsWith('//') ||
+                                      lines[lineNum - 1]?.trim().startsWith('#');
+            
+            if (tableMatch && !inMultiLineOperator && previousLineEmpty) {
                 const tableName = tableMatch[2];
+                
+                // This is a NEW query - reset all context
                 currentTable = tableName;
                 joinedTables.clear();
                 joinedTables.add(tableName);
                 createdColumns.clear();
                 hasSummarize = false;
+                inMultiLineOperator = false;
                 
                 if (!this.schemaValidator!.validateTableExists(tableName)) {
                     const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
