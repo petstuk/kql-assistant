@@ -9,5 +9,6 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 testingschemas/**
+icon/**
 *.pdf
 node_modules/**

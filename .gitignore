@@ -7,3 +7,4 @@ node_modules
 *.log
 .vscode-test-web/
 *.vsix.sig
+icon/

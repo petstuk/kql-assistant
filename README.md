@@ -1,6 +1,12 @@
-# KQL Assistant
+<div align="center">
+  <img src="icon.png" alt="KQL Assistant Logo" width="128"/>
+  
+  # KQL Assistant
+  
+  A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax checking, highlighting, and language support.
+</div>
 
-A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax checking, highlighting, and language support.
+---
 
 ## Features
 
@@ -92,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.4.0.vsix
+     code --install-extension kql-assistant-0.4.1.vsix
      ```
 
 ## Usage
@@ -289,6 +295,10 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.4.1
+
+- Added extension icon for VS Code Marketplace
 
 ### 0.4.0
 
