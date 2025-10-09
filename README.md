@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.4.3.vsix
+     code --install-extension kql-assistant-0.5.0.vsix
      ```
 
 ## Usage
@@ -296,9 +296,9 @@ Built with research from official [KQL documentation](https://learn.microsoft.co
 
 ## Release Notes
 
-### 0.4.3
+### 0.5.0
 
-**Critical Bug Fixes:**
+**New Features & Critical Bug Fixes:**
 - Fixed false positive error where multi-line `project` statement columns (e.g., `SourceUserName`) were incorrectly flagged as "Unknown table"
 - Added full support for `join` operations - columns from ALL joined tables are now properly validated
 - Fixed validation to check columns across all joined tables instead of just the primary table
