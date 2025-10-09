@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Kusto Query Language (KQL) syntax checking and language support",
-  "version": "0.4.21",
+  "version": "0.4.3",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {

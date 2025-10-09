@@ -98,7 +98,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.4.21.vsix
+     code --install-extension kql-assistant-0.4.3.vsix
      ```
 
 ## Usage
@@ -295,6 +295,21 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.4.3
+
+**Critical Bug Fixes:**
+- Fixed false positive error where multi-line `project` statement columns (e.g., `SourceUserName`) were incorrectly flagged as "Unknown table"
+- Added full support for `join` operations - columns from ALL joined tables are now properly validated
+- Fixed validation to check columns across all joined tables instead of just the primary table
+- Improved multi-line operator detection to prevent continuation lines from being misidentified as table names
+- Enhanced error messages for joined queries to show all relevant table names
+
+**Technical Details:**
+- Implemented join tracking with `joinedTables` Set to maintain schema context across join operations
+- Fixed regex pattern for table detection to exclude indented continuation lines
+- Updated column validation to check columns in any of the joined tables
+- Join regex now handles various join syntaxes: `| join kind=leftouter (TableName)` and `| join TableName`
 
 ### 0.4.21
 

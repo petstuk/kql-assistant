@@ -131,8 +131,10 @@ export class KqlSyntaxChecker {
     private checkTableAndColumns(text: string, errors: SyntaxError[]): void {
         const lines = text.split('\n');
         let currentTable: string | undefined;
+        let joinedTables: Set<string> = new Set(); // Track all tables in current join chain
         let createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize
         let hasSummarize = false; // Track if we've seen a summarize (creates new schema)
+        let inMultiLineOperator = false; // Track if we're in a multi-line operator (project/summarize/extend)
         
         for (let lineNum = 0; lineNum < lines.length; lineNum++) {
             const line = lines[lineNum];
@@ -148,11 +150,22 @@ export class KqlSyntaxChecker {
                 continue;
             }
             
-            // Check for table name at start of query or after union
-            const tableMatch = line.match(/^(\s*)([A-Z]\w+)(\s*\||$)/);
-            if (tableMatch) {
+            // Track multi-line operators
+            if (/\|\s*(?:project|summarize|extend)\b/i.test(line)) {
+                inMultiLineOperator = true;
+            } else if (trimmedLine.startsWith('|') && !/^\s+/.test(line)) {
+                // New pipe operator resets multi-line context
+                inMultiLineOperator = false;
+            }
+            
+            // Check for table name at start of query ONLY (not continuation lines)
+            // Table names must be at the start of the line (no leading whitespace) or after minimal indent
+            const tableMatch = line.match(/^([^\S\r\n]{0,2})([A-Z]\w+)(\s*\||$)/);
+            if (tableMatch && !inMultiLineOperator && lineNum === 0 || (tableMatch && !inMultiLineOperator && lines[lineNum - 1]?.trim() === '')) {
                 const tableName = tableMatch[2];
                 currentTable = tableName;
+                joinedTables.clear();
+                joinedTables.add(tableName);
                 createdColumns.clear();
                 hasSummarize = false;
                 
@@ -192,6 +205,16 @@ export class KqlSyntaxChecker {
                 }
             }
             
+            // Track join operations - adds columns from the joined table
+            const joinMatch = line.match(/\|\s*join\s+(?:kind\s*=\s*\w+\s+)?\(?(\w+)\)?/i);
+            if (joinMatch) {
+                const joinedTableName = joinMatch[1];
+                // Check if it's a valid table (not a keyword like 'kind')
+                if (this.schemaValidator!.validateTableExists(joinedTableName)) {
+                    joinedTables.add(joinedTableName);
+                }
+            }
+            
             // Track columns created by extend: | extend NewCol = ...
             if (/\|\s*extend\b/i.test(line)) {
                 const extendMatches = line.matchAll(/extend\s+([A-Z_]\w*)\s*=/gi);
@@ -212,12 +235,12 @@ export class KqlSyntaxChecker {
             
             // Validate columns if we know the current table
             if (currentTable && this.schemaValidator!.validateTableExists(currentTable)) {
-                this.validateColumnsInLine(line, lineNum, currentTable, createdColumns, hasSummarize, errors);
+                this.validateColumnsInLine(line, lineNum, currentTable, joinedTables, createdColumns, hasSummarize, errors);
             }
         }
     }
 
-    private validateColumnsInLine(line: string, lineNum: number, tableName: string, createdColumns: Set<string>, hasSummarize: boolean, errors: SyntaxError[]): void {
+    private validateColumnsInLine(line: string, lineNum: number, tableName: string, joinedTables: Set<string>, createdColumns: Set<string>, hasSummarize: boolean, errors: SyntaxError[]): void {
         // Skip if line has comments
         let cleanLine = line;
         if (line.includes('//')) {
@@ -237,26 +260,26 @@ export class KqlSyntaxChecker {
         if (hasWhere) {
             // Validate columns in where clause: where ColumnName ==, !=, <, >, etc.
             const wherePattern = /\bwhere\s+([A-Z_]\w*)\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
-            this.validateColumnsWithPattern(cleanLine, wherePattern, line, lineNum, tableName, createdColumns, errors);
+            this.validateColumnsWithPattern(cleanLine, wherePattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasProject || isContinuationLine) {
             // Validate all column-like identifiers in project statements
             // Match identifiers that are: start of word, optional comma before, optional comma/whitespace after
             const projectPattern = /\b([A-Z_]\w*)(?:\s*[,\s]|$)/gi;
-            this.validateColumnsWithPattern(cleanLine, projectPattern, line, lineNum, tableName, createdColumns, errors);
+            this.validateColumnsWithPattern(cleanLine, projectPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasExtend) {
             // In extend, validate columns on the right side of =
             const extendPattern = /=\s*([A-Z_]\w*)/gi;
-            this.validateColumnsWithPattern(cleanLine, extendPattern, line, lineNum, tableName, createdColumns, errors);
+            this.validateColumnsWithPattern(cleanLine, extendPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasLocalSummarize) {
             // Validate columns after 'by' keyword in summarize
             const byPattern = /\bby\s+([A-Z_]\w*)/gi;
-            this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, tableName, createdColumns, errors);
+            this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasOrderBy) {
@@ -264,13 +287,13 @@ export class KqlSyntaxChecker {
             if (!hasSummarize) {
                 // Only validate if we haven't seen a summarize yet
                 const byPattern = /\bby\s+([A-Z_]\w*)/gi;
-                this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, tableName, createdColumns, errors);
+                this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, joinedTables, createdColumns, errors);
             }
             // If after summarize, don't validate - those are aggregated columns
         }
     }
     
-    private validateColumnsWithPattern(cleanLine: string, pattern: RegExp, originalLine: string, lineNum: number, tableName: string, createdColumns: Set<string>, errors: SyntaxError[]): void {
+    private validateColumnsWithPattern(cleanLine: string, pattern: RegExp, originalLine: string, lineNum: number, joinedTables: Set<string>, createdColumns: Set<string>, errors: SyntaxError[]): void {
         const matches = cleanLine.matchAll(pattern);
         for (const match of matches) {
             const columnName = match[1];
@@ -292,13 +315,31 @@ export class KqlSyntaxChecker {
                 continue;
             }
             
-            // Validate column exists in table
-            if (!this.schemaValidator!.validateColumn(tableName, columnName)) {
-                const similarColumn = this.findSimilarColumn(tableName, columnName);
+            // Check if column exists in ANY of the joined tables
+            let columnFound = false;
+            let foundInTable = '';
+            
+            for (const tableName of joinedTables) {
+                if (this.schemaValidator!.validateColumn(tableName, columnName)) {
+                    columnFound = true;
+                    foundInTable = tableName;
+                    break;
+                }
+            }
+            
+            // If column not found in any table, report error
+            if (!columnFound) {
+                // Try to find similar column in the primary table (first in set)
+                const primaryTable = Array.from(joinedTables)[0];
+                const similarColumn = this.findSimilarColumn(primaryTable, columnName);
+                
+                const tableList = joinedTables.size > 1 
+                    ? `tables '${Array.from(joinedTables).join(', ')}'`
+                    : `table '${primaryTable}'`;
                 
                 const message = similarColumn
-                    ? `Unknown column '${columnName}' in table '${tableName}'. Did you mean '${similarColumn}'?`
-                    : `Unknown column '${columnName}' in table '${tableName}'`;
+                    ? `Unknown column '${columnName}' in ${tableList}. Did you mean '${similarColumn}'?`
+                    : `Unknown column '${columnName}' in ${tableList}`;
                 
                 const columnIndex = originalLine.indexOf(columnName);
                 if (columnIndex !== -1) {
