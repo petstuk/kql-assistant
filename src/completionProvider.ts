@@ -1,7 +1,58 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+
+interface ColumnSchema {
+    type: string;
+    description: string;
+}
+
+interface TableSchema {
+    tableName: string;
+    description: string;
+    columns: { [key: string]: ColumnSchema };
+}
 
 export class KqlCompletionProvider implements vscode.CompletionItemProvider {
-    
+    private schemas: Map<string, TableSchema> = new Map();
+    private tableNamesLower: Map<string, string> = new Map();
+    private extensionPath: string = '';
+
+    constructor(extensionPath?: string) {
+        if (extensionPath) {
+            this.extensionPath = extensionPath;
+            this.loadSchemas();
+        }
+    }
+
+    public setExtensionPath(extensionPath: string): void {
+        this.extensionPath = extensionPath;
+        this.loadSchemas();
+    }
+
+    private loadSchemas(): void {
+        try {
+            const schemasPath = path.join(this.extensionPath, 'schemas', 'all-tables.json');
+            
+            if (!fs.existsSync(schemasPath)) {
+                console.warn('Completion provider: Schema file not found:', schemasPath);
+                return;
+            }
+
+            const schemasData = fs.readFileSync(schemasPath, 'utf8');
+            const schemasJson = JSON.parse(schemasData);
+
+            for (const [tableName, schema] of Object.entries(schemasJson)) {
+                this.schemas.set(tableName, schema as TableSchema);
+                this.tableNamesLower.set(tableName.toLowerCase(), tableName);
+            }
+
+            console.log(`Completion provider loaded ${this.schemas.size} table schemas`);
+        } catch (error) {
+            console.error('Completion provider failed to load schemas:', error);
+        }
+    }
+
     provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -12,17 +63,25 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         const linePrefix = document.lineAt(position).text.substring(0, position.character);
         const completions: vscode.CompletionItem[] = [];
 
+        // Detect current table from document context
+        const currentTable = this.detectCurrentTable(document, position);
+
         // Check context
         const afterPipe = /\|\s*\w*$/.test(linePrefix);
         const startOfLine = /^\s*\w*$/.test(linePrefix);
-        const afterWhere = /\|\s*where\s+\w*$/.test(linePrefix);
-        const afterFieldName = /\|\s*where\s+\w+\s+\w*$/.test(linePrefix);
-        const afterComparisonOp = /\|\s*where\s+\w+\s+(==|!=|=~|!~|>|<|>=|<=|contains|startswith|endswith|has|in|between)\s+\w*$/.test(linePrefix);
-        const inSummarize = /\|\s*summarize\s/.test(linePrefix) && !linePrefix.endsWith('by ');
-        const afterBy = /\bby\s+\w*$/.test(linePrefix);
-        const inExtend = /\|\s*extend\s/.test(linePrefix);
-        const inLet = /^\s*let\s/.test(linePrefix);
-        const afterRender = /\|\s*render\s+\w*$/.test(linePrefix);
+        const afterWhere = /\|\s*where\s+\w*$/i.test(linePrefix);
+        const afterFieldName = /\|\s*where\s+\w+\s+\w*$/i.test(linePrefix);
+        const afterComparisonOp = /\|\s*where\s+\w+\s+(==|!=|=~|!~|>|<|>=|<=|contains|startswith|endswith|has|in|between)\s+\w*$/i.test(linePrefix);
+        const inSummarize = /\|\s*summarize\s/i.test(linePrefix) && !/\bby\s+\w*$/i.test(linePrefix);
+        const afterBy = /\bby\s+\w*$/i.test(linePrefix);
+        const inExtend = /\|\s*extend\s/i.test(linePrefix);
+        const inLet = /^\s*let\s/i.test(linePrefix);
+        const afterRender = /\|\s*render\s+\w*$/i.test(linePrefix);
+        const inProject = /\|\s*project\s+/i.test(linePrefix) || /\|\s*project-away\s+/i.test(linePrefix);
+        const afterOrder = /\|\s*(order|sort)\s+by\s+\w*$/i.test(linePrefix);
+
+        // Context where column suggestions are most helpful
+        const wantsColumns = afterWhere || afterBy || inProject || afterOrder;
 
         if (startOfLine && !afterPipe) {
             // At start of line - suggest let, table names, or table operators
@@ -41,22 +100,124 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         } else if (afterFieldName) {
             // After field name in where clause - suggest comparison operators
             completions.push(...this.getComparisonOperatorCompletions());
+        } else if (wantsColumns && currentTable) {
+            // After 'where', 'by', 'project', 'order by' - suggest columns from current table
+            completions.push(...this.getColumnCompletions(currentTable, linePrefix));
         } else if (afterWhere || afterBy) {
-            // Right after 'where' or 'by' - don't suggest operators, user needs to type field name
-            // Could suggest common field names here in the future
+            // Fallback if we don't have table context - return empty
             return [];
         } else if (inLet) {
             // Inside let statement - suggest scalar functions
             completions.push(...this.getScalarFunctionCompletions());
         } else if (inSummarize) {
-            // Inside summarize - suggest aggregation functions only
+            // Inside summarize - suggest aggregation functions AND columns for grouping
             completions.push(...this.getAggregationFunctionCompletions());
+            if (currentTable) {
+                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            }
         } else if (inExtend) {
-            // Inside extend - suggest scalar functions only
+            // Inside extend - suggest scalar functions AND columns
             completions.push(...this.getScalarFunctionCompletions());
+            if (currentTable) {
+                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            }
         } else {
             // General context - suggest scalar functions (not aggregations outside summarize)
             completions.push(...this.getScalarFunctionCompletions());
+            // Also suggest columns if we have table context
+            if (currentTable) {
+                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            }
+        }
+
+        return completions;
+    }
+
+    /**
+     * Detect the current table being queried by scanning backwards from the cursor position
+     */
+    private detectCurrentTable(document: vscode.TextDocument, position: vscode.Position): string | undefined {
+        // Scan backwards from current position to find the table name
+        for (let lineNum = position.line; lineNum >= 0; lineNum--) {
+            const lineText = document.lineAt(lineNum).text;
+            
+            // Skip empty lines
+            if (lineText.trim() === '') continue;
+            
+            // Skip comment lines
+            if (lineText.trim().startsWith('//') || lineText.trim().startsWith('#')) continue;
+            
+            // Skip markdown headers (query separator)
+            if (/^#{1,6}\s/.test(lineText.trim())) {
+                // Hit a section boundary - no table found
+                return undefined;
+            }
+            
+            // Check if this line starts with a table name (not a pipe)
+            const trimmed = lineText.trim();
+            if (!trimmed.startsWith('|') && !trimmed.startsWith('let ')) {
+                // First word might be a table name
+                const firstWord = trimmed.split(/[\s|]/)[0];
+                
+                // Check if it's a valid table in our schema
+                if (this.tableNamesLower.has(firstWord.toLowerCase())) {
+                    return this.tableNamesLower.get(firstWord.toLowerCase());
+                }
+                
+                // Check if it looks like a table (PascalCase, no special chars)
+                if (/^[A-Z][a-zA-Z0-9]*$/.test(firstWord)) {
+                    return firstWord;
+                }
+            }
+            
+            // Also check for join statements - extract table from join
+            const joinMatch = lineText.match(/\|\s*join\s+(?:kind\s*=\s*\w+\s+)?\(\s*([A-Za-z][A-Za-z0-9]*)/i);
+            if (joinMatch) {
+                // We found a join - the original table is still valid
+                continue;
+            }
+        }
+        
+        return undefined;
+    }
+
+    /**
+     * Get column completions for a specific table
+     */
+    private getColumnCompletions(tableName: string, linePrefix: string): vscode.CompletionItem[] {
+        const schema = this.schemas.get(tableName);
+        if (!schema) {
+            // Try case-insensitive lookup
+            const actualName = this.tableNamesLower.get(tableName.toLowerCase());
+            if (actualName) {
+                return this.getColumnCompletions(actualName, linePrefix);
+            }
+            return [];
+        }
+
+        // Get the partial column name being typed (if any)
+        const partialMatch = linePrefix.match(/(\w*)$/);
+        const partial = partialMatch ? partialMatch[1].toLowerCase() : '';
+
+        const completions: vscode.CompletionItem[] = [];
+        
+        for (const [colName, colSchema] of Object.entries(schema.columns)) {
+            // Filter by partial match if user is typing
+            if (partial && !colName.toLowerCase().startsWith(partial)) {
+                continue;
+            }
+
+            const item = new vscode.CompletionItem(colName, vscode.CompletionItemKind.Field);
+            item.detail = `${colSchema.type} - ${tableName}`;
+            item.documentation = new vscode.MarkdownString(
+                `**${colName}** (\`${colSchema.type}\`)\n\n${colSchema.description || 'No description available.'}\n\n*Table: ${tableName}*`
+            );
+            item.insertText = colName;
+            
+            // Set sort priority - columns should appear before functions
+            item.sortText = `0_${colName}`;
+            
+            completions.push(item);
         }
 
         return completions;

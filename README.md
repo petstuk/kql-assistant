@@ -57,12 +57,31 @@
   - 60+ additional scalar functions
   - Context-aware suggestions
 
-- **Semantic Analysis** (NEW in v0.4.0):
+- **Semantic Analysis**:
   - Validates table and column names against 718 Log Analytics schemas
   - Detects unknown tables/columns with "Did you mean?" suggestions
   - Real-time validation as you type
   - Schema-based validation from official Microsoft documentation
   - Works completely offline
+
+- **Context-Aware Column Suggestions** ⭐ NEW in v0.6.0:
+  - Auto-complete suggests columns from your current table
+  - Works in `where`, `project`, `extend`, `summarize`, `order by` and more
+  - Shows column type and description from schema
+  - 718 tables with full column definitions
+
+- **Query Formatting** ⭐ NEW in v0.6.0:
+  - Format Document (`Shift+Alt+F`) for KQL files
+  - Consistent pipe indentation
+  - Proper spacing around operators
+  - Comma and comparison operator normalization
+
+- **Quick Fixes (Code Actions)** ⭐ NEW in v0.6.0:
+  - 💡 Click the lightbulb for auto-fix suggestions
+  - SQL-to-KQL migration: `SELECT` → `project`, `FROM` → remove
+  - Typo fixes: "Did you mean 'Computer'?" → one-click fix
+  - Missing brackets: auto-close suggestions
+  - Missing pipe operators: auto-add `|` prefix
 
 ## Installation
 
@@ -98,7 +117,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.5.6.vsix
+     code --install-extension kql-assistant-0.6.0.vsix
      ```
 
 ## Usage
@@ -206,6 +225,37 @@ bin(TimeGenerated, 1h)
     Shows which parameter you're entering
 ```
 
+### 🔧 Format Document
+
+Format your KQL queries with proper indentation and spacing:
+1. Open a KQL file
+2. Press `Shift+Alt+F` (or right-click → Format Document)
+3. Your query will be formatted with:
+   - Consistent pipe operator indentation
+   - Proper spacing around operators (`==`, `!=`, etc.)
+   - Comma normalization
+
+**Before:**
+```kql
+SecurityEvent|where EventID==4625|project TimeGenerated,Account,Computer
+```
+
+**After:**
+```kql
+SecurityEvent
+| where EventID == 4625
+| project TimeGenerated, Account, Computer
+```
+
+### 💡 Quick Fixes
+
+When you see a lightbulb 💡 or squiggly underline, click it for auto-fix options:
+
+- **SQL Migration:** `SELECT Account` → `project Account`
+- **Typo Fixes:** `Computr` → `Computer` (one click!)
+- **Missing Pipes:** `where x > 5` → `| where x > 5`
+- **Unclosed Brackets:** Add missing `)`, `]`, or `}`
+
 ### Manual Syntax Check
 
 You can manually trigger a syntax check using the command palette:
@@ -299,9 +349,9 @@ StormEvents
 Help is especially welcome in these areas:
 - **Reducing false positives** in syntax checking
 - **Adding more KQL functions** to auto-completion
-- **Field name suggestions** (context-aware column names)
-- **Schema validation** (checking if tables/columns exist)
-- **Query formatting** (prettify KQL queries)
+- **Custom workspace schemas** (user-defined table definitions)
+- **Performance hints** (query optimization suggestions)
+- **Query execution** (run queries directly from VS Code)
 - **Performance optimizations**
 - **Documentation improvements**
 
@@ -324,6 +374,38 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.6.0 - "The Productivity Release" 🚀
+
+**Three Major New Features:**
+
+**1. Context-Aware Column Auto-Complete**
+- Type after `where`, `project`, `extend`, `summarize`, or `order by` to see column suggestions
+- Columns are filtered based on your current table (from 718 Log Analytics schemas)
+- Each suggestion shows column type and description
+- Sort priority ensures columns appear before functions
+
+**2. Query Formatting**
+- Press `Shift+Alt+F` or right-click → "Format Document"
+- Automatically formats your KQL with:
+  - Proper pipe operator indentation
+  - Consistent spacing around comparison operators
+  - Comma normalization (space after, none before)
+  - Multi-space cleanup
+- Also supports "Format Selection" for partial formatting
+
+**3. Quick Fixes (Code Actions)**
+- Click the 💡 lightbulb for instant fixes
+- SQL-to-KQL migration fixes: `SELECT` → `project`, `ORDER BY` → `order by`
+- One-click typo fixes from "Did you mean?" suggestions
+- Auto-add missing pipe operators
+- Auto-close unclosed brackets
+
+**Technical Changes:**
+- New `KqlFormattingProvider` for document formatting
+- New `KqlCodeActionProvider` for quick fixes
+- Enhanced `KqlCompletionProvider` with schema-aware column suggestions
+- Completion provider now loads 718 table schemas for column lookup
 
 ### 0.5.6
 
