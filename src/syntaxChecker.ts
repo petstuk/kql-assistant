@@ -28,11 +28,25 @@ export class KqlSyntaxChecker {
     private readonly scalarFunctions = new Set([
         'ago', 'array_length', 'bin', 'case', 'datetime', 'dayofweek', 'endofday',
         'endofmonth', 'endofweek', 'endofyear', 'extract', 'format_datetime', 'format_timespan',
-        'getmonth', 'getyear', 'hourofday', 'iff', 'indexof', 'isempty', 'isnotempty',
+        'getmonth', 'getyear', 'hourofday', 'iff', 'iif', 'indexof', 'isempty', 'isnotempty',
         'isnotnull', 'isnull', 'now', 'parse_json', 'parse_xml', 'replace', 'split',
         'startofday', 'startofmonth', 'startofweek', 'startofyear', 'strcat', 'strcat_delim',
         'strlen', 'substring', 'timespan', 'tostring', 'tolower', 'toupper', 'trim',
-        'trim_end', 'trim_start', 'toint', 'tolong', 'todouble', 'todecimal', 'tobool'
+        'trim_end', 'trim_start', 'toint', 'tolong', 'todouble', 'todecimal', 'tobool',
+        // Common functions that should be skipped in column validation
+        'coalesce', 'pack', 'pack_all', 'bag_pack', 'dynamic', 'parse_url', 'parse_urlquery',
+        'parse_path', 'parse_user_agent', 'parse_version', 'parse_csv', 'hash', 'hash_sha256',
+        'hash_md5', 'base64_encode_tostring', 'base64_decode_tostring', 'url_encode', 'url_decode',
+        'geo_distance_2points', 'geo_point_in_circle', 'ipv4_is_private', 'ipv4_is_in_range',
+        'array_concat', 'array_slice', 'array_index_of', 'array_sum', 'bag_keys', 'bag_merge',
+        'row_number', 'row_rank', 'prev', 'next', 'todynamic', 'toguid', 'totimespan',
+        'format_bytes', 'format_ipv4', 'format_ipv4_mask', 'has_any_ipv4', 'has_any_ipv4_prefix',
+        'ipv4_compare', 'ipv4_is_match', 'ipv6_compare', 'ipv6_is_match', 'parse_ipv4', 'parse_ipv6',
+        'translate', 'reverse', 'repeat', 'replace_regex', 'replace_string', 'replace_strings',
+        'trim_regex', 'unicode_codepoints_from_string', 'unicode_codepoints_to_string',
+        'weekofyear', 'monthofyear', 'dayofyear', 'datetime_add', 'datetime_diff', 'datetime_part',
+        'make_datetime', 'make_timespan', 'todatetime', 'unixtime_microseconds_todatetime',
+        'unixtime_milliseconds_todatetime', 'unixtime_nanoseconds_todatetime', 'unixtime_seconds_todatetime'
     ]);
 
     public setSchemaValidator(validator: KqlSchemaValidator): void {
@@ -209,23 +223,65 @@ export class KqlSyntaxChecker {
                 }
             }
             
-            // Check table names after union
-            const unionMatch = line.match(/union\s+([A-Z]\w+)/i);
-            if (unionMatch) {
-                const tableName = unionMatch[1];
-                if (!this.schemaValidator!.validateTableExists(tableName)) {
-                    const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
-                    const message = suggestion 
-                        ? `Unknown table '${tableName}'. Did you mean '${suggestion}'?`
-                        : `Unknown table '${tableName}'`;
+            // Check table names after union - handles: union Table1, Table2 or union withsource=X Table1, Table2
+            const unionLineMatch = line.match(/\bunion\b/i);
+            if (unionLineMatch) {
+                // Reset context for union - we'll track all tables
+                currentTable = undefined;
+                joinedTables.clear();
+                createdColumns.clear();
+                hasSummarize = false;
+                
+                // Extract all table names from union (skip parameters like withsource=)
+                // Pattern: skip 'union', skip parameters (word=value), find PascalCase table names
+                const afterUnion = line.substring(line.toLowerCase().indexOf('union') + 5);
+                
+                // Handle withsource=ColumnName parameter - creates a new column
+                const withSourceMatch = afterUnion.match(/\bwithsource\s*=\s*(\w+)/i);
+                if (withSourceMatch) {
+                    createdColumns.add(withSourceMatch[1]); // SourceTable column is created
+                }
+                
+                // Find all table names (PascalCase words that aren't parameters)
+                const tablePattern = /\b([A-Z][a-zA-Z0-9]*)\b/g;
+                let tableMatch;
+                while ((tableMatch = tablePattern.exec(afterUnion)) !== null) {
+                    const potentialTable = tableMatch[1];
                     
-                    const index = line.indexOf(tableName);
-                    errors.push({
-                        line: lineNum,
-                        column: index,
-                        length: tableName.length,
-                        message: message
-                    });
+                    // Skip if it's a parameter value (preceded by =)
+                    const beforeMatch = afterUnion.substring(0, tableMatch.index);
+                    if (beforeMatch.trimEnd().endsWith('=')) {
+                        continue;
+                    }
+                    
+                    // Skip common keywords/parameters
+                    if (['withsource', 'isfuzzy', 'kind'].includes(potentialTable.toLowerCase())) {
+                        continue;
+                    }
+                    
+                    // Check if it's a valid table
+                    if (this.schemaValidator!.validateTableExists(potentialTable)) {
+                        joinedTables.add(potentialTable);
+                        if (!currentTable) {
+                            currentTable = potentialTable; // First table becomes primary
+                        }
+                    } else {
+                        // Report unknown table
+                        const suggestion = this.schemaValidator!.suggestSimilarTable(potentialTable);
+                        const message = suggestion 
+                            ? `Unknown table '${potentialTable}'. Did you mean '${suggestion}'?`
+                            : `Unknown table '${potentialTable}'`;
+                        
+                        const index = line.indexOf(potentialTable);
+                        if (index !== -1) {
+                            errors.push({
+                                line: lineNum,
+                                column: index,
+                                length: potentialTable.length,
+                                message: message
+                            });
+                        }
+                    }
                 }
             }
             
@@ -336,26 +392,28 @@ export class KqlSyntaxChecker {
         
         if (hasWhere) {
             // Validate columns in where clause: where ColumnName ==, !=, <, >, etc.
-            const wherePattern = /\bwhere\s+([A-Z_]\w*)\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
+            // Skip function calls (words followed by parentheses)
+            const wherePattern = /\bwhere\s+([A-Z_]\w*)(?!\s*\()\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
             this.validateColumnsWithPattern(cleanLine, wherePattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasProject || isContinuationLine) {
             // Validate all column-like identifiers in project statements
-            // Match identifiers that are: start of word, optional comma before, optional comma/whitespace after
-            const projectPattern = /\b([A-Z_]\w*)(?:\s*[,\s]|$)/gi;
+            // Match identifiers that are: start of word, NOT followed by (, optional comma/whitespace after
+            const projectPattern = /\b([A-Z_]\w*)(?!\s*\()(?:\s*[,\s]|$)/gi;
             this.validateColumnsWithPattern(cleanLine, projectPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasExtend) {
-            // In extend, validate columns on the right side of =
-            const extendPattern = /=\s*([A-Z_]\w*)/gi;
+            // In extend, validate columns on the right side of = but NOT function calls
+            // Match column names that are NOT followed by ( (which would be a function call)
+            const extendPattern = /=\s*([A-Z_]\w*)(?!\s*\()/gi;
             this.validateColumnsWithPattern(cleanLine, extendPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasLocalSummarize) {
-            // Validate columns after 'by' keyword in summarize
-            const byPattern = /\bby\s+([A-Z_]\w*)/gi;
+            // Validate columns after 'by' keyword in summarize (skip function calls)
+            const byPattern = /\bby\s+([A-Z_]\w*)(?!\s*\()/gi;
             this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
@@ -647,23 +705,35 @@ export class KqlSyntaxChecker {
 
         // Check for assignment without proper operator
         // Only flag if we're not inside a summarize/extend/project/let/mv-expand block
-        // Exclude common parameters like kind=, on=, hint.*, etc.
-        const assignmentMatch = line.match(/\b(\w+)\s*=\s*(?![=>])/);
+        // Exclude common parameters like kind=, on=, hint.*, withsource=, etc.
+        // Also exclude comparison operators: =~, ==, !=, !~
+        const assignmentMatch = line.match(/\b(\w+)\s*=(?![=~>])\s*/);
         if (assignmentMatch) {
             const variableName = assignmentMatch[1].toLowerCase();
+            
+            // Skip if preceded by !, which would be != or !~ operator
+            const matchIndex = line.indexOf(assignmentMatch[0]);
+            if (matchIndex > 0 && line[matchIndex - 1] === '!') {
+                return; // This is != or !~, not an assignment
+            }
+            
             // Common KQL parameters that use = syntax
             const isParameter = [
                 'kind', 'on', 'hint', 'with', 'shuffle', 'broadcast', 'remote', 'local',
-                'strategy', 'isfuzzy', 'flags', 'format', 'key', 'name', 'scope'
+                'strategy', 'isfuzzy', 'flags', 'format', 'key', 'name', 'scope',
+                'withsource', 'isFuzzy', 'default', 'step', 'from', 'to'
             ].includes(variableName);
             
             // Check if it starts with hint. (e.g., hint.strategy=)
             const isHintParameter = variableName.startsWith('hint');
             
+            // Check if we're in a union statement (has parameters like withsource=)
+            const isUnionLine = trimmedLine.includes('union');
+            
             // Check if we're in an mv-expand, mv-apply, or lookup statement
             const isMvOperator = trimmedLine.includes('mv-expand') || trimmedLine.includes('mv-apply') || trimmedLine.includes('lookup');
             
-            if (!isParameter && !isHintParameter && !inOperatorBlock && !isMvOperator && !trimmedLine.includes('extend') && !trimmedLine.includes('summarize') && !trimmedLine.includes('project') && !trimmedLine.includes('let')) {
+            if (!isParameter && !isHintParameter && !inOperatorBlock && !isMvOperator && !isUnionLine && !trimmedLine.includes('extend') && !trimmedLine.includes('summarize') && !trimmedLine.includes('project') && !trimmedLine.includes('let')) {
                 const index = line.indexOf(assignmentMatch[0]);
                 errors.push({
                     line: lineNum,

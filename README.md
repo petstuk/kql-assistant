@@ -117,7 +117,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.6.0.vsix
+     code --install-extension kql-assistant-0.6.1.vsix
      ```
 
 ## Usage
@@ -374,6 +374,23 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.6.1
+
+**Bug Fixes:**
+
+- **Fixed `union withsource=` syntax** - No longer flags `withsource=SourceTable` as unknown table or invalid assignment
+- **Fixed `=~` and `!~` operators** - Case-insensitive equality operators no longer flagged as assignments
+- **Fixed function call detection** - Functions like `coalesce()`, `pack()`, `dynamic()` no longer flagged as unknown columns
+- **Fixed union table tracking** - All tables in `union Table1, Table2, Table3` now tracked for column validation
+- **Added 40+ functions** to skip list: `coalesce`, `pack`, `parse_url`, `hash`, `ipv4_*`, `datetime_*`, etc.
+
+**Technical Changes:**
+- Union statements now reset table context and track all listed tables
+- `withsource=` parameter properly creates a column (e.g., `SourceTable`)
+- Assignment check regex updated: `=(?![=~>])` to exclude comparison operators
+- Added negative lookahead `(?!\s*\()` to column patterns to skip function calls
+- Extended scalar functions set with 40+ additional common functions
 
 ### 0.6.0 - "The Productivity Release" 🚀
 
