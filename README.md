@@ -117,7 +117,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.6.1.vsix
+     code --install-extension kql-assistant-0.6.2.vsix
      ```
 
 ## Usage
@@ -374,6 +374,21 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.6.2
+
+**Critical Bug Fix - Regex Backtracking:**
+
+- **Fixed partial function name matching** - Functions like `iff()`, `bin()`, `toint()`, `strcat()`, `coalesce()` were being partially matched as columns (`if`, `bi`, `toin`, `strca`, `coalesc`)
+- Root cause: Regex backtracking when lookahead failed on full function name
+- Fix: Changed `(?!\s*\()` to `(?![(\w])` - prevents matching if followed by `(` OR another word character
+- This prevents the regex from "giving back" characters and matching partial names
+
+**Affected patterns fixed:**
+- `where` clause column detection
+- `project` statement column detection  
+- `extend` right-side column detection
+- `summarize by` column detection
 
 ### 0.6.1
 

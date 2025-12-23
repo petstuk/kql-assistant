@@ -392,28 +392,29 @@ export class KqlSyntaxChecker {
         
         if (hasWhere) {
             // Validate columns in where clause: where ColumnName ==, !=, <, >, etc.
-            // Skip function calls (words followed by parentheses)
-            const wherePattern = /\bwhere\s+([A-Z_]\w*)(?!\s*\()\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
+            // Skip function calls - use (?![(\w]) to prevent backtracking into partial function names
+            const wherePattern = /\bwhere\s+([A-Z_]\w*)(?![(\w])\s*(?:[=!<>]|contains|has|startswith|endswith)/gi;
             this.validateColumnsWithPattern(cleanLine, wherePattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasProject || isContinuationLine) {
             // Validate all column-like identifiers in project statements
-            // Match identifiers that are: start of word, NOT followed by (, optional comma/whitespace after
-            const projectPattern = /\b([A-Z_]\w*)(?!\s*\()(?:\s*[,\s]|$)/gi;
+            // Use (?![(\w]) to ensure we capture full identifiers and skip function calls
+            const projectPattern = /\b([A-Z_]\w*)(?![(\w])(?:\s*[,\s]|$)/gi;
             this.validateColumnsWithPattern(cleanLine, projectPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasExtend) {
             // In extend, validate columns on the right side of = but NOT function calls
-            // Match column names that are NOT followed by ( (which would be a function call)
-            const extendPattern = /=\s*([A-Z_]\w*)(?!\s*\()/gi;
+            // Use (?![(\w]) to prevent backtracking (e.g., iff( -> if)
+            const extendPattern = /=\s*([A-Z_]\w*)(?![(\w])/gi;
             this.validateColumnsWithPattern(cleanLine, extendPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
         if (hasLocalSummarize) {
             // Validate columns after 'by' keyword in summarize (skip function calls)
-            const byPattern = /\bby\s+([A-Z_]\w*)(?!\s*\()/gi;
+            // Use (?![(\w]) to prevent backtracking into partial names like bin( -> bi
+            const byPattern = /\bby\s+([A-Z_]\w*)(?![(\w])/gi;
             this.validateColumnsWithPattern(cleanLine, byPattern, line, lineNum, joinedTables, createdColumns, errors);
         }
         
