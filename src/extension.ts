@@ -6,11 +6,26 @@ import { KqlHoverProvider } from './hoverProvider';
 import { KqlSignatureHelpProvider } from './signatureHelpProvider';
 import { KqlFormattingProvider, KqlRangeFormattingProvider } from './formattingProvider';
 import { KqlCodeActionProvider } from './codeActionProvider';
+import { showFeedbackPrompt, initializeFeedback } from './feedback';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
+/**
+ * Check if a document has no errors and trigger feedback prompt if appropriate
+ */
+function checkSuccessAndShowFeedback(uri: vscode.Uri): void {
+    const diagnostics = vscode.languages.getDiagnostics(uri);
+    const hasErrors = diagnostics.some(d => d.severity === vscode.DiagnosticSeverity.Error);
+    if (!hasErrors) {
+        showFeedbackPrompt();
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('KQL Assistant extension is now active');
+
+    // Initialize feedback module
+    initializeFeedback(context);
 
     // Create diagnostics provider with schema validation
     diagnosticsProvider = new KqlDiagnosticsProvider(context);
@@ -95,6 +110,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.workspace.onDidSaveTextDocument(doc => {
             if (doc.languageId === 'kql') {
                 diagnosticsProvider?.updateDiagnostics(doc);
+                // Small delay to ensure diagnostics are updated before checking
+                setTimeout(() => checkSuccessAndShowFeedback(doc.uri), 100);
             }
         })
     );
@@ -120,12 +137,21 @@ export function activate(context: vscode.ExtensionContext) {
         if (editor && editor.document.languageId === 'kql') {
             diagnosticsProvider?.updateDiagnostics(editor.document);
             vscode.window.showInformationMessage('KQL syntax check completed');
+            // Small delay to ensure diagnostics are updated before checking
+            setTimeout(() => checkSuccessAndShowFeedback(editor.document.uri), 100);
         } else {
             vscode.window.showWarningMessage('Please open a KQL file to check syntax');
         }
     });
 
     context.subscriptions.push(checkSyntaxCommand);
+
+    // Register internal command to trigger feedback prompt (used by other providers)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('kql-assistant.triggerFeedback', () => {
+            showFeedbackPrompt();
+        })
+    );
 }
 
 export function deactivate() {

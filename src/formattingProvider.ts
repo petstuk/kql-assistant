@@ -1,4 +1,8 @@
 import * as vscode from 'vscode';
+import { showFeedbackPrompt } from './feedback';
+
+/** Delay before showing feedback prompt after formatting (ms) */
+const FEEDBACK_DELAY_MS = 1000;
 
 export class KqlFormattingProvider implements vscode.DocumentFormattingEditProvider {
     
@@ -17,6 +21,12 @@ export class KqlFormattingProvider implements vscode.DocumentFormattingEditProvi
                 document.positionAt(fullText.length)
             );
             edits.push(vscode.TextEdit.replace(fullRange, formatted));
+
+            // Successful formatting is a great time to ask for feedback
+            // We use setTimeout to let the formatting apply first and not block the UI immediately
+            setTimeout(() => {
+                showFeedbackPrompt();
+            }, FEEDBACK_DELAY_MS);
         }
         
         return edits;
@@ -212,6 +222,10 @@ export class KqlRangeFormattingProvider implements vscode.DocumentRangeFormattin
         const formatted = formattedLines.join('\n');
         
         if (formatted !== text) {
+            // Successful range formatting
+            setTimeout(() => {
+                showFeedbackPrompt();
+            }, FEEDBACK_DELAY_MS);
             return [vscode.TextEdit.replace(range, formatted)];
         }
         
@@ -249,4 +263,5 @@ export class KqlRangeFormattingProvider implements vscode.DocumentRangeFormattin
         return formatted;
     }
 }
+
 

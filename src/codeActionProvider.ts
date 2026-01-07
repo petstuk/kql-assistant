@@ -6,6 +6,12 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
         vscode.CodeActionKind.QuickFix
     ];
 
+    /** Command to trigger feedback prompt after a code action is applied */
+    private static readonly FEEDBACK_COMMAND: vscode.Command = {
+        command: 'kql-assistant.triggerFeedback',
+        title: 'Trigger Feedback'
+    };
+
     provideCodeActions(
         document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
@@ -95,6 +101,10 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
         const action = new vscode.CodeAction(title, vscode.CodeActionKind.QuickFix);
         action.edit = new vscode.WorkspaceEdit();
         action.edit.replace(document.uri, range, replacement);
+        
+        // Trigger feedback check when action is applied
+        action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
+        
         return action;
     }
 
@@ -127,6 +137,7 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
             action.edit.replace(document.uri, range, kqlKeyword);
             action.isPreferred = true;
             action.diagnostics = [diagnostic];
+            action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
             actions.push(action);
         }
 
@@ -161,6 +172,7 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
             action.edit.replace(document.uri, lineRange, tableName);
             action.isPreferred = true;
             action.diagnostics = [diagnostic];
+            action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
             actions.push(action);
         }
 
@@ -196,6 +208,7 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
             action.edit = new vscode.WorkspaceEdit();
             action.edit.insert(document.uri, insertPosition, closingBracket);
             action.diagnostics = [diagnostic];
+            action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
             actions.push(action);
         }
 
@@ -229,6 +242,7 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
                 action.edit.replace(document.uri, lineRange, `${leadingWhitespace}| ${trimmed}`);
                 action.isPreferred = true;
                 action.diagnostics = [diagnostic];
+                action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
                 
                 return action;
             }
@@ -237,4 +251,5 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
         return undefined;
     }
 }
+
 
