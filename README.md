@@ -117,7 +117,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.6.3.vsix
+     code --install-extension kql-assistant-0.6.4.vsix
      ```
 
 ## Usage
@@ -375,7 +375,7 @@ Built with research from official [KQL documentation](https://learn.microsoft.co
 
 ## Release Notes
 
-### 0.6.3
+### 0.6.4
 
 **New Feature - Feedback Prompt:**
 
@@ -384,6 +384,10 @@ Built with research from official [KQL documentation](https://learn.microsoft.co
 - Three options: "Share Feedback" (opens GitHub Discussions), "Later", or "Don't Ask Again"
 - Respects user choice - prompt never reappears after dismissal
 - Follows VS Code Marketplace guidelines (no repeated or aggressive prompts)
+
+### 0.6.3
+
+- Version bump for Marketplace release (no functional changes from 0.6.2)
 
 ### 0.6.2
 
