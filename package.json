@@ -1,7 +1,7 @@
 {
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
-  "description": "Kusto Query Language (KQL) syntax checking and language support",
+  "description": "KQL syntax checking, schema validation, auto-complete, formatting, quick fixes, and query organization with folding for Azure Log Analytics and Sentinel",
   "version": "0.7.0",
   "publisher": "petstuk",
   "icon": "icon.png",
@@ -25,8 +25,15 @@
     "kql",
     "kusto",
     "azure data explorer",
+    "log analytics",
+    "sentinel",
+    "microsoft sentinel",
+    "azure monitor",
     "syntax checking",
-    "linter"
+    "linter",
+    "security",
+    "detection rules",
+    "siem"
   ],
   "activationEvents": [
     "onStartupFinished"
