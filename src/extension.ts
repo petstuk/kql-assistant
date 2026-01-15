@@ -7,6 +7,7 @@ import { KqlSignatureHelpProvider } from './signatureHelpProvider';
 import { KqlFormattingProvider, KqlRangeFormattingProvider } from './formattingProvider';
 import { KqlCodeActionProvider } from './codeActionProvider';
 import { showFeedbackPrompt, initializeFeedback } from './feedback';
+import { KqlFoldingRangeProvider, findQueryBoundaries, getQueryText } from './foldingProvider';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
@@ -88,6 +89,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(codeActionProvider);
+
+    // Register folding range provider for collapsible sections
+    const foldingProvider = vscode.languages.registerFoldingRangeProvider(
+        'kql',
+        new KqlFoldingRangeProvider()
+    );
+    context.subscriptions.push(foldingProvider);
     
     // Register diagnostics on document open, change, and save
     context.subscriptions.push(
@@ -149,6 +157,58 @@ export function activate(context: vscode.ExtensionContext) {
     // Register internal command to trigger feedback prompt (used by other providers)
     context.subscriptions.push(
         vscode.commands.registerCommand('kql-assistant.triggerFeedback', () => {
+            showFeedbackPrompt();
+        })
+    );
+
+    // Register command to select current query
+    context.subscriptions.push(
+        vscode.commands.registerCommand('kql-assistant.selectCurrentQuery', (args?: { line?: number }) => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== 'kql') {
+                vscode.window.showWarningMessage('Please open a KQL file');
+                return;
+            }
+
+            const lineNumber = args?.line ?? editor.selection.active.line;
+            const boundaries = findQueryBoundaries(editor.document, lineNumber);
+            
+            if (!boundaries) {
+                vscode.window.showInformationMessage('No query section found at cursor position');
+                return;
+            }
+
+            // Select from start of header to end of query
+            const startPos = new vscode.Position(boundaries.startLine, 0);
+            const endLine = editor.document.lineAt(boundaries.endLine);
+            const endPos = new vscode.Position(boundaries.endLine, endLine.text.length);
+            
+            editor.selection = new vscode.Selection(startPos, endPos);
+            editor.revealRange(new vscode.Range(startPos, endPos));
+        })
+    );
+
+    // Register command to copy current query (without header)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('kql-assistant.copyCurrentQuery', async (args?: { line?: number }) => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== 'kql') {
+                vscode.window.showWarningMessage('Please open a KQL file');
+                return;
+            }
+
+            const lineNumber = args?.line ?? editor.selection.active.line;
+            const queryText = getQueryText(editor.document, lineNumber);
+            
+            if (!queryText) {
+                vscode.window.showInformationMessage('No query found at cursor position');
+                return;
+            }
+
+            await vscode.env.clipboard.writeText(queryText);
+            vscode.window.showInformationMessage('Query copied to clipboard');
+            
+            // This is a successful use of the extension
             showFeedbackPrompt();
         })
     );

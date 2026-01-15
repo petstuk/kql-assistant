@@ -83,6 +83,15 @@
   - Missing brackets: auto-close suggestions
   - Missing pipe operators: auto-add `|` prefix
 
+- **Query Organization & Folding** ⭐ NEW in v0.7.0:
+  - Organize queries with markdown headers:
+    - `# Category Name #` for categories
+    - `## Detection Rule Name ##` for individual rules
+  - **Collapsible sections**: Fold/unfold categories and rules
+  - **Select Current Query**: Command to select entire query block (`KQL: Select Current Query`)
+  - **Copy Query on Hover**: Hover over a `##` rule title and click "Copy Query"
+  - **Outline View**: Navigate queries in the sidebar with hierarchical structure
+
 ## Installation
 
 ### From VS Code Marketplace (Recommended)
@@ -117,7 +126,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.6.4.vsix
+     code --install-extension kql-assistant-0.7.0.vsix
      ```
 
 ## Usage
@@ -128,32 +137,45 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
 
 ### 📋 Organizing Multiple Queries in One File
 
-When working with multiple queries in a single `.kql` or `.kusto` file, the extension tracks each query's context separately. To ensure proper validation, **separate your queries** using one of these methods:
+When working with multiple queries in a single `.kql` or `.kusto` file, use a **hierarchical header structure** to organize your detection rules:
 
-- **Markdown headers** ⭐ **Recommended** - Use `## Header ##` to organize query sections
-- **Comment line** - Use `//` comments to separate queries  
-- **Blank line** - Leave an empty line between queries
+- `# Category Name #` - Top-level category (e.g., "Identity Threats", "Network Anomalies")
+- `## Detection Rule Name ##` - Individual detection rules within categories
 
 **Best Practice Example:**
 ```kql
-## User Identity Query ##
+# Identity Threats #
 
-IdentityInfo
-| where AccountUPN contains "user@domain.com"
-| project AccountUPN, AccountDisplayName
+## Suspicious Sign-In Activity ##
+
+SigninLogs
+| where ResultType != 0
+| where RiskLevelDuringSignIn in ("high", "medium")
+| project TimeGenerated, UserPrincipalName, IPAddress, Location
+
+## Impossible Travel Detection ##
+
+SigninLogs
+| summarize Locations = make_set(Location) by UserPrincipalName
+| where array_length(Locations) > 1
 
 
-## Security Log Query ##
+# Network Anomalies #
+
+## High Volume Outbound Traffic ##
 
 CommonSecurityLog
 | where TimeGenerated > ago(1d)
-| project TimeGenerated, SourceIP, DestinationIP
+| summarize BytesSent = sum(SentBytes) by SourceIP
+| where BytesSent > 1000000000
 ```
 
 > **💡 Pro Tips:**
-> - Always use markdown headers (`##`) for file titles and section names
+> - **Fold sections**: Click the arrow next to headers to collapse entire categories or rules
+> - **Copy queries quickly**: Hover over any `## Rule ##` header and click "📋 Copy Query"
+> - **Select entire query**: Use `KQL: Select Current Query` from command palette (`Ctrl+Shift+P`)
+> - **Navigate via Outline**: Use the Outline view in the sidebar to jump between queries
 > - Each query automatically resets its table and column context
-> - Never start your file with plain text (use `## Title ##` instead)
 
 ### Code Snippets
 
@@ -375,15 +397,27 @@ Built with research from official [KQL documentation](https://learn.microsoft.co
 
 ## Release Notes
 
-### 0.6.4
+### 0.7.0 - "The Query Organization Release" 📁
+
+**New Feature - Query Organization & Folding:**
+
+- **Hierarchical Headers**: Use `# Category #` and `## Rule ##` to organize queries
+- **Collapsible Sections**: Fold/unfold entire categories or individual detection rules
+- **Select Current Query** command: Place cursor anywhere in a query, run `KQL: Select Current Query` to select the entire block
+- **Copy Query on Hover**: Hover over any `## Rule ##` header to see "Copy Query" and "Select Query" actions
+- **Enhanced Outline View**: Categories show as 📁 Modules, rules show as Detection Rules with proper hierarchy
+- **Improved Symbol Provider**: Ranges now extend to include all content until the next header
 
 **New Feature - Feedback Prompt:**
 
 - Added a one-time, non-intrusive feedback prompt to gather user input
-- Triggers after successful use: error-free save, syntax check, formatting, or quick fix
+- Triggers after successful use: error-free save, syntax check, formatting, copy query, or quick fix
 - Three options: "Share Feedback" (opens GitHub Discussions), "Later", or "Don't Ask Again"
 - Respects user choice - prompt never reappears after dismissal
-- Follows VS Code Marketplace guidelines (no repeated or aggressive prompts)
+
+### 0.6.4
+
+- Version bump for Marketplace release
 
 ### 0.6.3
 

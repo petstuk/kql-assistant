@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Kusto Query Language (KQL) syntax checking and language support",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {
@@ -58,6 +58,14 @@
       {
         "command": "kql-assistant.checkSyntax",
         "title": "KQL: Check Syntax"
+      },
+      {
+        "command": "kql-assistant.selectCurrentQuery",
+        "title": "KQL: Select Current Query"
+      },
+      {
+        "command": "kql-assistant.copyCurrentQuery",
+        "title": "KQL: Copy Current Query"
       }
     ],
     "configuration": {

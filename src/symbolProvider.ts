@@ -9,72 +9,104 @@ export class KqlDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
         const text = document.getText();
         const lines = text.split('\n');
 
-        // Stack to track hierarchy of headers
-        const symbolStack: { symbol: vscode.DocumentSymbol; level: number }[] = [];
+        // First pass: collect all headers with their line numbers
+        const headers: { line: number; level: number; title: string; text: string }[] = [];
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
 
-            // Match markdown headers: # Title # or # Title or ## Title ##, etc.
+            // Match markdown headers: # Title # or ## Title ##, etc.
             const headerMatch = trimmedLine.match(/^(#{1,6})\s+(.+?)(?:\s+#{1,6})?\s*$/);
             
             if (headerMatch) {
-                const level = headerMatch[1].length; // Number of # symbols
+                const level = headerMatch[1].length;
                 const title = headerMatch[2].trim();
-                
-                // Calculate the range for this symbol
-                const startPos = new vscode.Position(i, 0);
-                // Initially set end to the same line, we'll adjust it later if needed
-                const endPos = new vscode.Position(i, line.length);
-                const range = new vscode.Range(startPos, endPos);
-                
-                // Selection range is just the header text itself
-                const titleStartCol = line.indexOf(headerMatch[1]) + headerMatch[1].length;
-                const selectionRange = new vscode.Range(
-                    new vscode.Position(i, titleStartCol),
-                    new vscode.Position(i, line.length)
-                );
-
-                // Determine symbol kind based on level
-                let symbolKind: vscode.SymbolKind;
-                switch (level) {
-                    case 1: symbolKind = vscode.SymbolKind.Module; break;
-                    case 2: symbolKind = vscode.SymbolKind.Class; break;
-                    case 3: symbolKind = vscode.SymbolKind.Method; break;
-                    case 4: symbolKind = vscode.SymbolKind.Function; break;
-                    case 5: symbolKind = vscode.SymbolKind.Property; break;
-                    case 6: symbolKind = vscode.SymbolKind.Field; break;
-                    default: symbolKind = vscode.SymbolKind.String; break;
-                }
-
-                const symbol = new vscode.DocumentSymbol(
-                    title,
-                    '',
-                    symbolKind,
-                    range,
-                    selectionRange
-                );
-
-                // Remove symbols from the stack that are at the same level or deeper
-                while (symbolStack.length > 0 && symbolStack[symbolStack.length - 1].level >= level) {
-                    symbolStack.pop();
-                }
-
-                // Add this symbol as a child of the parent in the stack, or to root
-                if (symbolStack.length > 0) {
-                    const parent = symbolStack[symbolStack.length - 1].symbol;
-                    parent.children.push(symbol);
-                } else {
-                    symbols.push(symbol);
-                }
-
-                // Add this symbol to the stack for future children
-                symbolStack.push({ symbol, level });
+                headers.push({ line: i, level, title, text: line });
             }
+        }
+
+        // Second pass: create symbols with proper ranges
+        const symbolStack: { symbol: vscode.DocumentSymbol; level: number; startLine: number }[] = [];
+
+        for (let idx = 0; idx < headers.length; idx++) {
+            const header = headers[idx];
+            const nextHeader = headers[idx + 1];
+
+            // Find the end line for this header's content
+            let endLine: number;
+            if (nextHeader) {
+                // End at the line before the next header of same or higher level
+                endLine = nextHeader.line - 1;
+                // Trim trailing empty lines
+                while (endLine > header.line && lines[endLine].trim() === '') {
+                    endLine--;
+                }
+            } else {
+                // Last header - extend to end of document
+                endLine = lines.length - 1;
+                while (endLine > header.line && lines[endLine].trim() === '') {
+                    endLine--;
+                }
+            }
+
+            const startPos = new vscode.Position(header.line, 0);
+            const endPos = new vscode.Position(endLine, lines[endLine]?.length || 0);
+            const range = new vscode.Range(startPos, endPos);
+            
+            // Selection range is just the header line
+            const selectionRange = new vscode.Range(
+                new vscode.Position(header.line, 0),
+                new vscode.Position(header.line, header.text.length)
+            );
+
+            // Determine symbol kind and detail based on level
+            let symbolKind: vscode.SymbolKind;
+            let detail: string;
+            switch (header.level) {
+                case 1: 
+                    symbolKind = vscode.SymbolKind.Module; 
+                    detail = 'Category';
+                    break;
+                case 2: 
+                    symbolKind = vscode.SymbolKind.Class; 
+                    detail = 'Detection Rule';
+                    break;
+                case 3: 
+                    symbolKind = vscode.SymbolKind.Method; 
+                    detail = 'Query Section';
+                    break;
+                default: 
+                    symbolKind = vscode.SymbolKind.Function; 
+                    detail = 'Section';
+                    break;
+            }
+
+            const symbol = new vscode.DocumentSymbol(
+                header.title,
+                detail,
+                symbolKind,
+                range,
+                selectionRange
+            );
+
+            // Remove symbols from the stack that are at the same level or deeper
+            while (symbolStack.length > 0 && symbolStack[symbolStack.length - 1].level >= header.level) {
+                symbolStack.pop();
+            }
+
+            // Add this symbol as a child of the parent in the stack, or to root
+            if (symbolStack.length > 0) {
+                const parent = symbolStack[symbolStack.length - 1].symbol;
+                parent.children.push(symbol);
+            } else {
+                symbols.push(symbol);
+            }
+
+            // Add this symbol to the stack for future children
+            symbolStack.push({ symbol, level: header.level, startLine: header.line });
         }
 
         return symbols;
     }
 }
-
