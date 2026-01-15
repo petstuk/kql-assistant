@@ -3,7 +3,9 @@
 
   **KQL Assistant**
 
-  A Visual Studio Code extension that provides Kusto Query Language (KQL) syntax checking, highlighting, and language support.
+  The ultimate VS Code extension for **Azure Log Analytics**, **Microsoft Sentinel**, and **Azure Data Explorer** query development.
+
+  *Syntax validation • Schema-aware auto-complete • Query formatting • Quick fixes • Collapsible query organization*
 </div>
 
 ---
