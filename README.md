@@ -128,7 +128,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.7.0.vsix
+     code --install-extension kql-assistant-0.7.1.vsix
      ```
 
 ## Usage
@@ -398,6 +398,13 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.7.1
+
+**Schema Fix:**
+
+- Added missing `AzureActivity` table schema with all 30+ columns
+- Fixes false positive errors for `Caller`, `OperationNameValue`, and other AzureActivity columns
 
 ### 0.7.0 - "The Query Organization Release" 📁
 
