@@ -128,7 +128,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.7.1.vsix
+     code --install-extension kql-assistant-0.7.2.vsix
      ```
 
 ## Usage
@@ -398,6 +398,15 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.7.2
+
+**New Feature - Inline CodeLens Actions:**
+
+- `## Rule ##` headers now show **Copy Query** and **Select Query** buttons inline
+- `# Category #` headers show a **Select All** button inline
+- Buttons appear directly on the header line — no hovering needed
+- CodeLens updates live as you add or remove headers
 
 ### 0.7.1
 

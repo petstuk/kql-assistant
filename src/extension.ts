@@ -8,6 +8,7 @@ import { KqlFormattingProvider, KqlRangeFormattingProvider } from './formattingP
 import { KqlCodeActionProvider } from './codeActionProvider';
 import { showFeedbackPrompt, initializeFeedback } from './feedback';
 import { KqlFoldingRangeProvider, findQueryBoundaries, getQueryText } from './foldingProvider';
+import { KqlCodeLensProvider } from './codeLensProvider';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
@@ -96,6 +97,21 @@ export function activate(context: vscode.ExtensionContext) {
         new KqlFoldingRangeProvider()
     );
     context.subscriptions.push(foldingProvider);
+
+    // Register CodeLens provider for inline Copy/Select buttons on headers
+    const codeLensProvider = new KqlCodeLensProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider({ language: 'kql' }, codeLensProvider)
+    );
+
+    // Refresh CodeLens when the document changes (headers added/removed)
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument(e => {
+            if (e.document.languageId === 'kql') {
+                codeLensProvider.refresh();
+            }
+        })
+    );
     
     // Register diagnostics on document open, change, and save
     context.subscriptions.push(
