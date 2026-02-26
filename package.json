@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "KQL syntax checking, schema validation, auto-complete, formatting, quick fixes, and query organization with folding for Azure Log Analytics and Sentinel",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {

@@ -128,7 +128,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.7.2.vsix
+     code --install-extension kql-assistant-0.7.3.vsix
      ```
 
 ## Usage
@@ -398,6 +398,14 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.7.3
+
+**CodeLens Improvements:**
+
+- `## Rule ##` headers now show a **· N lines** count of the query body
+- `# Category #` headers now show a **· N rules** count of rules inside
+- Removed redundant header hover actions (CodeLens covers this now)
 
 ### 0.7.2
 

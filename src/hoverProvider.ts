@@ -71,32 +71,10 @@ export class KqlHoverProvider implements vscode.HoverProvider {
     ): vscode.ProviderResult<vscode.Hover> {
         
         const lineText = document.lineAt(position.line).text.trim();
-        
-        // Check for rule header: ## Name ## - show copy/select actions
-        if (lineText.match(/^##\s+.*\s+##$/)) {
-            const title = lineText.replace(/^##\s+/, '').replace(/\s+##$/, '');
-            const markdown = new vscode.MarkdownString();
-            markdown.appendMarkdown(`**🔍 ${title}**\n\n`);
-            markdown.appendMarkdown(`*Detection Rule*\n\n`);
-            markdown.appendMarkdown(`---\n\n`);
-            markdown.appendMarkdown(`[📋 Copy Query](command:kql-assistant.copyCurrentQuery?${encodeURIComponent(JSON.stringify({ line: position.line }))}) · `);
-            markdown.appendMarkdown(`[✓ Select Query](command:kql-assistant.selectCurrentQuery?${encodeURIComponent(JSON.stringify({ line: position.line }))})`);
-            markdown.isTrusted = true;
-            const lineRange = new vscode.Range(position.line, 0, position.line, document.lineAt(position.line).text.length);
-            return new vscode.Hover(markdown, lineRange);
-        }
 
-        // Check for category header: # Name # (but not ##)
-        if (lineText.match(/^#\s+[^#].*[^#]\s*#$/) && !lineText.startsWith('##')) {
-            const title = lineText.replace(/^#\s+/, '').replace(/\s+#$/, '');
-            const markdown = new vscode.MarkdownString();
-            markdown.appendMarkdown(`**📁 ${title}**\n\n`);
-            markdown.appendMarkdown(`*Category* - Contains detection rules\n\n`);
-            markdown.appendMarkdown(`---\n\n`);
-            markdown.appendMarkdown(`[✓ Select All](command:kql-assistant.selectCurrentQuery?${encodeURIComponent(JSON.stringify({ line: position.line }))})`);
-            markdown.isTrusted = true;
-            const lineRange = new vscode.Range(position.line, 0, position.line, document.lineAt(position.line).text.length);
-            return new vscode.Hover(markdown, lineRange);
+        // Skip hover on header lines - CodeLens handles Copy/Select actions there
+        if (lineText.match(/^#{1,6}\s+/)) {
+            return undefined;
         }
 
         const range = document.getWordRangeAtPosition(position, /[\w-]+/);
