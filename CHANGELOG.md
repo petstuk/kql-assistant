@@ -2,6 +2,15 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.8.2
+
+**False-positive "Unknown column" fixes:**
+
+- **`project` alias tracking**: Column aliases introduced by `| project Alias = expr` (and `| project-rename`) are now added to the tracked column set, so they are not flagged as unknown in downstream `where`, `summarize`, or `order by` clauses.
+- **Multi-line join subquery scope**: After `| join kind=… (…)`, the validator now detects the inner table name even when the subquery spans multiple lines, adds it to the joined-tables set, and extracts any `project`/`extend` aliases defined inside the subquery. Columns from the joined table (e.g. `EmailEvents`) and aliases produced within the subquery (e.g. `EmailTime`) are recognised in all subsequent operators.
+- **Skip subquery-internal validation**: Lines inside a multi-line join subquery are no longer checked against the outer query's table — this eliminates false positives for columns that belong to the inner table.
+- **Schema revert**: Incorrectly added columns (`OfficeTime`, `EmailTime`, `RecipientEmailAddress`, `NetworkMessageId`, `DeliveryAction`) removed from the `OfficeActivity` schema; the proper fix is behavioural (above), not schema-level.
+
 ## 0.8.1
 
 - Documentation: README restructured for the Marketplace (scannable overview, explicit product scope, commands/settings tables, condensed snippets and contributing).

@@ -58,7 +58,7 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.8.1.vsix`
+  `code --install-extension kql-assistant-0.8.2.vsix`
 
 ## Quick start
 
@@ -164,6 +164,10 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.8.2
+
+- **Column validation fixes**: `project`-alias columns (e.g. `OfficeTime = TimeGenerated`) are no longer flagged as unknown. Columns from multi-line join subqueries (inner table columns plus any aliases projected inside the subquery) are now correctly recognised in downstream operators. Schema revert: five columns incorrectly added to `OfficeActivity` are removed.
 
 ### 0.8.1
 

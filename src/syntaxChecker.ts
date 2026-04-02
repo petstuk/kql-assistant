@@ -146,9 +146,11 @@ export class KqlSyntaxChecker {
         const lines = text.split('\n');
         let currentTable: string | undefined;
         let joinedTables: Set<string> = new Set(); // Track all tables in current join chain
-        let createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize
+        let createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize/project
         let hasSummarize = false; // Track if we've seen a summarize (creates new schema)
         let inMultiLineOperator = false; // Track if we're in a multi-line operator (project/summarize/extend)
+        let inJoinSubquery = false; // True while processing lines inside a multi-line join (...)
+        let joinParenDepth = 0;    // Open-paren depth counter for the join subquery
         
         for (let lineNum = 0; lineNum < lines.length; lineNum++) {
             const line = lines[lineNum];
@@ -159,6 +161,8 @@ export class KqlSyntaxChecker {
                 // Reset multi-line operator context on empty lines or markdown headers (new query boundary)
                 if (!trimmedLine || trimmedLine.startsWith('#')) {
                     inMultiLineOperator = false;
+                    inJoinSubquery = false;
+                    joinParenDepth = 0;
                 }
                 continue;
             }
@@ -205,6 +209,8 @@ export class KqlSyntaxChecker {
                     createdColumns.clear();
                     hasSummarize = false;
                     inMultiLineOperator = false;
+                    inJoinSubquery = false;
+                    joinParenDepth = 0;
                     
                     if (!isValidTable) {
                         const suggestion = this.schemaValidator!.suggestSimilarTable(tableName);
@@ -285,21 +291,67 @@ export class KqlSyntaxChecker {
                 }
             }
             
-            // Track join operations - adds columns from the joined table
-            const joinMatch = line.match(/\|\s*join\s+(?:kind\s*=\s*\w+\s+)?\(?(\w+)\)?/i);
-            if (joinMatch) {
-                const joinedTableName = joinMatch[1];
-                // Check if it's a valid table (not a keyword like 'kind')
-                if (this.schemaValidator!.validateTableExists(joinedTableName)) {
-                    joinedTables.add(joinedTableName);
+            // Track join operations — handles single-line and multi-line subquery forms
+            if (/\|\s*join\b/i.test(line)) {
+                // Single-line: | join kind=inner (EmailEvents) on key
+                const singleJoin = line.match(/\|\s*join\s+(?:kind\s*=\s*\w+\s+)?\(\s*([A-Z]\w+)\s*\)/i);
+                if (singleJoin && this.schemaValidator!.validateTableExists(singleJoin[1])) {
+                    joinedTables.add(singleJoin[1]);
+                }
+                // Multi-line: count unmatched parens; if any remain open, the subquery continues
+                const opens = (line.match(/\(/g) || []).length;
+                const closes = (line.match(/\)/g) || []).length;
+                if (opens > closes) {
+                    inJoinSubquery = true;
+                    joinParenDepth = opens - closes;
+                }
+            } else if (inJoinSubquery) {
+                // Track paren depth to detect the end of the subquery
+                const opens = (line.match(/\(/g) || []).length;
+                const closes = (line.match(/\)/g) || []).length;
+                joinParenDepth += opens - closes;
+
+                if (joinParenDepth <= 0) {
+                    inJoinSubquery = false;
+                    joinParenDepth = 0;
+                } else {
+                    // Detect the inner table name (indented PascalCase at the start of the line)
+                    const innerTable = line.match(/^\s{2,}([A-Z][a-zA-Z0-9]+)\s*(?:\||$)/);
+                    if (innerTable && this.schemaValidator!.validateTableExists(innerTable[1])) {
+                        joinedTables.add(innerTable[1]);
+                    }
+
+                    // Track project aliases inside the subquery
+                    if (/\|\s*project(?!-away|-keep|-reorder)\b/i.test(line)) {
+                        const aliasRe = /\b([A-Z_]\w*)\s*=(?![=>~!<])/gi;
+                        for (const m of line.matchAll(aliasRe)) {
+                            createdColumns.add(m[1]);
+                        }
+                    }
+
+                    // Track extend aliases inside the subquery
+                    if (/\|\s*extend\b/i.test(line)) {
+                        const extMatches = line.matchAll(/extend\s+([A-Z_]\w*)\s*=/gi);
+                        for (const m of extMatches) {
+                            createdColumns.add(m[1]);
+                        }
+                    }
                 }
             }
-            
+
             // Track columns created by extend: | extend NewCol = ...
             if (/\|\s*extend\b/i.test(line)) {
                 const extendMatches = line.matchAll(/extend\s+([A-Z_]\w*)\s*=/gi);
                 for (const match of extendMatches) {
                     createdColumns.add(match[1]);
+                }
+            }
+
+            // Track column aliases created by project: | project NewName = expr
+            if (/\|\s*project(?!-away|-keep|-reorder)\b/i.test(line)) {
+                const projectAliasRe = /\b([A-Z_]\w*)\s*=(?![=>~!<])/gi;
+                for (const m of line.matchAll(projectAliasRe)) {
+                    createdColumns.add(m[1]);
                 }
             }
             
@@ -354,8 +406,9 @@ export class KqlSyntaxChecker {
                 }
             }
             
-            // Validate columns if we know the current table
-            if (currentTable && this.schemaValidator!.validateTableExists(currentTable)) {
+            // Validate columns if we know the current table; skip lines inside join subqueries
+            // (the subquery is a separate scope — validating it against the outer table causes false positives)
+            if (currentTable && this.schemaValidator!.validateTableExists(currentTable) && !inJoinSubquery) {
                 this.validateColumnsInLine(line, lineNum, currentTable, joinedTables, createdColumns, hasSummarize, errors);
             }
         }
