@@ -45,6 +45,7 @@
 
 - **Hover Documentation**: 
   - Hover over functions and operators for instant documentation
+  - ⭐ **v0.8.0**: Hover over **table names** for schema descriptions and **column names** for type and description (when table context is detected)
   - Detailed syntax, parameters, and examples
   - No need to leave your editor
 
@@ -54,13 +55,13 @@
   - Supports 100+ KQL functions
 
 - **Enhanced Auto-completion**: 
-  - 27 common Azure tables (SecurityEvent, SigninLogs, etc.)
+  - ⭐ **v0.8.0**: **All 719+ Log Analytics tables** from the bundled schema at line start (not a short curated list)
   - 12 chart types for render operator
   - 60+ additional scalar functions
   - Context-aware suggestions
 
 - **Semantic Analysis**:
-  - Validates table and column names against 718 Log Analytics schemas
+  - Validates table and column names against 719+ Log Analytics table schemas
   - Detects unknown tables/columns with "Did you mean?" suggestions
   - Real-time validation as you type
   - Schema-based validation from official Microsoft documentation
@@ -70,7 +71,7 @@
   - Auto-complete suggests columns from your current table
   - Works in `where`, `project`, `extend`, `summarize`, `order by` and more
   - Shows column type and description from schema
-  - 718 tables with full column definitions
+  - 719+ tables with full column definitions
 
 - **Query Formatting** ⭐ NEW in v0.6.0:
   - Format Document (`Shift+Alt+F`) for KQL files
@@ -128,7 +129,7 @@ Or install directly from the [VS Code Marketplace](https://marketplace.visualstu
    - Or package and install:
      ```bash
      npm run package
-     code --install-extension kql-assistant-0.7.3.vsix
+     code --install-extension kql-assistant-0.8.0.vsix
      ```
 
 ## Usage
@@ -398,6 +399,15 @@ MIT License - feel free to use this extension in your projects.
 Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
 
 ## Release Notes
+
+### 0.8.0
+
+**Schema experience and reliability:**
+
+- **Table completions**: Line-start IntelliSense now offers every table in the bundled `all-tables.json` schema (700+), with table descriptions in the completion detail.
+- **Schema-backed hover**: Hover on a known table name for its description; hover on a column name (with table context from scanning the query) for type and description.
+- **One schema load on activation**: A single `KqlSchemaValidator` instance is shared by diagnostics, completion, and hover — no duplicate `readFileSync` / JSON parse.
+- **Quick fixes**: SQL-style hints now match actual diagnostic messages (`select` / `from` fixes apply when offered). `FROM` fix deletes only the `from ` prefix and keeps the rest of the line. Document-level “unclosed bracket” fixes insert at the end of the file. “Ignore unknown table” appears in the lightbulb menu (placeholder until persistence is added).
 
 ### 0.7.3
 
