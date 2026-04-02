@@ -46,17 +46,13 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
             }
 
             // SQL-to-KQL migration fixes
-            if (message.includes('SELECT')) {
-                actions.push(...this.createSqlMigrationFixes(document, diagnostic, 'SELECT', 'project'));
+            // Messages from syntaxChecker: 'KQL uses "project" instead of "select"'
+            //                              'KQL starts with table name, no "from" keyword needed'
+            if (message.includes('"select"')) {
+                actions.push(...this.createSqlMigrationFixes(document, diagnostic, 'select', 'project'));
             }
-            if (message.includes('FROM')) {
+            if (message.includes('"from"')) {
                 actions.push(...this.createFromFix(document, diagnostic));
-            }
-            if (message.includes('GROUP BY')) {
-                actions.push(...this.createSqlMigrationFixes(document, diagnostic, 'GROUP BY', 'summarize'));
-            }
-            if (message.includes('ORDER BY')) {
-                actions.push(...this.createSqlMigrationFixes(document, diagnostic, 'ORDER BY', 'order by'));
             }
 
             // Unknown table suggestions
@@ -64,13 +60,12 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
                 const tableMatch = message.match(/Unknown table '([^']+)'/);
                 if (tableMatch) {
                     const tableName = tableMatch[1];
-                    // Offer to add to custom schema or ignore
                     const ignoreAction = new vscode.CodeAction(
                         `Ignore unknown table '${tableName}'`,
                         vscode.CodeActionKind.QuickFix
                     );
                     ignoreAction.diagnostics = [diagnostic];
-                    // This would require a way to store ignored tables - future enhancement
+                    actions.push(ignoreAction);
                 }
             }
 
@@ -153,23 +148,22 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
         const line = document.lineAt(diagnostic.range.start.line).text;
         
         // In KQL, you start with the table name, not "from TableName"
-        // Suggest removing "from" and putting table at the start
-        const fromMatch = line.match(/\bfrom\s+(\w+)/i);
+        // Remove the "from " prefix while preserving the rest of the line
+        const fromMatch = line.match(/(\bfrom\s+)(\w+)/i);
         if (fromMatch) {
-            const tableName = fromMatch[1];
+            const fromPrefix = fromMatch[1]; // e.g. "from "
+            const startIndex = line.search(/\bfrom\s+/i);
+            const fromRange = new vscode.Range(
+                diagnostic.range.start.line, startIndex,
+                diagnostic.range.start.line, startIndex + fromPrefix.length
+            );
             
             const action = new vscode.CodeAction(
                 `Remove 'from' (KQL starts with table name)`,
                 vscode.CodeActionKind.QuickFix
             );
             action.edit = new vscode.WorkspaceEdit();
-            
-            // Replace the whole line with just the table name
-            const lineRange = new vscode.Range(
-                diagnostic.range.start.line, 0,
-                diagnostic.range.start.line, line.length
-            );
-            action.edit.replace(document.uri, lineRange, tableName);
+            action.edit.delete(document.uri, fromRange);
             action.isPreferred = true;
             action.diagnostics = [diagnostic];
             action.command = KqlCodeActionProvider.FEEDBACK_COMMAND;
@@ -197,9 +191,14 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
         }
 
         if (closingBracket) {
-            // Insert at end of line
-            const line = document.lineAt(diagnostic.range.start.line);
-            const insertPosition = new vscode.Position(line.lineNumber, line.text.length);
+            // For document-level bracket errors (reported at line 0, col 0), insert at end of document
+            const isDocumentLevel =
+                diagnostic.range.start.line === 0 && diagnostic.range.start.character === 0;
+            const targetLineNum = isDocumentLevel
+                ? document.lineCount - 1
+                : diagnostic.range.start.line;
+            const line = document.lineAt(targetLineNum);
+            const insertPosition = new vscode.Position(targetLineNum, line.text.length);
 
             const action = new vscode.CodeAction(
                 `Add closing '${closingBracket}'`,

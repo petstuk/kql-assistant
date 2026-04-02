@@ -1,57 +1,8 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-
-interface ColumnSchema {
-    type: string;
-    description: string;
-}
-
-interface TableSchema {
-    tableName: string;
-    description: string;
-    columns: { [key: string]: ColumnSchema };
-}
+import { KqlSchemaValidator } from './schemaValidator';
 
 export class KqlCompletionProvider implements vscode.CompletionItemProvider {
-    private schemas: Map<string, TableSchema> = new Map();
-    private tableNamesLower: Map<string, string> = new Map();
-    private extensionPath: string = '';
-
-    constructor(extensionPath?: string) {
-        if (extensionPath) {
-            this.extensionPath = extensionPath;
-            this.loadSchemas();
-        }
-    }
-
-    public setExtensionPath(extensionPath: string): void {
-        this.extensionPath = extensionPath;
-        this.loadSchemas();
-    }
-
-    private loadSchemas(): void {
-        try {
-            const schemasPath = path.join(this.extensionPath, 'schemas', 'all-tables.json');
-            
-            if (!fs.existsSync(schemasPath)) {
-                console.warn('Completion provider: Schema file not found:', schemasPath);
-                return;
-            }
-
-            const schemasData = fs.readFileSync(schemasPath, 'utf8');
-            const schemasJson = JSON.parse(schemasData);
-
-            for (const [tableName, schema] of Object.entries(schemasJson)) {
-                this.schemas.set(tableName, schema as TableSchema);
-                this.tableNamesLower.set(tableName.toLowerCase(), tableName);
-            }
-
-            console.log(`Completion provider loaded ${this.schemas.size} table schemas`);
-        } catch (error) {
-            console.error('Completion provider failed to load schemas:', error);
-        }
-    }
+    constructor(private validator: KqlSchemaValidator) {}
 
     provideCompletionItems(
         document: vscode.TextDocument,
@@ -160,8 +111,8 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
                 const firstWord = trimmed.split(/[\s|]/)[0];
                 
                 // Check if it's a valid table in our schema
-                if (this.tableNamesLower.has(firstWord.toLowerCase())) {
-                    return this.tableNamesLower.get(firstWord.toLowerCase());
+                if (this.validator.validateTableExists(firstWord)) {
+                    return this.validator.getCanonicalTableName(firstWord);
                 }
                 
                 // Check if it looks like a table (PascalCase, no special chars)
@@ -185,13 +136,8 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
      * Get column completions for a specific table
      */
     private getColumnCompletions(tableName: string, linePrefix: string): vscode.CompletionItem[] {
-        const schema = this.schemas.get(tableName);
+        const schema = this.validator.getTableSchema(tableName);
         if (!schema) {
-            // Try case-insensitive lookup
-            const actualName = this.tableNamesLower.get(tableName.toLowerCase());
-            if (actualName) {
-                return this.getColumnCompletions(actualName, linePrefix);
-            }
             return [];
         }
 
@@ -488,43 +434,22 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
     }
 
     private getAzureTableCompletions(): vscode.CompletionItem[] {
-        const tables = [
-            { label: 'SecurityEvent', detail: 'Windows Security Events', doc: 'Security events from Windows machines.\n\nCommon fields: EventID, Account, Computer, Activity' },
-            { label: 'SigninLogs', detail: 'Azure AD Sign-in Logs', doc: 'Azure Active Directory sign-in logs.\n\nCommon fields: UserPrincipalName, IPAddress, Location, ResultType' },
-            { label: 'AuditLogs', detail: 'Azure AD Audit Logs', doc: 'Azure Active Directory audit logs.\n\nCommon fields: OperationName, Result, InitiatedBy' },
-            { label: 'Heartbeat', detail: 'Agent Heartbeat', doc: 'Heartbeat records from monitoring agents.\n\nCommon fields: Computer, OSType, Version' },
-            { label: 'Perf', detail: 'Performance Counters', doc: 'Performance counter data.\n\nCommon fields: Computer, ObjectName, CounterName, CounterValue' },
-            { label: 'Event', detail: 'Windows Event Logs', doc: 'Windows event log data.\n\nCommon fields: EventID, EventLog, Computer, RenderedDescription' },
-            { label: 'Syslog', detail: 'Linux Syslog', doc: 'Syslog data from Linux machines.\n\nCommon fields: Computer, Facility, SeverityLevel, SyslogMessage' },
-            { label: 'SecurityAlert', detail: 'Security Alerts', doc: 'Security alerts from Microsoft Defender.\n\nCommon fields: AlertName, AlertSeverity, CompromisedEntity' },
-            { label: 'SecurityIncident', detail: 'Security Incidents', doc: 'Security incidents.\n\nCommon fields: IncidentNumber, Title, Severity, Status' },
-            { label: 'EmailEvents', detail: 'Email Events', doc: 'Email events from Microsoft 365 Defender.\n\nCommon fields: SenderFromAddress, RecipientEmailAddress, Subject, DeliveryAction' },
-            { label: 'DeviceEvents', detail: 'Device Events', doc: 'Device events from Microsoft 365 Defender.\n\nCommon fields: DeviceName, ActionType, FileName, FolderPath' },
-            { label: 'DeviceFileEvents', detail: 'Device File Events', doc: 'File events from devices.\n\nCommon fields: DeviceName, FileName, FolderPath, FileSize' },
-            { label: 'DeviceNetworkEvents', detail: 'Device Network Events', doc: 'Network events from devices.\n\nCommon fields: DeviceName, RemoteIP, RemotePort, RemoteUrl' },
-            { label: 'DeviceProcessEvents', detail: 'Device Process Events', doc: 'Process events from devices.\n\nCommon fields: DeviceName, ProcessCommandLine, FileName' },
-            { label: 'DeviceLogonEvents', detail: 'Device Logon Events', doc: 'Logon events from devices.\n\nCommon fields: DeviceName, AccountName, LogonType' },
-            { label: 'IdentityLogonEvents', detail: 'Identity Logon Events', doc: 'Logon events from identity sources.\n\nCommon fields: AccountName, Application, Protocol' },
-            { label: 'CloudAppEvents', detail: 'Cloud App Events', doc: 'Events from cloud applications.\n\nCommon fields: Application, ActionType, AccountDisplayName' },
-            { label: 'AADNonInteractiveUserSignInLogs', detail: 'Azure AD Non-Interactive Sign-ins', doc: 'Non-interactive Azure AD sign-in logs.\n\nCommon fields: UserPrincipalName, AppId, ResourceDisplayName' },
-            { label: 'AADServicePrincipalSignInLogs', detail: 'Service Principal Sign-ins', doc: 'Service principal sign-in logs.\n\nCommon fields: ServicePrincipalName, AppId, IPAddress' },
-            { label: 'W3CIISLog', detail: 'IIS Web Server Logs', doc: 'IIS web server logs.\n\nCommon fields: sSiteName, csMethod, csUriStem, scStatus' },
-            { label: 'AppServiceHTTPLogs', detail: 'App Service HTTP Logs', doc: 'Azure App Service HTTP logs.\n\nCommon fields: CsMethod, CsUriStem, ScStatus' },
-            { label: 'AzureActivity', detail: 'Azure Activity Logs', doc: 'Azure subscription activity logs.\n\nCommon fields: OperationName, ResourceProvider, Caller' },
-            { label: 'AzureDiagnostics', detail: 'Azure Diagnostics', doc: 'Azure resource diagnostics.\n\nCommon fields: ResourceType, Category, OperationName' },
-            { label: 'CommonSecurityLog', detail: 'Common Event Format Logs', doc: 'CEF format security logs.\n\nCommon fields: DeviceVendor, DeviceProduct, DeviceEventClassID' },
-            { label: 'Update', detail: 'Update Management', doc: 'Update management data.\n\nCommon fields: Computer, Title, Classification, UpdateState' },
-            { label: 'UpdateSummary', detail: 'Update Summary', doc: 'Update management summary.\n\nCommon fields: Computer, TotalUpdatesMissing, CriticalUpdatesMissing' },
-            { label: 'ProtectionStatus', detail: 'Protection Status', doc: 'Antimalware protection status.\n\nCommon fields: Computer, ProtectionStatus, DetectionId' }
-        ];
+        const completions: vscode.CompletionItem[] = [];
 
-        return tables.map(table => {
-            const item = new vscode.CompletionItem(table.label, vscode.CompletionItemKind.Class);
-            item.detail = table.detail;
-            item.documentation = new vscode.MarkdownString(table.doc);
-            item.insertText = table.label;
-            return item;
-        });
+        for (const tableName of this.validator.getAllTableNames()) {
+            const schema = this.validator.getTableSchema(tableName)!;
+            const item = new vscode.CompletionItem(tableName, vscode.CompletionItemKind.Class);
+            item.detail = schema.description || 'Azure Monitor table';
+            if (schema.description) {
+                item.documentation = new vscode.MarkdownString(`**${tableName}**\n\n${schema.description}`);
+            } else {
+                item.documentation = new vscode.MarkdownString(`**${tableName}**`);
+            }
+            item.insertText = tableName;
+            completions.push(item);
+        }
+
+        return completions;
     }
 
     private getRenderChartCompletions(): vscode.CompletionItem[] {

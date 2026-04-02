@@ -146,6 +146,11 @@ export class KqlSchemaValidator {
         return schema?.description;
     }
 
+    public getCanonicalTableName(name: string): string | undefined {
+        if (this.schemas.has(name)) { return name; }
+        return this.tableNamesLower.get(name.toLowerCase());
+    }
+
     // Levenshtein distance for typo detection
     private levenshteinDistance(a: string, b: string): number {
         const matrix: number[][] = [];

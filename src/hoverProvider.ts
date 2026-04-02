@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
+import { KqlSchemaValidator } from './schemaValidator';
 
 export class KqlHoverProvider implements vscode.HoverProvider {
+    constructor(private validator: KqlSchemaValidator) {}
     
     private operatorDocs = new Map<string, { detail: string; doc: string }>([
         ['where', { detail: 'Filter rows', doc: 'Filters rows based on a predicate.\n\n**Syntax:** `| where <predicate>`\n\n**Example:**\n```kql\nStormEvents\n| where State == "TEXAS"\n| where EventType contains "Tornado"\n```' }],
@@ -112,6 +114,63 @@ export class KqlHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(markdown, range);
         }
 
+        // Schema-backed: check if word is a known table name (use original case for lookup)
+        const originalWord = document.getText(range);
+        if (this.validator.validateTableExists(originalWord)) {
+            const tableSchema = this.validator.getTableSchema(originalWord)!;
+            const markdown = new vscode.MarkdownString();
+            markdown.appendMarkdown(`**${tableSchema.tableName || originalWord}** *(table)*`);
+            if (tableSchema.description) {
+                markdown.appendMarkdown(`\n\n${tableSchema.description}`);
+            }
+            const columnCount = Object.keys(tableSchema.columns).length;
+            if (columnCount > 0) {
+                markdown.appendMarkdown(`\n\n*${columnCount} column${columnCount === 1 ? '' : 's'} available*`);
+            }
+            markdown.isTrusted = true;
+            return new vscode.Hover(markdown, range);
+        }
+
+        // Schema-backed: check if word is a known column by scanning back for table context
+        const tableAtCursor = this.detectTableContext(document, position);
+        if (tableAtCursor) {
+            const tableSchema = this.validator.getTableSchema(tableAtCursor);
+            if (tableSchema) {
+                // Find column case-insensitively
+                const colEntry = Object.entries(tableSchema.columns)
+                    .find(([colName]) => colName.toLowerCase() === originalWord.toLowerCase());
+                if (colEntry) {
+                    const [colName, colSchema] = colEntry;
+                    const markdown = new vscode.MarkdownString();
+                    markdown.appendMarkdown(`**${colName}** \`${colSchema.type}\``);
+                    markdown.appendMarkdown(`\n\n*Table: ${tableAtCursor}*`);
+                    if (colSchema.description) {
+                        markdown.appendMarkdown(`\n\n${colSchema.description}`);
+                    }
+                    markdown.isTrusted = true;
+                    return new vscode.Hover(markdown, range);
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    private detectTableContext(document: vscode.TextDocument, position: vscode.Position): string | undefined {
+        for (let lineNum = position.line; lineNum >= 0; lineNum--) {
+            const lineText = document.lineAt(lineNum).text;
+            if (lineText.trim() === '') { continue; }
+            if (lineText.trim().startsWith('//') || lineText.trim().startsWith('#')) { continue; }
+            if (/^#{1,6}\s/.test(lineText.trim())) { return undefined; }
+
+            const trimmed = lineText.trim();
+            if (!trimmed.startsWith('|') && !trimmed.startsWith('let ')) {
+                const firstWord = trimmed.split(/[\s|]/)[0];
+                if (this.validator.validateTableExists(firstWord)) {
+                    return this.validator.getCanonicalTableName(firstWord);
+                }
+            }
+        }
         return undefined;
     }
 }

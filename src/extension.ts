@@ -9,6 +9,7 @@ import { KqlCodeActionProvider } from './codeActionProvider';
 import { showFeedbackPrompt, initializeFeedback } from './feedback';
 import { KqlFoldingRangeProvider, findQueryBoundaries, getQueryText } from './foldingProvider';
 import { KqlCodeLensProvider } from './codeLensProvider';
+import { KqlSchemaValidator } from './schemaValidator';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 
@@ -29,11 +30,14 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize feedback module
     initializeFeedback(context);
 
+    // Create shared schema validator — loaded once, injected into all providers
+    const schemaValidator = new KqlSchemaValidator(context);
+
     // Create diagnostics provider with schema validation
-    diagnosticsProvider = new KqlDiagnosticsProvider(context);
+    diagnosticsProvider = new KqlDiagnosticsProvider(context, schemaValidator);
     
     // Register completion provider for KQL with schema support
-    const kqlCompletionProvider = new KqlCompletionProvider(context.extensionPath);
+    const kqlCompletionProvider = new KqlCompletionProvider(schemaValidator);
     const completionProvider = vscode.languages.registerCompletionItemProvider(
         'kql',
         kqlCompletionProvider,
@@ -54,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Register hover provider for documentation
     const hoverProvider = vscode.languages.registerHoverProvider(
         'kql',
-        new KqlHoverProvider()
+        new KqlHoverProvider(schemaValidator)
     );
     context.subscriptions.push(hoverProvider);
 

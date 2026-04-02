@@ -6,12 +6,9 @@ export class KqlDiagnosticsProvider {
     private diagnosticCollection: vscode.DiagnosticCollection;
     private syntaxChecker: KqlSyntaxChecker;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(private context: vscode.ExtensionContext, schemaValidator: KqlSchemaValidator) {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('kql');
         this.syntaxChecker = new KqlSyntaxChecker();
-        
-        // Initialize schema validator
-        const schemaValidator = new KqlSchemaValidator(context);
         this.syntaxChecker.setSchemaValidator(schemaValidator);
     }
 
