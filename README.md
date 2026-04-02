@@ -3,321 +3,136 @@
 
   **KQL Assistant**
 
-  The ultimate VS Code extension for **Azure Log Analytics**, **Microsoft Sentinel**, and **Azure Data Explorer** query development.
+  Editing support for **Kusto Query Language (KQL)** on **Azure Monitor**, **Log Analytics**, **Microsoft Sentinel**, and related platforms.
 
-  *Syntax validation • Schema-aware auto-complete • Query formatting • Quick fixes • Collapsible query organization*
+  *Syntax validation · Schema-aware IntelliSense · Formatting · Quick fixes · Multi-query organization*
 </div>
 
 ---
 
+## At a glance
+
+KQL Assistant is a **language support** extension: highlighting, diagnostics, completions, hover text, formatting, and lightweight project organization for `.kql` / `.kusto` files. It ships a large **offline** table/column catalog (700+ tables) so you get validation and suggestions without signing in to Azure.
+
+**Out of scope:** this extension **does not execute queries**. It does not connect to an Azure Data Explorer cluster or a Log Analytics workspace. Run queries in the Azure portal, Microsoft Sentinel, Fabric, or another tool that supports execution against your data plane.
+
 ## Features
 
-- **Syntax Highlighting**: Full syntax highlighting for KQL queries with support for:
-  - Keywords and operators
-  - Aggregation and scalar functions
-  - String literals and numbers
-  - Comments (line and block)
-  - Data types
+**Editing and syntax**
 
-- **Syntax Checking**: Real-time syntax validation that detects:
-  - Unmatched brackets, parentheses, and braces
-  - Unclosed string literals
-  - Incorrect pipe operator usage
-  - Common SQL-to-KQL migration mistakes (e.g., using `SELECT` instead of `project`)
-  - Missing operators for assignments
-  - Query structure issues
+- Syntax highlighting, bracket/quote behavior, comments, folding
+- Real-time diagnostics: brackets and strings, pipes, SQL-style patterns (`select` / `from`), structure
 
-- **Language Configuration**: 
-  - Auto-closing brackets and quotes
-  - Comment toggling support
-  - Code folding regions
+**IntelliSense and schemas**
 
-- **Document Outline**: 
-  - Markdown headers in KQL files appear in the Outline view
-  - Supports `#` through `######` header levels
-  - Navigate quickly through sections of your queries
+- Completions for 719+ bundled tables, operators, chart types, and 100+ functions
+- Column suggestions (with type and description) when table context is inferred
+- Hover documentation for operators and functions; hover on **table names** and **column names** when the schema and context apply
+- Signature help while typing function arguments
 
-- **Code Snippets**: 
-  - 30+ pre-built query templates
-  - Common patterns: time filters, aggregations, joins, security queries
-  - Type prefix (e.g., `timerange`, `failedlogins`) and press Tab to insert
-  - See full list in Usage section below
+**Productivity**
 
-- **Hover Documentation**: 
-  - Hover over functions and operators for instant documentation
-  - ⭐ **v0.8.0**: Hover over **table names** for schema descriptions and **column names** for type and description (when table context is detected)
-  - Detailed syntax, parameters, and examples
-  - No need to leave your editor
-
-- **Parameter Hints**: 
-  - IntelliSense shows function parameters as you type
-  - Highlights current parameter
-  - Supports 100+ KQL functions
-
-- **Enhanced Auto-completion**: 
-  - ⭐ **v0.8.0**: **All 719+ Log Analytics tables** from the bundled schema at line start (not a short curated list)
-  - 12 chart types for render operator
-  - 60+ additional scalar functions
-  - Context-aware suggestions
-
-- **Semantic Analysis**:
-  - Validates table and column names against 719+ Log Analytics table schemas
-  - Detects unknown tables/columns with "Did you mean?" suggestions
-  - Real-time validation as you type
-  - Schema-based validation from official Microsoft documentation
-  - Works completely offline
-
-- **Context-Aware Column Suggestions** ⭐ NEW in v0.6.0:
-  - Auto-complete suggests columns from your current table
-  - Works in `where`, `project`, `extend`, `summarize`, `order by` and more
-  - Shows column type and description from schema
-  - 719+ tables with full column definitions
-
-- **Query Formatting** ⭐ NEW in v0.6.0:
-  - Format Document (`Shift+Alt+F`) for KQL files
-  - Consistent pipe indentation
-  - Proper spacing around operators
-  - Comma and comparison operator normalization
-
-- **Quick Fixes (Code Actions)** ⭐ NEW in v0.6.0:
-  - 💡 Click the lightbulb for auto-fix suggestions
-  - SQL-to-KQL migration: `SELECT` → `project`, `FROM` → remove
-  - Typo fixes: "Did you mean 'Computer'?" → one-click fix
-  - Missing brackets: auto-close suggestions
-  - Missing pipe operators: auto-add `|` prefix
-
-- **Query Organization & Folding** ⭐ NEW in v0.7.0:
-  - Organize queries with markdown headers:
-    - `# Category Name #` for categories
-    - `## Detection Rule Name ##` for individual rules
-  - **Collapsible sections**: Fold/unfold categories and rules
-  - **Select Current Query**: Command to select entire query block (`KQL: Select Current Query`)
-  - **Copy Query on Hover**: Hover over a `##` rule title and click "Copy Query"
-  - **Outline View**: Navigate queries in the sidebar with hierarchical structure
+- Format Document and Format Selection
+- Code actions (lightbulb): typos, SQL-style fixes, brackets, missing `|`
+- Optional markdown headers (`# Category #`, `## Rule ##`) with folding, outline navigation, and **KQL: Select Current Query** / **KQL: Copy Current Query**
+- Inline CodeLens on headers (copy/select, line counts) where supported
 
 ## Installation
 
-### From VS Code Marketplace (Recommended)
+### VS Code Marketplace (recommended)
 
-1. Open Visual Studio Code
-2. Go to the Extensions view (`Ctrl+Shift+X` or `Cmd+Shift+X` on Mac)
-3. Search for "KQL Assistant"
-4. Click "Install"
+1. Open the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+2. Search for **KQL Assistant**
+3. Install
 
-Or install directly from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=petstuk.kql-assistant)
+Or open the [Marketplace listing](https://marketplace.visualstudio.com/items?itemName=petstuk.kql-assistant).
 
-### From Source
+### From source or VSIX
 
-1. Clone or download this repository
-2. Navigate to the extension directory:
-   ```bash
-   cd kql-assistant
-   ```
+```bash
+git clone https://github.com/petstuk/kql-assistant.git
+cd kql-assistant
+npm install
+npm run compile
+```
 
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
+- **Development:** press `F5` in VS Code (Extension Development Host)
+- **VSIX:** `npm run package` then  
+  `code --install-extension kql-assistant-0.8.1.vsix`
 
-4. Compile the TypeScript code:
-   ```bash
-   npm run compile
-   ```
+## Quick start
 
-5. Install the extension:
-   - Press `F5` in VS Code to open a new Extension Development Host window
-   - Or package and install:
-     ```bash
-     npm run package
-     code --install-extension kql-assistant-0.8.0.vsix
-     ```
+1. Open or create a file with extension `.kql` or `.kusto`
+2. Start from a table name, then chain operators with `|`
+3. Use **Format Document** (`Shift+Alt+F`) and the command **KQL: Check Syntax** when you want a full pass
 
-## Usage
+## Organizing multiple queries
 
-1. Open any file with `.kql` or `.kusto` extension
-2. The extension will automatically activate and provide syntax highlighting
-3. Syntax errors will be underlined in real-time as you type
+Use markdown-style headers so folds, outline, and CodeLens stay aligned:
 
-### 📋 Organizing Multiple Queries in One File
+- `# Category Name #` — group
+- `## Rule or query name ##` — one query block
 
-When working with multiple queries in a single `.kql` or `.kusto` file, use a **hierarchical header structure** to organize your detection rules:
+Example:
 
-- `# Category Name #` - Top-level category (e.g., "Identity Threats", "Network Anomalies")
-- `## Detection Rule Name ##` - Individual detection rules within categories
-
-**Best Practice Example:**
 ```kql
-# Identity Threats #
+# Identity #
 
-## Suspicious Sign-In Activity ##
+## Suspicious sign-ins ##
 
 SigninLogs
 | where ResultType != 0
-| where RiskLevelDuringSignIn in ("high", "medium")
-| project TimeGenerated, UserPrincipalName, IPAddress, Location
+| project TimeGenerated, UserPrincipalName, IPAddress
 
-## Impossible Travel Detection ##
+## Another rule ##
 
 SigninLogs
-| summarize Locations = make_set(Location) by UserPrincipalName
-| where array_length(Locations) > 1
-
-
-# Network Anomalies #
-
-## High Volume Outbound Traffic ##
-
-CommonSecurityLog
-| where TimeGenerated > ago(1d)
-| summarize BytesSent = sum(SentBytes) by SourceIP
-| where BytesSent > 1000000000
+| summarize c = count() by bin(TimeGenerated, 1h)
 ```
 
-> **💡 Pro Tips:**
-> - **Fold sections**: Click the arrow next to headers to collapse entire categories or rules
-> - **Copy queries quickly**: Hover over any `## Rule ##` header and click "📋 Copy Query"
-> - **Select entire query**: Use `KQL: Select Current Query` from command palette (`Ctrl+Shift+P`)
-> - **Navigate via Outline**: Use the Outline view in the sidebar to jump between queries
-> - Each query automatically resets its table and column context
+Fold arrows in the gutter collapse sections; use the **Outline** view to jump between blocks.
 
-### Code Snippets
+## Commands
 
-Type a snippet prefix and press `Tab` to insert a template. Available snippets:
+| Command | Action |
+|--------|--------|
+| **KQL: Check Syntax** | Re-run diagnostics on the active file |
+| **KQL: Select Current Query** | Select the query section around the cursor (respects header boundaries) |
+| **KQL: Copy Current Query** | Copy query body to the clipboard (without the header line) |
 
-**Time & Filtering:**
-- `timerange` - Filter by time range with ago()
-- `timebetween` - Filter by specific date range
-- `topn` - Get top N results
-- `distinct` - Get distinct values
-- `wherein` - Multiple OR conditions using 'in'
-- `contains` - String contains filter
-
-**Aggregations & Analysis:**
-- `agg` - Basic aggregation with count by field
-- `timeseries` - Time series aggregation with chart
-- `percentile` - Percentile analysis (P50, P95, P99)
-- `errorcount` - Count errors by type
-
-**Joins & Unions:**
-- `join` - Inner join two tables
-- `leftjoin` - Left outer join
-- `union` - Combine multiple tables
-
-**Variables & Statements:**
-- `let` - Define scalar variable
-- `lettable` - Define table variable
-- `extend` - Add multiple computed columns
-- `project` - Select specific columns
-
-**Security Queries:**
-- `failedlogins` - Failed login attempts analysis
-- `suspiciouslogin` - Successful logins after failed attempts
-- `emailsecurity` - Email security analysis
-- `signinanalysis` - Azure AD sign-in failure analysis
-- `securityalerts` - Security alert summary
-
-**Parsing & Data Manipulation:**
-- `parsejson` - Parse JSON field and extract properties
-- `parse` - Parse custom log format
-- `mvexpand` - Expand multi-value array
-- `extract` - Extract data using regex
-
-**Azure-Specific:**
-- `perfcounter` - Performance counter analysis
-- `heartbeat` - Computer heartbeat/availability check
-- `ipanalysis` - IP address analysis
-
-**Advanced Patterns:**
-- `rownumber` - Window function with row_number()
-- `makeseries` - Create time series with make-series
-- `case` - Multi-condition case statement
-
-*Start typing any prefix and press Tab to insert the full query template!*
-
-### Hover for Help
-
-Hover your mouse over any KQL function or operator to see:
-- Detailed description
-- Syntax and parameters
-- Usage examples
-
-### Parameter Hints
-
-When typing a function, you'll see parameter hints:
-```kql
-bin(TimeGenerated, 1h)
-    ^^^^^^^^^^^^^^  ^^^
-    Shows which parameter you're entering
-```
-
-### 🔧 Format Document
-
-Format your KQL queries with proper indentation and spacing:
-1. Open a KQL file
-2. Press `Shift+Alt+F` (or right-click → Format Document)
-3. Your query will be formatted with:
-   - Consistent pipe operator indentation
-   - Proper spacing around operators (`==`, `!=`, etc.)
-   - Comma normalization
-
-**Before:**
-```kql
-SecurityEvent|where EventID==4625|project TimeGenerated,Account,Computer
-```
-
-**After:**
-```kql
-SecurityEvent
-| where EventID == 4625
-| project TimeGenerated, Account, Computer
-```
-
-### 💡 Quick Fixes
-
-When you see a lightbulb 💡 or squiggly underline, click it for auto-fix options:
-
-- **SQL Migration:** `SELECT Account` → `project Account`
-- **Typo Fixes:** `Computr` → `Computer` (one click!)
-- **Missing Pipes:** `where x > 5` → `| where x > 5`
-- **Unclosed Brackets:** Add missing `)`, `]`, or `}`
-
-### Manual Syntax Check
-
-You can manually trigger a syntax check using the command palette:
-1. Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
-2. Type "KQL: Check Syntax"
-3. Press Enter
+Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 
 ## Configuration
 
-The extension provides the following settings:
+| Setting | Default | Description |
+|--------|---------|-------------|
+| `kqlAssistant.enableDiagnostics` | `true` | Turn syntax/schema diagnostics on or off |
+| `kqlAssistant.diagnosticLevel` | `error` | `error`, `warning`, or `information` |
 
-- `kqlAssistant.enableDiagnostics`: Enable or disable syntax checking (default: `true`)
-- `kqlAssistant.diagnosticLevel`: Set the severity level for diagnostics:
-  - `error` (default): Show diagnostics as errors
-  - `warning`: Show diagnostics as warnings
-  - `information`: Show diagnostics as information
+In Settings, search for **KQL Assistant**.
 
-To configure these settings:
-1. Open VS Code Settings (`Ctrl+,` or `Cmd+,`)
-2. Search for "KQL Assistant"
-3. Adjust settings as needed
+## Snippets
 
-## Example KQL Queries
+There are **30+** snippets: type a prefix (e.g. `timerange`, `join`, `failedlogins`, `agg`) and press **Tab**. The full set is defined in [`snippets/kql.json`](snippets/kql.json) in this repository.
+
+## Editor tips
+
+- **Hover** operators, functions, tables, and columns (when context is known) for documentation
+- **Lightbulb** fixes appear on diagnostics from KQL Assistant
+- **Format Document** normalizes pipes, spacing, and commas (see also Format Selection for a range)
+
+## Example queries
 
 ```kql
-// Simple query with filtering
 StormEvents
 | where State == "TEXAS"
 | project StartTime, EventType, DamageProperty
 | take 10
 
-// Aggregation query
 StormEvents
 | summarize EventCount = count(), TotalDamage = sum(DamageProperty) by State
 | order by TotalDamage desc
 
-// Time-based analysis
 StormEvents
 | where StartTime >= ago(30d)
 | extend Month = startofmonth(StartTime)
@@ -325,355 +140,41 @@ StormEvents
 | render timechart
 ```
 
-## Supported KQL Features
+## Supported language surface (summary)
 
-### Keywords
-`and`, `as`, `by`, `extend`, `join`, `project`, `summarize`, `where`, `order`, `sort`, `take`, `limit`, `union`, and more
+KQL is large; the extension focuses on common **keywords**, **tabular operators**, **aggregation** helpers (`count`, `sum`, `dcount`, `make_list`, …), and **scalar** functions (`ago`, `bin`, `parse_json`, `tostring`, …). Completions and hovers cover a substantial subset; see [KQL reference](https://learn.microsoft.com/en-us/kusto/query/) for the full language.
 
-### Aggregation Functions
-`count`, `sum`, `avg`, `min`, `max`, `dcount`, `percentile`, `make_list`, `make_set`, and more
+## Known limitations
 
-### Scalar Functions
-`ago`, `datetime`, `format_datetime`, `substring`, `split`, `parse_json`, `tostring`, `toint`, `tolower`, `toupper`, and more
+- Join column validation across tables is incomplete
+- Heavy use of subqueries or dynamic SQL may produce imperfect diagnostics
+- Function parameter **types** are not deeply validated
+- Workspace-specific or custom table schemas are not loaded from your tenant (bundled schemas only)
 
-## Known Limitations
+## Contributing
 
-- Join column validation across tables not yet fully implemented
-- Complex query validation with subqueries is limited
-- Function parameter type validation is basic
-- Custom table schemas (workspace-specific tables) not yet supported
-- Column validation in join conditions coming in future release
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for bug reports, feature ideas, and development setup.
 
-## 🤝 Contributing
+## License
 
-**Contributions are very welcome!** This extension is actively being improved and your input is valuable.
+MIT — see [LICENSE](LICENSE).
 
-### How to Contribute
+## Acknowledgments
 
-1. **Report Issues**: Found a bug or false positive error? [Open an issue](../../issues/new) with:
-   - A description of the problem
-   - The KQL query that triggered it
-   - Expected vs actual behavior
+Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
-2. **Suggest Improvements**: Have ideas for new features or better auto-completion? [Create an issue](../../issues/new) with:
-   - Feature description
-   - Use case examples
-   - Why it would be helpful
+## Release notes (recent)
 
-3. **Submit Pull Requests**: Want to fix something yourself?
-   - Fork the repository
-   - Create a feature branch (`git checkout -b feature/YourFeature`)
-   - Make your changes
-   - Test thoroughly in the Extension Development Host
-   - Commit with clear messages (`git commit -m 'Add: feature description'`)
-   - Push to your branch (`git push origin feature/YourFeature`)
-   - Open a Pull Request
+### 0.8.1
 
-### Areas for Improvement
-
-Help is especially welcome in these areas:
-- **Reducing false positives** in syntax checking
-- **Adding more KQL functions** to auto-completion
-- **Custom workspace schemas** (user-defined table definitions)
-- **Performance hints** (query optimization suggestions)
-- **Query execution** (run queries directly from VS Code)
-- **Performance optimizations**
-- **Documentation improvements**
-
-### Development Setup
-
-```bash
-git clone https://github.com/petstuk/kql-assistant.git
-cd kql-assistant
-npm install
-npm run compile
-# Press F5 in VS Code to launch Extension Development Host
-```
-
-## 📄 License
-
-MIT License - feel free to use this extension in your projects.
-
-## 🙏 Acknowledgments
-
-Built with research from official [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community best practices.
-
-## Release Notes
+- Documentation: clearer Marketplace README; full history in [CHANGELOG.md](CHANGELOG.md).
 
 ### 0.8.0
 
-**Schema experience and reliability:**
-
-- **Table completions**: Line-start IntelliSense now offers every table in the bundled `all-tables.json` schema (700+), with table descriptions in the completion detail.
-- **Schema-backed hover**: Hover on a known table name for its description; hover on a column name (with table context from scanning the query) for type and description.
-- **One schema load on activation**: A single `KqlSchemaValidator` instance is shared by diagnostics, completion, and hover — no duplicate `readFileSync` / JSON parse.
-- **Quick fixes**: SQL-style hints now match actual diagnostic messages (`select` / `from` fixes apply when offered). `FROM` fix deletes only the `from ` prefix and keeps the rest of the line. Document-level “unclosed bracket” fixes insert at the end of the file. “Ignore unknown table” appears in the lightbulb menu (placeholder until persistence is added).
+- Full-schema **table** completions; **schema-backed hover** for tables and columns; single shared schema load; **quick fix** alignment for SQL-style messages and bracket/`from` fixes.
 
 ### 0.7.3
 
-**CodeLens Improvements:**
+- CodeLens line/rule counts on headers; redundant header hover removed.
 
-- `## Rule ##` headers now show a **· N lines** count of the query body
-- `# Category #` headers now show a **· N rules** count of rules inside
-- Removed redundant header hover actions (CodeLens covers this now)
-
-### 0.7.2
-
-**New Feature - Inline CodeLens Actions:**
-
-- `## Rule ##` headers now show **Copy Query** and **Select Query** buttons inline
-- `# Category #` headers show a **Select All** button inline
-- Buttons appear directly on the header line — no hovering needed
-- CodeLens updates live as you add or remove headers
-
-### 0.7.1
-
-**Schema Fix:**
-
-- Added missing `AzureActivity` table schema with all 30+ columns
-- Fixes false positive errors for `Caller`, `OperationNameValue`, and other AzureActivity columns
-
-### 0.7.0 - "The Query Organization Release" 📁
-
-**New Feature - Query Organization & Folding:**
-
-- **Hierarchical Headers**: Use `# Category #` and `## Rule ##` to organize queries
-- **Collapsible Sections**: Fold/unfold entire categories or individual detection rules
-- **Select Current Query** command: Place cursor anywhere in a query, run `KQL: Select Current Query` to select the entire block
-- **Copy Query on Hover**: Hover over any `## Rule ##` header to see "Copy Query" and "Select Query" actions
-- **Enhanced Outline View**: Categories show as 📁 Modules, rules show as Detection Rules with proper hierarchy
-- **Improved Symbol Provider**: Ranges now extend to include all content until the next header
-
-**New Feature - Feedback Prompt:**
-
-- Added a one-time, non-intrusive feedback prompt to gather user input
-- Triggers after successful use: error-free save, syntax check, formatting, copy query, or quick fix
-- Three options: "Share Feedback" (opens GitHub Discussions), "Later", or "Don't Ask Again"
-- Respects user choice - prompt never reappears after dismissal
-
-### 0.6.4
-
-- Version bump for Marketplace release
-
-### 0.6.3
-
-- Version bump for Marketplace release (no functional changes from 0.6.2)
-
-### 0.6.2
-
-**Critical Bug Fix - Regex Backtracking:**
-
-- **Fixed partial function name matching** - Functions like `iff()`, `bin()`, `toint()`, `strcat()`, `coalesce()` were being partially matched as columns (`if`, `bi`, `toin`, `strca`, `coalesc`)
-- Root cause: Regex backtracking when lookahead failed on full function name
-- Fix: Changed `(?!\s*\()` to `(?![(\w])` - prevents matching if followed by `(` OR another word character
-- This prevents the regex from "giving back" characters and matching partial names
-
-**Affected patterns fixed:**
-- `where` clause column detection
-- `project` statement column detection  
-- `extend` right-side column detection
-- `summarize by` column detection
-
-### 0.6.1
-
-**Bug Fixes:**
-
-- **Fixed `union withsource=` syntax** - No longer flags `withsource=SourceTable` as unknown table or invalid assignment
-- **Fixed `=~` and `!~` operators** - Case-insensitive equality operators no longer flagged as assignments
-- **Fixed function call detection** - Functions like `coalesce()`, `pack()`, `dynamic()` no longer flagged as unknown columns
-- **Fixed union table tracking** - All tables in `union Table1, Table2, Table3` now tracked for column validation
-- **Added 40+ functions** to skip list: `coalesce`, `pack`, `parse_url`, `hash`, `ipv4_*`, `datetime_*`, etc.
-
-**Technical Changes:**
-- Union statements now reset table context and track all listed tables
-- `withsource=` parameter properly creates a column (e.g., `SourceTable`)
-- Assignment check regex updated: `=(?![=~>])` to exclude comparison operators
-- Added negative lookahead `(?!\s*\()` to column patterns to skip function calls
-- Extended scalar functions set with 40+ additional common functions
-
-### 0.6.0 - "The Productivity Release" 🚀
-
-**Three Major New Features:**
-
-**1. Context-Aware Column Auto-Complete**
-- Type after `where`, `project`, `extend`, `summarize`, or `order by` to see column suggestions
-- Columns are filtered based on your current table (from 718 Log Analytics schemas)
-- Each suggestion shows column type and description
-- Sort priority ensures columns appear before functions
-
-**2. Query Formatting**
-- Press `Shift+Alt+F` or right-click → "Format Document"
-- Automatically formats your KQL with:
-  - Proper pipe operator indentation
-  - Consistent spacing around comparison operators
-  - Comma normalization (space after, none before)
-  - Multi-space cleanup
-- Also supports "Format Selection" for partial formatting
-
-**3. Quick Fixes (Code Actions)**
-- Click the 💡 lightbulb for instant fixes
-- SQL-to-KQL migration fixes: `SELECT` → `project`, `ORDER BY` → `order by`
-- One-click typo fixes from "Did you mean?" suggestions
-- Auto-add missing pipe operators
-- Auto-close unclosed brackets
-
-**Technical Changes:**
-- New `KqlFormattingProvider` for document formatting
-- New `KqlCodeActionProvider` for quick fixes
-- Enhanced `KqlCompletionProvider` with schema-aware column suggestions
-- Completion provider now loads 718 table schemas for column lookup
-
-### 0.5.6
-
-**Final MV-Expand Assignment Fix:**
-- Fixed false positive "Assignment requires extend, summarize..." error in `mv-expand` statements
-- Assignments in `mv-expand` (e.g., `DeviceName = DeviceNames`) now properly recognized
-- Added `mv-expand`, `mv-apply`, and `lookup` to assignment validation exceptions
-
-### 0.5.5
-
-**Comprehensive Summarize & MV-Expand Fixes:**
-- Fixed `count_` column recognition (created by `count()` without assignment)
-- Fixed string literal columns in summarize: `["Events Recorded"] = count()`
-- Fixed tracking of columns created by `make_set()`, `make_list()` in summarize
-- Fixed `mv-expand` column tracking: both `ColName = ArrayCol` and simple `mv-expand ArrayCol`
-- Fixed `project-away` operator - now skips validation entirely
-- Added automatic column name detection for unassigned aggregations: `sum_`, `avg_`, `max_`, `min_`
-
-**Technical Details:**
-- Enhanced summarize parsing to detect default column names (`count_`, `sum_`, etc.)
-- Added string literal column extraction: `/\["([^"]+)"\]\s*=/gi`
-- Improved mv-expand column tracking with assignment and simple forms
-- project-away now skips validation like lookup and mv-expand
-
-### 0.5.4
-
-**Enhanced Operator Support:**
-- Added support for `lookup` operator (validation skipped for lookup lines)
-- Added support for `mv-expand` and `mv-apply` operators
-- Added support for string literals in column names: `["Events Recorded"]`, `['Column Name']`
-- Added keywords: `on`, `away` to prevent false positives
-- String literals in `summarize` statements no longer flagged as unknown columns
-
-**Technical Changes:**
-- Multi-line operator tracking now includes `lookup`, `mv-expand`, `mv-apply`
-- String literals removed from validation (`/\["[^"]+"\]/g` and `/\['[^']+'\]/g`)
-- Lookup and mv-expand lines skipped entirely (too complex for current validation)
-
-### 0.5.3
-
-**Critical Bug Fix - Multi-line Operator Context:**
-- Fixed context bleeding when multi-line operators (project/extend/summarize) weren't properly reset between queries
-- Empty lines and markdown headers now correctly reset the multi-line operator flag
-- This fixes the issue where columns from the first query were incorrectly validated against subsequent queries
-
-### 0.5.2
-
-**Critical Bug Fix:**
-- Fixed false detection of random text as table names (e.g., "Useful" in "Useful KQL Queries")
-- Table names now require either: valid schema match OR pipe operator following them
-- Improved file organization: markdown headers now properly recommended as best practice
-- Updated documentation with clear examples of proper query separation
-
-**Documentation Updates:**
-- Added "Best Practice" example showing proper file organization with markdown headers
-- Emphasized using `## Header ##` format for file titles and section names
-- Added pro tips: never start files with plain text, always use markdown headers
-
-### 0.5.1
-
-**Critical Bug Fix:**
-- Fixed query context bleeding across multiple queries in the same file
-- Each query now properly resets table/column context when separated by blank lines or markdown headers
-- Previously, columns from the first query's table were incorrectly validated against subsequent queries' tables
-- Improved detection of new query starts: now recognizes queries after empty lines, comments, or markdown headers
-
-### 0.5.0
-
-**New Features & Critical Bug Fixes:**
-- Fixed false positive error where multi-line `project` statement columns (e.g., `SourceUserName`) were incorrectly flagged as "Unknown table"
-- Added full support for `join` operations - columns from ALL joined tables are now properly validated
-- Fixed validation to check columns across all joined tables instead of just the primary table
-- Improved multi-line operator detection to prevent continuation lines from being misidentified as table names
-- Enhanced error messages for joined queries to show all relevant table names
-
-**Technical Details:**
-- Implemented join tracking with `joinedTables` Set to maintain schema context across join operations
-- Fixed regex pattern for table detection to exclude indented continuation lines
-- Updated column validation to check columns in any of the joined tables
-- Join regex now handles various join syntaxes: `| join kind=leftouter (TableName)` and `| join TableName`
-
-### 0.4.21
-
-**Marketplace Display Fix:**
-- Fixed README markdown rendering issue in VS Code Marketplace
-- Changed title from `# KQL Assistant` to `**KQL Assistant**` for better marketplace compatibility
-
-### 0.4.2
-
-**Bug Fixes:**
-- Fixed column validation for multi-line `project` statements
-- Fixed validation to track columns created by `extend` and `summarize` operators
-- Fixed false positives when using aggregated columns (e.g., `TotalEmailsInPastThirtyDays`) in `sort by` after `summarize`
-- Enhanced query pipeline tracking to understand column schema changes through the query
-- Improved handling of continuation lines in project/summarize statements
-
-### 0.4.1
-
-- Added extension icon for VS Code Marketplace
-
-### 0.4.0
-
-**Semantic Analysis & Validation** - Major Intelligence Update
-
-- **NEW**: Schema-Based Table & Column Validation
-  - Validates against 718 Log Analytics table schemas
-  - Extracted from official Microsoft documentation
-  - Detects unknown/misspelled table names (e.g., `SecurityEvents` → `SecurityEvent`)
-  - Detects unknown/misspelled column names (e.g., `ComputrName` → `Computer`)
-  - "Did you mean?" suggestions for typos
-  
-- **NEW**: Complete Table Schema Library
-  - All Log Analytics, Azure Monitor, and Microsoft Sentinel tables
-  - Includes table descriptions and all column definitions
-  - Column types, names, and descriptions for every table
-  - Works completely offline - no Azure connection needed
-  - Schemas sourced from Microsoft Learn documentation
-
-- **NEW**: Intelligent Column Detection
-  - Validates columns in `where`, `project`, `extend`, `summarize`, and `order by` clauses
-  - Tracks table context through query pipeline
-  - Smart suggestions for similar column names
-  - Levenshtein distance matching for typo detection
-
-### 0.3.1
-
-- Comprehensive snippet reference in README with complete list organized by category
-- Clear usage instructions for each snippet prefix
-- Helps users discover all 30+ available templates
-
-### 0.3.0
-
-Productivity enhancements:
-- 30+ Code Snippets for common query patterns
-- Hover Documentation for 100+ operators and functions
-- Signature Help (Parameter Hints) for function parameters
-- Azure Table Auto-completion (27 common tables)
-- Render Chart Types auto-completion (12 chart types)
-- 60+ additional scalar functions (network, encoding, geospatial, arrays, etc.)
-
-### 0.2.0
-
-- Document outline support for markdown headers
-- Headers (`#`, `##`, `###`, etc.) appear in the Outline view with hierarchical navigation
-- Fixed false positive errors for "from" keyword in markdown headers
-
-### 0.1.0
-
-Initial release:
-- Basic syntax highlighting
-- Real-time syntax checking
-- Support for .kql and .kusto files
-- Common error detection
-- Configurable diagnostics
-
+Earlier versions: [CHANGELOG.md](CHANGELOG.md).

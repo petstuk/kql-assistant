@@ -1,0 +1,232 @@
+# Changelog
+
+All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
+
+## 0.8.1
+
+- Documentation: README restructured for the Marketplace (scannable overview, explicit product scope, commands/settings tables, condensed snippets and contributing).
+- Historical release notes moved from README into this file.
+
+## 0.8.0
+
+**Schema experience and reliability:**
+
+- **Table completions**: Line-start IntelliSense now offers every table in the bundled `all-tables.json` schema (700+), with table descriptions in the completion detail.
+- **Schema-backed hover**: Hover on a known table name for its description; hover on a column name (with table context from scanning the query) for type and description.
+- **One schema load on activation**: A single `KqlSchemaValidator` instance is shared by diagnostics, completion, and hover — no duplicate `readFileSync` / JSON parse.
+- **Quick fixes**: SQL-style hints now match actual diagnostic messages (`select` / `from` fixes apply when offered). `FROM` fix deletes only the `from ` prefix and keeps the rest of the line. Document-level “unclosed bracket” fixes insert at the end of the file. “Ignore unknown table” appears in the lightbulb menu (placeholder until persistence is added).
+
+## 0.7.3
+
+**CodeLens Improvements:**
+
+- `## Rule ##` headers now show a **· N lines** count of the query body
+- `# Category #` headers now show a **· N rules** count of rules inside
+- Removed redundant header hover actions (CodeLens covers this now)
+
+## 0.7.2
+
+**New Feature - Inline CodeLens Actions:**
+
+- `## Rule ##` headers now show **Copy Query** and **Select Query** buttons inline
+- `# Category #` headers show a **Select All** button inline
+- Buttons appear directly on the header line — no hovering needed
+- CodeLens updates live as you add or remove headers
+
+## 0.7.1
+
+**Schema Fix:**
+
+- Added missing `AzureActivity` table schema with all 30+ columns
+- Fixes false positive errors for `Caller`, `OperationNameValue`, and other AzureActivity columns
+
+## 0.7.0 - "The Query Organization Release"
+
+**New Feature - Query Organization & Folding:**
+
+- **Hierarchical Headers**: Use `# Category #` and `## Rule ##` to organize queries
+- **Collapsible Sections**: Fold/unfold entire categories or individual detection rules
+- **Select Current Query** command: Place cursor anywhere in a query, run `KQL: Select Current Query` to select the entire block
+- **Copy Query on Hover**: Hover over any `## Rule ##` header to see "Copy Query" and "Select Query" actions
+- **Enhanced Outline View**: Categories show as Modules, rules show as Detection Rules with proper hierarchy
+- **Improved Symbol Provider**: Ranges now extend to include all content until the next header
+
+**New Feature - Feedback Prompt:**
+
+- Added a one-time, non-intrusive feedback prompt to gather user input
+- Triggers after successful use: error-free save, syntax check, formatting, copy query, or quick fix
+- Three options: "Share Feedback" (opens GitHub Discussions), "Later", or "Don't Ask Again"
+- Respects user choice - prompt never reappears after dismissal
+
+## 0.6.4
+
+- Version bump for Marketplace release
+
+## 0.6.3
+
+- Version bump for Marketplace release (no functional changes from 0.6.2)
+
+## 0.6.2
+
+**Critical Bug Fix - Regex Backtracking:**
+
+- **Fixed partial function name matching** - Functions like `iff()`, `bin()`, `toint()`, `strcat()`, `coalesce()` were being partially matched as columns (`if`, `bi`, `toin`, `strca`, `coalesc`)
+- Root cause: Regex backtracking when lookahead failed on full function name
+- Fix: Changed `(?!\s*\()` to `(?![(\w])` - prevents matching if followed by `(` OR another word character
+
+**Affected patterns fixed:**
+
+- `where` clause column detection
+- `project` statement column detection
+- `extend` right-side column detection
+- `summarize by` column detection
+
+## 0.6.1
+
+**Bug Fixes:**
+
+- **Fixed `union withsource=` syntax** - No longer flags `withsource=SourceTable` as unknown table or invalid assignment
+- **Fixed `=~` and `!~` operators** - Case-insensitive equality operators no longer flagged as assignments
+- **Fixed function call detection** - Functions like `coalesce()`, `pack()`, `dynamic()` no longer flagged as unknown columns
+- **Fixed union table tracking** - All tables in `union Table1, Table2, Table3` now tracked for column validation
+- **Added 40+ functions** to skip list: `coalesce`, `pack`, `parse_url`, `hash`, `ipv4_*`, `datetime_*`, etc.
+
+**Technical Changes:**
+
+- Union statements now reset table context and track all listed tables
+- `withsource=` parameter properly creates a column (e.g., `SourceTable`)
+- Assignment check regex updated: `=(?![=~>])` to exclude comparison operators
+- Added negative lookahead `(?!\s*\()` to column patterns to skip function calls
+- Extended scalar functions set with 40+ additional common functions
+
+## 0.6.0 - "The Productivity Release"
+
+**Three Major New Features:**
+
+**1. Context-Aware Column Auto-Complete**
+
+- Type after `where`, `project`, `extend`, `summarize`, or `order by` to see column suggestions
+- Columns are filtered based on your current table (from 718 Log Analytics schemas)
+- Each suggestion shows column type and description
+- Sort priority ensures columns appear before functions
+
+**2. Query Formatting**
+
+- Press `Shift+Alt+F` or right-click → "Format Document"
+- Automatically formats your KQL with proper pipe indentation, spacing, comma normalization
+- Also supports "Format Selection" for partial formatting
+
+**3. Quick Fixes (Code Actions)**
+
+- Click the lightbulb for instant fixes
+- SQL-to-KQL migration fixes: `SELECT` → `project`, `ORDER BY` → `order by`
+- One-click typo fixes from "Did you mean?" suggestions
+- Auto-add missing pipe operators
+- Auto-close unclosed brackets
+
+**Technical Changes:**
+
+- New `KqlFormattingProvider` for document formatting
+- New `KqlCodeActionProvider` for quick fixes
+- Enhanced `KqlCompletionProvider` with schema-aware column suggestions
+- Completion provider now loads 718 table schemas for column lookup
+
+## 0.5.6
+
+**Final MV-Expand Assignment Fix:**
+
+- Fixed false positive "Assignment requires extend, summarize..." error in `mv-expand` statements
+- Assignments in `mv-expand` (e.g., `DeviceName = DeviceNames`) now properly recognized
+- Added `mv-expand`, `mv-apply`, and `lookup` to assignment validation exceptions
+
+## 0.5.5
+
+**Comprehensive Summarize & MV-Expand Fixes:**
+
+- Fixed `count_` column recognition (created by `count()` without assignment)
+- Fixed string literal columns in summarize: `["Events Recorded"] = count()`
+- Fixed tracking of columns created by `make_set()`, `make_list()` in summarize
+- Fixed `mv-expand` column tracking: both `ColName = ArrayCol` and simple `mv-expand ArrayCol`
+- Fixed `project-away` operator - now skips validation entirely
+- Added automatic column name detection for unassigned aggregations: `sum_`, `avg_`, `max_`, `min_`
+
+## 0.5.4
+
+**Enhanced Operator Support:**
+
+- Added support for `lookup` operator (validation skipped for lookup lines)
+- Added support for `mv-expand` and `mv-apply` operators
+- Added support for string literals in column names: `["Events Recorded"]`, `['Column Name']`
+- Added keywords: `on`, `away` to prevent false positives
+- String literals in `summarize` statements no longer flagged as unknown columns
+
+## 0.5.3
+
+**Critical Bug Fix - Multi-line Operator Context:**
+
+- Fixed context bleeding when multi-line operators (project/extend/summarize) weren't properly reset between queries
+- Empty lines and markdown headers now correctly reset the multi-line operator flag
+
+## 0.5.2
+
+**Critical Bug Fix:**
+
+- Fixed false detection of random text as table names (e.g., "Useful" in "Useful KQL Queries")
+- Table names now require either: valid schema match OR pipe operator following them
+
+## 0.5.1
+
+**Critical Bug Fix:**
+
+- Fixed query context bleeding across multiple queries in the same file
+- Each query now properly resets table/column context when separated by blank lines or markdown headers
+
+## 0.5.0
+
+**New Features & Critical Bug Fixes:**
+
+- Fixed false positive error where multi-line `project` statement columns were incorrectly flagged as "Unknown table"
+- Added full support for `join` operations - columns from ALL joined tables are now properly validated
+
+## 0.4.21
+
+**Marketplace Display Fix:**
+
+- Fixed README markdown rendering issue in VS Code Marketplace
+- Changed title from `# KQL Assistant` to `**KQL Assistant**` for better marketplace compatibility
+
+## 0.4.2
+
+**Bug Fixes:**
+
+- Fixed column validation for multi-line `project` statements
+- Fixed validation to track columns created by `extend` and `summarize` operators
+- Fixed false positives when using aggregated columns in `sort by` after `summarize`
+
+## 0.4.1
+
+- Added extension icon for VS Code Marketplace
+
+## 0.4.0
+
+**Semantic Analysis & Validation** - Major Intelligence Update
+
+- Schema-Based Table & Column Validation (718+ Log Analytics table schemas, offline)
+- Complete Table Schema Library with descriptions and column types
+- Intelligent Column Detection with "Did you mean?" typo suggestions
+
+## 0.3.1
+
+- Comprehensive snippet reference in README with complete list organized by category
+
+## 0.3.0
+
+- 30+ Code Snippets, hover documentation, signature help, table and chart completions, 60+ scalar functions
+
+## 0.2.0
+
+- Document outline support for markdown headers
+
+## 0.1.0
+
+- Initial release: syntax highlighting, real-time syntax checking, `.kql` / `.kusto` support, configurable diagnostics
