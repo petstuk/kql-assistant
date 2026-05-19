@@ -1,0 +1,10 @@
+{
+  "CustomAlerts": {
+    "tableName": "CustomAlerts",
+    "description": "Test custom table for user schema merge",
+    "columns": {
+      "AlertId": { "type": "string", "description": "Alert identifier" },
+      "Severity": { "type": "string", "description": "Severity level" }
+    }
+  }
+}

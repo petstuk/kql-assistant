@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { KQL_DIAGNOSTIC_SOURCE } from './diagnostics';
 
 export class KqlCodeActionProvider implements vscode.CodeActionProvider {
     
@@ -23,7 +24,7 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
 
         // Process each diagnostic in the context
         for (const diagnostic of context.diagnostics) {
-            if (diagnostic.source !== 'KQL Assistant') {
+            if (diagnostic.source !== KQL_DIAGNOSTIC_SOURCE) {
                 continue;
             }
 

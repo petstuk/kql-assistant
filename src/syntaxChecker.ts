@@ -1,10 +1,14 @@
 import { KqlSchemaValidator } from './schemaValidator';
 
+export type SyntaxIssueSeverity = 'error' | 'information';
+
 export interface SyntaxError {
     line: number;
     column: number;
     length: number;
     message: string;
+    /** When set, overrides kqlAssistant.diagnosticLevel for this issue */
+    severity?: SyntaxIssueSeverity;
 }
 
 export class KqlSyntaxChecker {
@@ -145,8 +149,8 @@ export class KqlSyntaxChecker {
     private checkTableAndColumns(text: string, errors: SyntaxError[]): void {
         const lines = text.split('\n');
         let currentTable: string | undefined;
-        let joinedTables: Set<string> = new Set(); // Track all tables in current join chain
-        let createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize/project
+        const joinedTables: Set<string> = new Set(); // Track all tables in current join chain
+        const createdColumns: Set<string> = new Set(); // Track columns created by extend/summarize/project
         let hasSummarize = false; // Track if we've seen a summarize (creates new schema)
         let inMultiLineOperator = false; // Track if we're in a multi-line operator (project/summarize/extend)
         let inJoinSubquery = false; // True while processing lines inside a multi-line join (...)
@@ -411,7 +415,64 @@ export class KqlSyntaxChecker {
             if (currentTable && this.schemaValidator!.validateTableExists(currentTable) && !inJoinSubquery) {
                 this.validateColumnsInLine(line, lineNum, currentTable, joinedTables, createdColumns, hasSummarize, errors);
             }
+
+            if (/\|\s*join\b/i.test(line) && /\bon\b/i.test(line) && joinedTables.size > 0) {
+                this.checkJoinKeys(line, lineNum, joinedTables, createdColumns, errors);
+            }
         }
+    }
+
+    private checkJoinKeys(
+        line: string,
+        lineNum: number,
+        joinedTables: Set<string>,
+        createdColumns: Set<string>,
+        errors: SyntaxError[]
+    ): void {
+        const onPattern = /\bon\s+(?:\$left\.|\$right\.)?([A-Za-z_]\w*)\s*==\s*(?:\$left\.|\$right\.)?([A-Za-z_]\w*)/gi;
+        for (const match of line.matchAll(onPattern)) {
+            for (const columnName of [match[1], match[2]]) {
+                if (!columnName || this.isKqlKeywordOrFunction(columnName) || createdColumns.has(columnName)) {
+                    continue;
+                }
+                let columnFound = false;
+                for (const tableName of joinedTables) {
+                    if (this.schemaValidator!.validateColumn(tableName, columnName)) {
+                        columnFound = true;
+                        break;
+                    }
+                }
+                if (!columnFound) {
+                    const columnIndex = line.indexOf(columnName, match.index);
+                    if (columnIndex !== -1) {
+                        errors.push({
+                            line: lineNum,
+                            column: columnIndex,
+                            length: columnName.length,
+                            message: `Join key column '${columnName}' not found in joined tables`
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    private addSkippedValidationNotice(
+        errors: SyntaxError[],
+        line: string,
+        lineNum: number,
+        operator: string
+    ): void {
+        const pipeMatch = line.match(new RegExp(`\\|\\s*${operator.replace('-', '\\-')}\\b`, 'i'));
+        const column = pipeMatch ? line.indexOf(pipeMatch[0]) : 0;
+        const length = pipeMatch ? pipeMatch[0].length : 1;
+        errors.push({
+            line: lineNum,
+            column,
+            length,
+            message: `Column validation is limited for '${operator}' — verify columns manually or run in Azure`,
+            severity: 'information'
+        });
     }
 
     private validateColumnsInLine(line: string, lineNum: number, tableName: string, joinedTables: Set<string>, createdColumns: Set<string>, hasSummarize: boolean, errors: SyntaxError[]): void {
@@ -435,8 +496,16 @@ export class KqlSyntaxChecker {
         const hasLookup = /\|\s*lookup\b/i.test(cleanLine);
         const hasMvExpand = /\|\s*mv-expand\b/i.test(cleanLine);
         
-        // Skip validation for lookup, mv-expand, and project-away lines (too complex for now)
-        if (hasLookup || hasMvExpand || hasProjectAway) {
+        if (hasLookup) {
+            this.addSkippedValidationNotice(errors, line, lineNum, 'lookup');
+            return;
+        }
+        if (hasMvExpand) {
+            this.addSkippedValidationNotice(errors, line, lineNum, 'mv-expand');
+            return;
+        }
+        if (hasProjectAway) {
+            this.addSkippedValidationNotice(errors, line, lineNum, 'project-away');
             return;
         }
         
@@ -595,81 +664,6 @@ export class KqlSyntaxChecker {
         }
         
         return matrix[b.length][a.length];
-    }
-
-    private checkBracketBalance(line: string, lineNum: number, errors: SyntaxError[]): void {
-        let parenCount = 0;
-        let bracketCount = 0;
-        let braceCount = 0;
-
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            
-            // Skip string literals
-            if (char === '"' || char === "'") {
-                i = this.skipString(line, i);
-                continue;
-            }
-
-            switch (char) {
-                case '(': parenCount++; break;
-                case ')': parenCount--; break;
-                case '[': bracketCount++; break;
-                case ']': bracketCount--; break;
-                case '{': braceCount++; break;
-                case '}': braceCount--; break;
-            }
-
-            if (parenCount < 0) {
-                errors.push({
-                    line: lineNum,
-                    column: i,
-                    length: 1,
-                    message: 'Unmatched closing parenthesis'
-                });
-            }
-            if (bracketCount < 0) {
-                errors.push({
-                    line: lineNum,
-                    column: i,
-                    length: 1,
-                    message: 'Unmatched closing bracket'
-                });
-            }
-            if (braceCount < 0) {
-                errors.push({
-                    line: lineNum,
-                    column: i,
-                    length: 1,
-                    message: 'Unmatched closing brace'
-                });
-            }
-        }
-
-        if (parenCount > 0) {
-            errors.push({
-                line: lineNum,
-                column: line.length - 1,
-                length: 1,
-                message: 'Unclosed parenthesis'
-            });
-        }
-        if (bracketCount > 0) {
-            errors.push({
-                line: lineNum,
-                column: line.length - 1,
-                length: 1,
-                message: 'Unclosed bracket'
-            });
-        }
-        if (braceCount > 0) {
-            errors.push({
-                line: lineNum,
-                column: line.length - 1,
-                length: 1,
-                message: 'Unclosed brace'
-            });
-        }
     }
 
     private checkPipeOperator(line: string, lineNum: number, errors: SyntaxError[]): void {
@@ -881,14 +875,5 @@ export class KqlSyntaxChecker {
         }
     }
 
-    private skipString(line: string, start: number): number {
-        const quote = line[start];
-        for (let i = start + 1; i < line.length; i++) {
-            if (line[i] === quote && line[i - 1] !== '\\') {
-                return i;
-            }
-        }
-        return line.length;
-    }
 }
 

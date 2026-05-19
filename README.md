@@ -14,6 +14,8 @@
 
 KQL Assistant is a **language support** extension: highlighting, diagnostics, completions, hover text, formatting, and lightweight project organization for `.kql` / `.kusto` files. It ships a large **offline** table/column catalog (700+ tables) so you get validation and suggestions without signing in to Azure.
 
+**Validation is heuristic, not execution:** diagnostics catch many typos and structural mistakes using regex and the bundled (or user-supplied) schema. They do **not** prove a query will run in your workspace. Always run queries in Azure to confirm.
+
 **Out of scope:** this extension **does not execute queries**. It does not connect to an Azure Data Explorer cluster or a Log Analytics workspace. Run queries in the Azure portal, Microsoft Sentinel, Fabric, or another tool that supports execution against your data plane.
 
 ## Features
@@ -21,12 +23,14 @@ KQL Assistant is a **language support** extension: highlighting, diagnostics, co
 **Editing and syntax**
 
 - Syntax highlighting, bracket/quote behavior, comments, folding
-- Real-time diagnostics: brackets and strings, pipes, SQL-style patterns (`select` / `from`), structure
+- Real-time diagnostics (debounced while typing): brackets and strings, pipes, SQL-style patterns (`select` / `from`), table/column names against schema, single-line join keys
+- Information hints when column checks are limited (`lookup`, `mv-expand`, `project-away`)
 
 **IntelliSense and schemas**
 
 - Completions for 719+ bundled tables, operators, chart types, and 100+ functions
 - Column suggestions (with type and description) when table context is inferred
+- Optional **custom schema** via `kqlAssistant.userSchemaPath` for tenant-specific tables (merged over bundled data)
 - Hover documentation for operators and functions; hover on **table names** and **column names** when the schema and context apply
 - Signature help while typing function arguments
 
@@ -58,13 +62,13 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.8.2.vsix`
+  `code --install-extension kql-assistant-0.8.3.vsix`
 
 ## Quick start
 
 1. Open or create a file with extension `.kql` or `.kusto`
 2. Start from a table name, then chain operators with `|`
-3. Use **Format Document** (`Shift+Alt+F`) and the command **KQL: Check Syntax** when you want a full pass
+3. Use **Format Document** (`Shift+Alt+F`) and **KQL: Check Syntax** when you want a full offline validation pass (does not run against Azure)
 
 ## Organizing multiple queries
 
@@ -96,7 +100,7 @@ Fold arrows in the gutter collapse sections; use the **Outline** view to jump be
 
 | Command | Action |
 |--------|--------|
-| **KQL: Check Syntax** | Re-run diagnostics on the active file |
+| **KQL: Check Syntax** | Re-run offline diagnostics; message clarifies this is not execution validation |
 | **KQL: Select Current Query** | Select the query section around the cursor (respects header boundaries) |
 | **KQL: Copy Current Query** | Copy query body to the clipboard (without the header line) |
 
@@ -108,6 +112,7 @@ Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 |--------|---------|-------------|
 | `kqlAssistant.enableDiagnostics` | `true` | Turn syntax/schema diagnostics on or off |
 | `kqlAssistant.diagnosticLevel` | `error` | `error`, `warning`, or `information` |
+| `kqlAssistant.userSchemaPath` | *(empty)* | Optional JSON file with custom tables/columns (same shape as bundled `schemas/all-tables.json`); merged over bundled schemas |
 
 In Settings, search for **KQL Assistant**.
 
@@ -146,10 +151,12 @@ KQL is large; the extension focuses on common **keywords**, **tabular operators*
 
 ## Known limitations
 
-- Join column validation across tables is incomplete
-- Heavy use of subqueries or dynamic SQL may produce imperfect diagnostics
+- Validation is **offline heuristic + schema** — not the Kusto compiler; a clean file does not guarantee the query runs in your environment
+- Join validation covers **single-line** `on` keys; multi-line joins and complex join shapes are partial
+- Column checks are **skipped or limited** for `lookup`, `mv-expand`, and `project-away` (an information diagnostic is shown where checks are skipped)
+- Heavy use of subqueries, `dynamic`, or macros may produce imperfect diagnostics
 - Function parameter **types** are not deeply validated
-- Workspace-specific or custom table schemas are not loaded from your tenant (bundled schemas only)
+- Schemas are not fetched from Azure automatically; use `kqlAssistant.userSchemaPath` for a local JSON export of custom tables
 
 ## Contributing
 
@@ -164,6 +171,10 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.8.3
+
+- **Trust & scope**: Check Syntax and post-save feedback aligned with what the extension actually validates; optional `userSchemaPath` for custom tables; information diagnostics when column checks are limited; single-line join key validation; debounced live diagnostics; unit tests and CI.
 
 ### 0.8.2
 

@@ -2,6 +2,18 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.8.3
+
+**Trust, schema, and validation depth:**
+
+- **Honest validation scope**: **KQL: Check Syntax** reports that checks are offline heuristics against the bundled schema and do not execute against Azure. Post-save feedback only runs when this extension has no outstanding diagnostics at your configured severity (not other extensions’ squiggles).
+- **Optional user schema**: New setting `kqlAssistant.userSchemaPath` — point to a JSON file (same format as `schemas/all-tables.json`) to merge custom tables/columns over the bundled catalog. Reloads when the setting changes.
+- **Join key checks**: Single-line `| join … on Column == Column` patterns validate join keys against joined table schemas.
+- **Transparency for limited checks**: `lookup`, `mv-expand`, and `project-away` lines emit an **information** diagnostic when full column validation is skipped (so silence is not mistaken for a clean bill of health).
+- **Performance**: Diagnostics on edit are debounced (250ms); save still runs an immediate full pass.
+- **Engineering**: Unit tests for `KqlSyntaxChecker` and `SchemaStore` (`npm test`); GitHub Actions workflow runs tests on push/PR. Schema loading refactored into `schemaStore.ts` for testability without the VS Code API.
+- **Cleanup**: Removed unused per-line `checkBracketBalance` helper (file-level bracket balance remains).
+
 ## 0.8.2
 
 **False-positive "Unknown column" fixes:**

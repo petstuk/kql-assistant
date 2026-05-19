@@ -40,6 +40,7 @@ npm install
 2. Make changes in `src/` directory
 3. Test changes:
    - Compile: `npm run compile`
+   - Unit tests: `npm test` (runs Mocha against `KqlSyntaxChecker` / `SchemaStore`)
    - Press `F5` in VS Code to open Extension Development Host
    - Test with various KQL queries
 4. Commit: `git commit -m "Add: clear description"`
@@ -47,8 +48,9 @@ npm install
 6. Open a Pull Request on GitHub
 
 ### Testing Your Changes
-- Test with the example files in `examples/`
-- Create new test cases for your changes
+- Run **`npm test`** before opening a PR; add cases in `test/syntaxChecker.test.ts` for checker/schema behaviour
+- For new tables/columns, use `test/fixtures/user-schema.json` as a reference for the JSON shape
+- Test with the example files in `examples/` (if present) and your own `.kql` files
 - Ensure no false positives are introduced
 - Test auto-completion context-awareness
 - Verify syntax highlighting works correctly

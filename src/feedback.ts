@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const FEEDBACK_URL = 'https://github.com/pertstuk/kql-assistant/discussions';
+const FEEDBACK_URL = 'https://github.com/petstuk/kql-assistant/discussions';
 const DISMISSED_KEY = 'feedbackPromptDismissed';
 let hasShownThisSession = false;
 let globalContext: vscode.ExtensionContext | undefined;
