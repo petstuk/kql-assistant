@@ -1,4 +1,5 @@
 import { KqlSchemaValidator } from './schemaValidator';
+import { buildQueryModel, ColumnReference, QuerySchemaProvider, QueryStep } from './queryModel';
 
 export type SyntaxIssueSeverity = 'error' | 'information';
 
@@ -12,7 +13,7 @@ export interface SyntaxError {
 }
 
 export class KqlSyntaxChecker {
-    private schemaValidator: KqlSchemaValidator | undefined;
+    private schemaValidator: QuerySchemaProvider | undefined;
     // KQL keywords and operators
     private readonly keywords = new Set([
         'and', 'as', 'away', 'by', 'consume', 'count', 'distinct', 'evaluate', 'extend',
@@ -53,7 +54,7 @@ export class KqlSyntaxChecker {
         'unixtime_milliseconds_todatetime', 'unixtime_nanoseconds_todatetime', 'unixtime_seconds_todatetime'
     ]);
 
-    public setSchemaValidator(validator: KqlSchemaValidator): void {
+    public setSchemaValidator(validator: KqlSchemaValidator | QuerySchemaProvider): void {
         this.schemaValidator = validator;
     }
 
@@ -140,10 +141,101 @@ export class KqlSyntaxChecker {
 
         // Check table and column names against schema (if validator is available)
         if (this.schemaValidator) {
-            this.checkTableAndColumns(text, errors);
+            this.checkTableAndColumnsWithModel(text, errors);
         }
 
         return errors;
+    }
+
+    private checkTableAndColumnsWithModel(text: string, errors: SyntaxError[]): void {
+        const model = buildQueryModel(text, this.schemaValidator);
+
+        for (const issue of model.parseIssues) {
+            errors.push(issue);
+        }
+
+        for (const block of model.blocks) {
+            if (block.sourceName && !block.sourceTable && /^[A-Z]\w*/.test(block.sourceName)) {
+                const suggestion = this.schemaValidator!.suggestSimilarTable(block.sourceName);
+                errors.push({
+                    line: block.sourceLine ?? block.startLine,
+                    column: block.sourceColumn ?? 0,
+                    length: block.sourceName.length,
+                    message: suggestion
+                        ? `Unknown table '${block.sourceName}'. Did you mean '${suggestion}'?`
+                        : `Unknown table '${block.sourceName}'`
+                });
+                continue;
+            }
+
+            for (const step of block.steps) {
+                if (step.operator === 'lookup') {
+                    errors.push({
+                        line: step.line,
+                        column: step.column,
+                        length: 'lookup'.length + 1,
+                        message: "Column validation is limited for 'lookup' — verify columns manually or run in Azure",
+                        severity: 'information'
+                    });
+                    continue;
+                }
+
+                const validColumns = this.getValidColumnsForStep(step);
+                for (const reference of step.referencedColumns) {
+                    this.validateColumnReference(reference, validColumns, step, errors);
+                }
+
+                for (const removed of step.removedColumns) {
+                    this.validateColumnReference(removed, step.inputColumns, step, errors);
+                }
+            }
+        }
+    }
+
+    private getValidColumnsForStep(step: QueryStep): string[] {
+        if (step.operator === 'join' && step.join?.rightTable) {
+            return [
+                ...step.inputColumns,
+                ...this.schemaValidator!.getColumns(step.join.rightTable)
+            ];
+        }
+        return step.inputColumns;
+    }
+
+    private validateColumnReference(
+        reference: ColumnReference,
+        validColumns: string[],
+        step: QueryStep,
+        errors: SyntaxError[]
+    ): void {
+        if (this.isKqlKeywordOrFunction(reference.name)) {
+            return;
+        }
+        if (this.schemaValidator!.validateTableExists(reference.name)) {
+            return;
+        }
+        if (validColumns.some(column => column.toLowerCase() === reference.name.toLowerCase())) {
+            return;
+        }
+
+        const primaryTable = step.inputTables[0] ?? step.outputTables[0];
+        const similarColumn = primaryTable ? this.findSimilarColumn(primaryTable, reference.name) : undefined;
+        const tableList = step.inputTables.length > 1
+            ? `tables '${step.inputTables.join(', ')}'`
+            : primaryTable
+                ? `table '${primaryTable}'`
+                : 'current query scope';
+
+        errors.push({
+            line: reference.line,
+            column: reference.column,
+            length: reference.name.length,
+            message: step.operator === 'join'
+                ? `Join key column '${reference.name}' not found in joined tables`
+                : similarColumn
+                ? `Unknown column '${reference.name}' in ${tableList}. Did you mean '${similarColumn}'?`
+                : `Unknown column '${reference.name}' in ${tableList}`
+        });
     }
 
     private checkTableAndColumns(text: string, errors: SyntaxError[]): void {

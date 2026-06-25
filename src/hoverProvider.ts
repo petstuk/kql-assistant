@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { KqlSchemaValidator } from './schemaValidator';
+import { buildQueryModel, getScopeAtLine } from './queryModel';
 
 export class KqlHoverProvider implements vscode.HoverProvider {
     constructor(private validator: KqlSchemaValidator) {}
@@ -131,9 +132,10 @@ export class KqlHoverProvider implements vscode.HoverProvider {
             return new vscode.Hover(markdown, range);
         }
 
-        // Schema-backed: check if word is a known column by scanning back for table context
-        const tableAtCursor = this.detectTableContext(document, position);
-        if (tableAtCursor) {
+        // Schema-backed: check if word is a known column in the current query scope
+        const scope = getScopeAtLine(buildQueryModel(document.getText(), this.validator), position.line);
+        if (scope) {
+            for (const tableAtCursor of scope.tables) {
             const tableSchema = this.validator.getTableSchema(tableAtCursor);
             if (tableSchema) {
                 // Find column case-insensitively
@@ -150,6 +152,14 @@ export class KqlHoverProvider implements vscode.HoverProvider {
                     markdown.isTrusted = true;
                     return new vscode.Hover(markdown, range);
                 }
+            }
+        }
+            if (scope.columns.some(column => column.toLowerCase() === originalWord.toLowerCase())) {
+                const markdown = new vscode.MarkdownString();
+                markdown.appendMarkdown(`**${originalWord}** *(current query column)*`);
+                markdown.appendMarkdown('\n\nColumn produced by the current query scope.');
+                markdown.isTrusted = true;
+                return new vscode.Hover(markdown, range);
             }
         }
 

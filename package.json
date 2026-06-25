@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Offline KQL syntax and schema validation, custom schema support, IntelliSense, formatting, quick fixes, and query organization for Azure Log Analytics and Sentinel",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {

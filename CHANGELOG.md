@@ -2,6 +2,18 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.9.0
+
+**Parser-backed query understanding:**
+
+- **Shared QueryModel**: Diagnostics, completions, and hovers now use a common model for query blocks, pipe steps, source tables, aliases, `let` table bindings, and current column scope.
+- **Better joins**: Join key validation now handles common multiline `join (...) on ...` shapes, extending the 0.8.3 single-line support.
+- **Scope isolation**: Multi-query files and markdown-header sections keep column scopes separate, reducing alias leakage and false confidence.
+- **Deeper column checks**: `project-away` and simple `mv-expand` are validated instead of being treated as skipped validation paths. `lookup` still emits an information diagnostic where column validation is limited.
+- **Editor consistency**: Column completions and schema-backed hover use the same query scope as diagnostics instead of separate backward scans.
+- **Engineering**: Added a VS Code-free parser adapter and `QueryModel` test suite. The test suite now covers 25+ diagnostics/model cases.
+- **Parser spike result**: `@fossiq/kql-lezer` passed the license/size check but failed npm install because its published package references `workspace:*`; 0.9.0 therefore ships the internal parser-adapter fallback.
+
 ## 0.8.3
 
 **Trust, schema, and validation depth:**

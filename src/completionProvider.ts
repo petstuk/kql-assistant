@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { KqlSchemaValidator } from './schemaValidator';
+import { buildQueryModel, getScopeAtLine } from './queryModel';
 
 export class KqlCompletionProvider implements vscode.CompletionItemProvider {
     constructor(private validator: KqlSchemaValidator) {}
@@ -14,8 +15,7 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         const linePrefix = document.lineAt(position).text.substring(0, position.character);
         const completions: vscode.CompletionItem[] = [];
 
-        // Detect current table from document context
-        const currentTable = this.detectCurrentTable(document, position);
+        const scope = getScopeAtLine(buildQueryModel(document.getText(), this.validator), position.line);
 
         // Check context
         const afterPipe = /\|\s*\w*$/.test(linePrefix);
@@ -51,9 +51,9 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         } else if (afterFieldName) {
             // After field name in where clause - suggest comparison operators
             completions.push(...this.getComparisonOperatorCompletions());
-        } else if (wantsColumns && currentTable) {
-            // After 'where', 'by', 'project', 'order by' - suggest columns from current table
-            completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+        } else if (wantsColumns && scope) {
+            // After 'where', 'by', 'project', 'order by' - suggest columns from current query scope
+            completions.push(...this.getScopedColumnCompletions(scope, linePrefix));
         } else if (afterWhere || afterBy) {
             // Fallback if we don't have table context - return empty
             return [];
@@ -63,21 +63,21 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         } else if (inSummarize) {
             // Inside summarize - suggest aggregation functions AND columns for grouping
             completions.push(...this.getAggregationFunctionCompletions());
-            if (currentTable) {
-                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            if (scope) {
+                completions.push(...this.getScopedColumnCompletions(scope, linePrefix));
             }
         } else if (inExtend) {
             // Inside extend - suggest scalar functions AND columns
             completions.push(...this.getScalarFunctionCompletions());
-            if (currentTable) {
-                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            if (scope) {
+                completions.push(...this.getScopedColumnCompletions(scope, linePrefix));
             }
         } else {
             // General context - suggest scalar functions (not aggregations outside summarize)
             completions.push(...this.getScalarFunctionCompletions());
             // Also suggest columns if we have table context
-            if (currentTable) {
-                completions.push(...this.getColumnCompletions(currentTable, linePrefix));
+            if (scope) {
+                completions.push(...this.getScopedColumnCompletions(scope, linePrefix));
             }
         }
 
@@ -163,6 +163,41 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
             // Set sort priority - columns should appear before functions
             item.sortText = `0_${colName}`;
             
+            completions.push(item);
+        }
+
+        return completions;
+    }
+
+    private getScopedColumnCompletions(
+        scope: { tables: string[]; columns: string[] },
+        linePrefix: string
+    ): vscode.CompletionItem[] {
+        const partialMatch = linePrefix.match(/(\w*)$/);
+        const partial = partialMatch ? partialMatch[1].toLowerCase() : '';
+        const completions: vscode.CompletionItem[] = [];
+        const seen = new Set<string>();
+
+        for (const tableName of scope.tables) {
+            for (const item of this.getColumnCompletions(tableName, linePrefix)) {
+                seen.add(item.label.toString().toLowerCase());
+                completions.push(item);
+            }
+        }
+
+        for (const columnName of scope.columns) {
+            const key = columnName.toLowerCase();
+            if (seen.has(key) || (partial && !key.startsWith(partial))) {
+                continue;
+            }
+
+            const item = new vscode.CompletionItem(columnName, vscode.CompletionItemKind.Field);
+            item.detail = 'calculated column';
+            item.documentation = new vscode.MarkdownString(
+                `**${columnName}**\n\nColumn from the current query scope.`
+            );
+            item.insertText = columnName;
+            item.sortText = `0_${columnName}`;
             completions.push(item);
         }
 

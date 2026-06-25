@@ -14,7 +14,7 @@
 
 KQL Assistant is a **language support** extension: highlighting, diagnostics, completions, hover text, formatting, and lightweight project organization for `.kql` / `.kusto` files. It ships a large **offline** table/column catalog (700+ tables) so you get validation and suggestions without signing in to Azure.
 
-**Validation is heuristic, not execution:** diagnostics catch many typos and structural mistakes using regex and the bundled (or user-supplied) schema. They do **not** prove a query will run in your workspace. Always run queries in Azure to confirm.
+**Validation is offline, not execution:** diagnostics use parser-backed query structure plus the bundled (or user-supplied) schema to catch many typos, scope mistakes, and structural issues. They do **not** prove a query will run in your workspace. Always run queries in Azure to confirm.
 
 **Out of scope:** this extension **does not execute queries**. It does not connect to an Azure Data Explorer cluster or a Log Analytics workspace. Run queries in the Azure portal, Microsoft Sentinel, Fabric, or another tool that supports execution against your data plane.
 
@@ -23,13 +23,13 @@ KQL Assistant is a **language support** extension: highlighting, diagnostics, co
 **Editing and syntax**
 
 - Syntax highlighting, bracket/quote behavior, comments, folding
-- Real-time diagnostics (debounced while typing): brackets and strings, pipes, SQL-style patterns (`select` / `from`), table/column names against schema, single-line join keys
-- Information hints when column checks are limited (`lookup`, `mv-expand`, `project-away`)
+- Real-time diagnostics (debounced while typing): brackets and strings, pipes, SQL-style patterns (`select` / `from`), table/column names against schema, multiline join keys, `let` table bindings, and query-block scope
+- Information hints when column checks are limited (`lookup`)
 
 **IntelliSense and schemas**
 
 - Completions for 719+ bundled tables, operators, chart types, and 100+ functions
-- Column suggestions (with type and description) when table context is inferred
+- Column suggestions (with type and description) from the same query scope used by diagnostics
 - Optional **custom schema** via `kqlAssistant.userSchemaPath` for tenant-specific tables (merged over bundled data)
 - Hover documentation for operators and functions; hover on **table names** and **column names** when the schema and context apply
 - Signature help while typing function arguments
@@ -62,7 +62,7 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.8.3.vsix`
+  `code --install-extension kql-assistant-0.9.0.vsix`
 
 ## Quick start
 
@@ -151,9 +151,9 @@ KQL is large; the extension focuses on common **keywords**, **tabular operators*
 
 ## Known limitations
 
-- Validation is **offline heuristic + schema** — not the Kusto compiler; a clean file does not guarantee the query runs in your environment
-- Join validation covers **single-line** `on` keys; multi-line joins and complex join shapes are partial
-- Column checks are **skipped or limited** for `lookup`, `mv-expand`, and `project-away` (an information diagnostic is shown where checks are skipped)
+- Validation is **offline parser-backed structure + schema** — not the Kusto compiler; a clean file does not guarantee the query runs in your environment
+- Join validation covers common single-line and multiline `on` keys; complex join shapes are still partial
+- Column checks remain limited for `lookup` (an information diagnostic is shown where checks are skipped)
 - Heavy use of subqueries, `dynamic`, or macros may produce imperfect diagnostics
 - Function parameter **types** are not deeply validated
 - Schemas are not fetched from Azure automatically; use `kqlAssistant.userSchemaPath` for a local JSON export of custom tables
@@ -171,6 +171,10 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.9.0
+
+- **Parser-backed query understanding**: diagnostics, completions, and hovers now share a QueryModel for query blocks, pipe steps, aliases, `let` table bindings, multiline join keys, `project-away`, and simple `mv-expand`.
 
 ### 0.8.3
 

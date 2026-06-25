@@ -23,6 +23,10 @@ class TestSchemaValidator {
         return this.store.suggestSimilarTable(tableName);
     }
 
+    getCanonicalTableName(name: string): string | undefined {
+        return this.store.getCanonicalTableName(name);
+    }
+
     getColumns(tableName: string): string[] {
         return this.store.getColumns(tableName);
     }
@@ -79,13 +83,12 @@ describe('KqlSyntaxChecker', () => {
         assert.ok(hasMessage(errors, 'project" instead of "select'));
     });
 
-    it('emits information notice for mv-expand', () => {
+    it('validates simple mv-expand instead of skipping it', () => {
         const errors = checker.check(
-            'SigninLogs\n| mv-expand Properties\n| take 10'
+            'SigninLogs\n| mv-expand ExpandedUser = UserPrincipalName\n| take 10'
         );
-        const notice = errors.find(e => e.severity === 'information');
-        assert.ok(notice);
-        assert.ok(notice!.message.includes('mv-expand'));
+        assert.ok(!errors.some(e => e.severity === 'information' && e.message.includes('mv-expand')));
+        assert.ok(!hasMessage(errors, "Unknown column 'ExpandedUser'"));
     });
 
     it('validates join key columns on single-line join', () => {
@@ -93,6 +96,45 @@ describe('KqlSyntaxChecker', () => {
             'SigninLogs\n| join kind=inner (AuditLogs) on BadJoinKey == BadJoinKey'
         );
         assert.ok(hasMessage(errors, "Join key column 'BadJoinKey'"));
+    });
+
+    it('validates join key columns on multiline join', () => {
+        const errors = checker.check(
+            'SigninLogs\n| join kind=inner (\n    AuditLogs\n) on BadJoinKey == BadJoinKey'
+        );
+        assert.ok(hasMessage(errors, "Join key column 'BadJoinKey'"));
+    });
+
+    it('validates project-away columns', () => {
+        const errors = checker.check(
+            'SigninLogs\n| project-away NotARealColumn'
+        );
+        assert.ok(hasMessage(errors, "Unknown column 'NotARealColumn'"));
+    });
+
+    it('keeps query scopes isolated across blocks', () => {
+        const withUser = createChecker(userSchemaPath);
+        const errors = withUser.check(
+            'SigninLogs\n| project OfficeTime = TimeGenerated\n\nCustomAlerts\n| where OfficeTime > ago(1d)'
+        );
+        assert.ok(hasMessage(errors, "Unknown column 'OfficeTime'"));
+    });
+
+    it('resolves table-shaped let bindings', () => {
+        const errors = checker.check(
+            'let Recent = SigninLogs | where TimeGenerated > ago(1d);\nRecent\n| where UserPrincipalName contains "@"'
+        );
+        assert.ok(!hasMessage(errors, "Unknown table 'Recent'"));
+        assert.ok(!hasMessage(errors, "Unknown column 'UserPrincipalName'"));
+    });
+
+    it('keeps lookup transparency notice', () => {
+        const errors = checker.check(
+            'SigninLogs\n| lookup AuditLogs on Id'
+        );
+        const notice = errors.find(e => e.severity === 'information');
+        assert.ok(notice);
+        assert.ok(notice!.message.includes('lookup'));
     });
 
     it('loads user schema for custom tables', () => {
