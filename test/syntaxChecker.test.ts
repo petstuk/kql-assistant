@@ -52,6 +52,18 @@ describe('KqlSyntaxChecker', () => {
         assert.ok(hasMessage(errors, 'Did you mean'));
     });
 
+    it('skips unknown table when ignored', () => {
+        const local = createChecker();
+        local.setIgnoredTables(['SigninLogz']);
+        const errors = local.check('SigninLogz | take 10');
+        assert.ok(!hasMessage(errors, "Unknown table 'SigninLogz'"));
+    });
+
+    it('flags missing pipe before tabular operator', () => {
+        const errors = checker.check('SigninLogs\nwhere TimeGenerated > ago(1d)');
+        assert.ok(hasMessage(errors, 'Missing pipe operator before \'where\''));
+    });
+
     it('accepts valid SigninLogs column in where', () => {
         const errors = checker.check(
             'SigninLogs\n| where TimeGenerated > ago(1d)\n| take 10'

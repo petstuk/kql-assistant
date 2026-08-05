@@ -33,6 +33,9 @@ export class KqlDiagnosticsProvider {
             return;
         }
 
+        const ignoredTables = config.get<string[]>('ignoredTables', []) ?? [];
+        this.syntaxChecker.setIgnoredTables(ignoredTables);
+
         const text = document.getText();
         const errors = this.syntaxChecker.check(text);
         const diagnosticLevel = config.get<string>('diagnosticLevel', 'error');

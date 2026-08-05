@@ -14,6 +14,16 @@ export interface SyntaxError {
 
 export class KqlSyntaxChecker {
     private schemaValidator: QuerySchemaProvider | undefined;
+    private ignoredTables = new Set<string>();
+
+    /** Operators that must be preceded by `|` when used as a line-leading tabular step */
+    private readonly pipeRequiredOperators = [
+        'project-away', 'project-keep', 'project-rename', 'project-reorder',
+        'mv-expand', 'mv-apply', 'make-series',
+        'where', 'project', 'extend', 'summarize', 'order', 'sort',
+        'take', 'limit', 'top', 'distinct', 'count', 'render', 'join', 'lookup'
+    ];
+
     // KQL keywords and operators
     private readonly keywords = new Set([
         'and', 'as', 'away', 'by', 'consume', 'count', 'distinct', 'evaluate', 'extend',
@@ -56,6 +66,15 @@ export class KqlSyntaxChecker {
 
     public setSchemaValidator(validator: KqlSchemaValidator | QuerySchemaProvider): void {
         this.schemaValidator = validator;
+    }
+
+    /** Table names that should not produce "Unknown table" diagnostics (case-insensitive). */
+    public setIgnoredTables(tables: string[]): void {
+        this.ignoredTables = new Set(
+            tables
+                .map(t => t.trim().toLowerCase())
+                .filter(t => t.length > 0)
+        );
     }
 
     public check(text: string): SyntaxError[] {
@@ -129,6 +148,7 @@ export class KqlSyntaxChecker {
 
             // Check for common syntax errors (not bracket balance per line)
             this.checkPipeOperator(line, i, errors);
+            this.checkMissingPipeOperator(line, i, errors);
             this.checkStringLiterals(line, i, errors);
             this.checkCommonMistakes(line, i, errors, inSummarizeBlock || inExtendBlock || inProjectBlock || inLetStatement);
         }
@@ -156,6 +176,9 @@ export class KqlSyntaxChecker {
 
         for (const block of model.blocks) {
             if (block.sourceName && !block.sourceTable && /^[A-Z]\w*/.test(block.sourceName)) {
+                if (this.ignoredTables.has(block.sourceName.toLowerCase())) {
+                    continue;
+                }
                 const suggestion = this.schemaValidator!.suggestSimilarTable(block.sourceName);
                 errors.push({
                     line: block.sourceLine ?? block.startLine,
@@ -760,7 +783,7 @@ export class KqlSyntaxChecker {
 
     private checkPipeOperator(line: string, lineNum: number, errors: SyntaxError[]): void {
         const trimmedLine = line.trim();
-        
+
         // Check for pipe at the start (except for continuation)
         if (trimmedLine.startsWith('|') && lineNum === 0) {
             errors.push({
@@ -780,6 +803,34 @@ export class KqlSyntaxChecker {
                 length: 2,
                 message: 'Double pipe operator - use single | to chain operators'
             });
+        }
+    }
+
+    private checkMissingPipeOperator(line: string, lineNum: number, errors: SyntaxError[]): void {
+        const trimmedLine = line.trim();
+        if (
+            trimmedLine === '' ||
+            trimmedLine.startsWith('|') ||
+            trimmedLine.startsWith('//') ||
+            trimmedLine.startsWith('/*') ||
+            /^#{1,6}\s+/.test(trimmedLine) ||
+            trimmedLine.toLowerCase().startsWith('let ')
+        ) {
+            return;
+        }
+
+        const lower = trimmedLine.toLowerCase();
+        for (const op of this.pipeRequiredOperators) {
+            if (lower === op || lower.startsWith(op + ' ') || lower.startsWith(op + '\t')) {
+                const startCol = line.search(/\S/);
+                errors.push({
+                    line: lineNum,
+                    column: startCol >= 0 ? startCol : 0,
+                    length: op.length,
+                    message: `Missing pipe operator before '${op}'`
+                });
+                return;
+            }
         }
     }
 

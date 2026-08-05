@@ -19,6 +19,7 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
 
         // Check context
         const afterPipe = /\|\s*\w*$/.test(linePrefix);
+        const afterJoin = /\|\s*join(\s+\w*)?$/i.test(linePrefix);
         const startOfLine = /^\s*\w*$/.test(linePrefix);
         const afterWhere = /\|\s*where\s+\w*$/i.test(linePrefix);
         const afterFieldName = /\|\s*where\s+\w+\s+\w*$/i.test(linePrefix);
@@ -42,6 +43,9 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         } else if (afterRender) {
             // After render operator - suggest chart types
             completions.push(...this.getRenderChartCompletions());
+        } else if (afterJoin) {
+            // After join - suggest join kinds / related keywords
+            completions.push(...this.getKeywordCompletions());
         } else if (afterPipe) {
             // Right after pipe operator - suggest KQL operators only
             completions.push(...this.getOperatorCompletions());

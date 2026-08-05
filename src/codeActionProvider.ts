@@ -66,6 +66,11 @@ export class KqlCodeActionProvider implements vscode.CodeActionProvider {
                         vscode.CodeActionKind.QuickFix
                     );
                     ignoreAction.diagnostics = [diagnostic];
+                    ignoreAction.command = {
+                        command: 'kql-assistant.ignoreUnknownTable',
+                        title: `Ignore unknown table '${tableName}'`,
+                        arguments: [tableName]
+                    };
                     actions.push(ignoreAction);
                 }
             }

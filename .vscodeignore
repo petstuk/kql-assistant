@@ -12,3 +12,12 @@ testingschemas/**
 icon/**
 *.pdf
 node_modules/**
+.github/**
+test/**
+out/test/**
+examples/**
+*.vsix
+CONTRIBUTING.md
+.cursor/**
+out/*.js
+out/*.js.map

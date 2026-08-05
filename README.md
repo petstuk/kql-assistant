@@ -37,7 +37,7 @@ KQL Assistant is a **language support** extension: highlighting, diagnostics, co
 **Productivity**
 
 - Format Document and Format Selection
-- Code actions (lightbulb): typos, SQL-style fixes, brackets, missing `|`
+- Code actions (lightbulb): typos, SQL-style fixes, brackets, missing `|`, ignore unknown tables
 - Optional markdown headers (`# Category #`, `## Rule ##`) with folding, outline navigation, and **KQL: Select Current Query** / **KQL: Copy Current Query**
 - Inline CodeLens on headers (copy/select, line counts) where supported
 
@@ -62,7 +62,7 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.9.0.vsix`
+  `code --install-extension kql-assistant-0.9.1.vsix`
 
 ## Quick start
 
@@ -113,6 +113,7 @@ Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 | `kqlAssistant.enableDiagnostics` | `true` | Turn syntax/schema diagnostics on or off |
 | `kqlAssistant.diagnosticLevel` | `error` | `error`, `warning`, or `information` |
 | `kqlAssistant.userSchemaPath` | *(empty)* | Optional JSON file with custom tables/columns (same shape as bundled `schemas/all-tables.json`); merged over bundled schemas |
+| `kqlAssistant.ignoredTables` | `[]` | Table names to skip for unknown-table diagnostics (also set via lightbulb **Ignore unknown table**) |
 
 In Settings, search for **KQL Assistant**.
 
@@ -171,6 +172,10 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.9.1
+
+- New Marketplace icon; **Ignore unknown table** persistence; missing-pipe diagnostics; join-kind completions; `lookup` hover; activate only for KQL files; cleaner VSIX packaging.
 
 ### 0.9.0
 

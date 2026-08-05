@@ -2,6 +2,18 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.9.1
+
+**Logo and quick UX fixes:**
+
+- **New extension icon**: geometric “K” mark for Marketplace and README.
+- **Ignore unknown table**: lightbulb now persists the table name in `kqlAssistant.ignoredTables` (workspace) and suppresses matching diagnostics.
+- **Missing pipe diagnostics**: lines that start with a tabular operator without `|` (e.g. `where …`) are flagged; the existing Add pipe quick fix applies.
+- **Join completions**: after `| join`, offer join-kind / related keyword completions.
+- **Lookup hover**: hover docs for `lookup` aligned with completions.
+- **Activation**: activate on `onLanguage:kql` instead of every VS Code startup.
+- **Packaging**: tighter `.vscodeignore` (exclude tests, CI, examples, stale `out/` artifacts).
+
 ## 0.9.0
 
 **Parser-backed query understanding:**

@@ -79,22 +79,19 @@ kql-assistant/
 ## 🎯 Areas Needing Help
 
 ### High Priority
-- [ ] Reduce false positives in syntax checking
-- [ ] Add missing KQL functions to auto-completion
-- [ ] Improve multi-line query context tracking
-- [ ] Better handling of dynamic/complex expressions
+- [ ] Reduce remaining false positives in complex expressions / subqueries
+- [ ] Deeper `lookup` column validation (join-shaped common cases)
+- [ ] Better handling of `dynamic` / macros
 
 ### Medium Priority
-- [ ] Field name suggestions (requires schema knowledge)
-- [ ] Query formatting/prettify
-- [ ] Hover documentation for functions
-- [ ] Performance optimizations
+- [ ] Expand function coverage in completions and signature help
+- [ ] Persist “ignore unknown column” (tables already supported via `ignoredTables`)
+- [ ] Performance optimizations on very large multi-query files
 
 ### Future Ideas
-- [ ] Schema validation (check table/column existence)
+- [ ] Fetch / sync schemas from Azure (auth + refresh UX)
 - [ ] Query execution integration
 - [ ] Query performance hints
-- [ ] Azure Data Explorer connection
 
 ## 📝 Commit Message Guidelines
 

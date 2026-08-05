@@ -168,8 +168,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('kqlAssistant.userSchemaPath')) {
-                diagnosticsProvider?.reloadSchemas();
+            if (
+                e.affectsConfiguration('kqlAssistant.userSchemaPath') ||
+                e.affectsConfiguration('kqlAssistant.ignoredTables')
+            ) {
+                if (e.affectsConfiguration('kqlAssistant.userSchemaPath')) {
+                    diagnosticsProvider?.reloadSchemas();
+                }
                 vscode.workspace.textDocuments.forEach(doc => {
                     if (doc.languageId === 'kql') {
                         diagnosticsProvider?.updateDiagnostics(doc);
@@ -202,6 +207,38 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('kql-assistant.triggerFeedback', () => {
             showFeedbackPrompt();
         })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'kql-assistant.ignoreUnknownTable',
+            async (tableName?: string) => {
+                if (!tableName || typeof tableName !== 'string') {
+                    return;
+                }
+                const config = vscode.workspace.getConfiguration('kqlAssistant');
+                const current = config.get<string[]>('ignoredTables', []) ?? [];
+                const alreadyIgnored = current.some(
+                    t => t.toLowerCase() === tableName.toLowerCase()
+                );
+                if (!alreadyIgnored) {
+                    await config.update(
+                        'ignoredTables',
+                        [...current, tableName],
+                        vscode.ConfigurationTarget.Workspace
+                    );
+                }
+                vscode.window.showInformationMessage(
+                    `Ignoring unknown table '${tableName}' in this workspace (kqlAssistant.ignoredTables).`
+                );
+                vscode.workspace.textDocuments.forEach(doc => {
+                    if (doc.languageId === 'kql') {
+                        diagnosticsProvider?.updateDiagnostics(doc);
+                    }
+                });
+                showFeedbackPrompt();
+            }
+        )
     );
 
     context.subscriptions.push(
