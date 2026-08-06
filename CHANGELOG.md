@@ -2,26 +2,36 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
-## Unreleased
+## 0.10.0
 
-**Sprint 3 — SOC packaging:**
+**Detection engineering release** — offline lint, CI CLI, schema packs, analytics-rule export, and SOC-oriented schema/snippet fixes.
 
-- **Analytics rule export**: `KQL: Export Analytics Rule YAML` (+ CodeLens) builds a Sentinel scheduled-rule stub from `## Rule ##` blocks.
-- **Rule metadata**: Parse `// tactic:`, `// technique:`, `// severity:`, `// description:`, `// queryFrequency:` under headers; surface in CodeLens and Outline.
-- **Lookup / IOC**: Join-shaped `lookup` column validation; `datatable(...)` IOC lists via `let` get column scope; removed legacy line-scanner dead code from `syntaxChecker`.
+### Detection lint and CI
 
-**Sprint 2 — engineer value:**
+- **`kqlAssistant.lintMode`** (`off` | `basic` | `strict`) with rules **KQL101–KQL105**: early time filter, join `kind=`, prefer `has` over `contains`, bare `search`/`find`, and (strict) project-after-join guidance.
+- **Headless CLI**: `kql-assistant lint` / `npm run lint:kql` for detection-as-code pipelines (`--format text|sarif`, `--packs`, `--lint`, `--fail-on`).
 
-- **Lint pack**: New `kqlAssistant.lintMode` (`off` | `basic` | `strict`) with rules KQL101–KQL105 (early time filter, join `kind=`, prefer `has` over `contains`, bare `search`/`find`, strict project-after-join).
-- **CLI**: `kql-assistant lint` / `npm run lint:kql` for detection-as-code CI (`--format text|sarif`, `--packs`, `--fail-on`).
-- **Schema packs**: `kqlAssistant.schemaPacks` (`all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`) plus offline `_Im_*` ASIM parser stubs in `schemas/asim-parsers.json`.
+### Schemas and packs
 
-**Sprint 1 — security credibility:**
+- Added **`SecurityAlert`** and **`Syslog`** (catalog **721** tables).
+- **`kqlAssistant.schemaPacks`**: `all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`.
+- Offline **`_Im_*` ASIM parser stubs** in `schemas/asim-parsers.json` (merged with `all` / `asim` / `asim-parsers`).
 
-- **Schema**: Added `SecurityAlert` and `Syslog` from Azure Monitor reference columns (catalog now 721 tables).
-- **Snippets**: Fixed `securityalerts` to use `AlertSeverity` (not `Severity`); added MDE process/network, ASIM network, watchlist join, TI IP match, syslog auth, and `hasfilter` starters with early `TimeGenerated` filters.
-- **Tests**: Snippet table existence + security-snippet offline validation coverage.
-- **Packaging**: Moved `pdf-parse` to `devDependencies` (schema tooling only; not needed at extension runtime). `.gitignore` already excludes `*.vsix`.
+### Sentinel rule packaging
+
+- **`KQL: Export Analytics Rule YAML`** (+ CodeLens **Export Rule**) builds a scheduled analytics-rule stub from `## Rule ##` blocks.
+- Rule metadata comments under headers: `// tactic:`, `// technique:`, `// severity:`, `// description:`, `// queryFrequency:` (and related keys) — shown in CodeLens and Outline.
+
+### Language depth
+
+- Join-shaped **`lookup`** column validation (no longer a skipped “limited” notice for common cases).
+- **`datatable(...)`** IOC lists via `let` participate in column scope.
+- Removed legacy line-scanner dead code from `syntaxChecker` (QueryModel path is authoritative).
+
+### Snippets and packaging
+
+- Fixed `securityalerts` (`AlertSeverity`); added MDE / ASIM / watchlist / TI / syslog / `hasfilter` starters with early `TimeGenerated` filters.
+- Snippet table-existence tests; `pdf-parse` moved to `devDependencies` (schema tooling only).
 
 ## 0.9.1
 
