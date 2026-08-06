@@ -114,8 +114,19 @@ Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 | `kqlAssistant.diagnosticLevel` | `error` | `error`, `warning`, or `information` |
 | `kqlAssistant.userSchemaPath` | *(empty)* | Optional JSON file with custom tables/columns (same shape as bundled `schemas/all-tables.json`); merged over bundled schemas |
 | `kqlAssistant.ignoredTables` | `[]` | Table names to skip for unknown-table diagnostics (also set via lightbulb **Ignore unknown table**) |
+| `kqlAssistant.lintMode` | `basic` | Detection/cost lint: `off`, `basic`, or `strict` (rules KQL101–KQL105) |
+| `kqlAssistant.schemaPacks` | `["all"]` | Schema packs to load (`all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`) |
 
 In Settings, search for **KQL Assistant**.
+
+### CI / headless lint
+
+After `npm run compile`:
+
+```bash
+npm run lint:kql -- examples --lint basic
+node out/src/cli.js lint path/to/detections --format sarif --fail-on warning
+```
 
 ## Snippets
 

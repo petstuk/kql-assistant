@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 
 export interface ColumnSchema {
     type: string;
@@ -11,25 +12,128 @@ export interface TableSchema {
     columns: { [key: string]: ColumnSchema };
 }
 
+export interface PackManifestEntry {
+    description?: string;
+    tables: string[] | null;
+}
+
+export interface SchemaStoreOptions {
+    /** Pack ids from schemas/packs/manifest.json. Empty or includes "all" => full catalog. */
+    schemaPacks?: string[];
+    /** Directory containing manifest.json (defaults to <bundledDir>/packs). */
+    packsDir?: string;
+    /** Extra schema JSON files to merge (e.g. asim-parsers.json). */
+    overlaySchemaPaths?: string[];
+}
+
 export class SchemaStore {
     private schemas: Map<string, TableSchema> = new Map();
     private tableNamesLower: Map<string, string> = new Map();
+    private schemaPacks: string[];
+    private packsDir: string;
+    private overlaySchemaPaths: string[];
 
     constructor(
         private readonly bundledSchemaPath: string,
-        private readonly userSchemaPath?: string
+        private readonly userSchemaPath?: string,
+        options: SchemaStoreOptions = {}
     ) {
+        this.schemaPacks = normalizePacks(options.schemaPacks);
+        this.packsDir = options.packsDir ?? path.join(path.dirname(bundledSchemaPath), 'packs');
+        this.overlaySchemaPaths = options.overlaySchemaPaths ?? [];
         this.reload();
     }
 
-    public reload(userSchemaPath?: string): void {
+    public reload(userSchemaPath?: string, options?: SchemaStoreOptions): void {
         this.schemas.clear();
         this.tableNamesLower.clear();
+        if (options?.schemaPacks) {
+            this.schemaPacks = normalizePacks(options.schemaPacks);
+        }
+        if (options?.packsDir) {
+            this.packsDir = options.packsDir;
+        }
+        if (options?.overlaySchemaPaths) {
+            this.overlaySchemaPaths = options.overlaySchemaPaths;
+        }
+
         const userPath = userSchemaPath ?? this.userSchemaPath;
         this.mergeSchemaFile(this.bundledSchemaPath, 'bundled');
+        this.applyPackFilter();
+        this.mergeConfiguredOverlays();
         if (userPath) {
             this.mergeSchemaFile(userPath, 'user');
         }
+    }
+
+    private mergeConfiguredOverlays(): void {
+        const packs = new Set(this.schemaPacks.map(p => p.toLowerCase()));
+        const wantAsimParsers = packs.has('all') || packs.has('asim-parsers') || packs.has('asim');
+
+        const overlays = [...this.overlaySchemaPaths];
+        if (wantAsimParsers) {
+            const asimPath = path.join(path.dirname(this.bundledSchemaPath), 'asim-parsers.json');
+            if (!overlays.includes(asimPath)) {
+                overlays.push(asimPath);
+            }
+        }
+
+        for (const overlay of overlays) {
+            this.mergeSchemaFile(overlay, 'overlay');
+        }
+    }
+
+    private applyPackFilter(): void {
+        if (this.schemaPacks.includes('all')) {
+            return;
+        }
+
+        const allowed = this.resolveAllowedTables();
+        if (allowed.size === 0) {
+            return;
+        }
+
+        for (const tableName of [...this.schemas.keys()]) {
+            if (!allowed.has(tableName) && !allowed.has(tableName.toLowerCase())) {
+                this.schemas.delete(tableName);
+                this.tableNamesLower.delete(tableName.toLowerCase());
+            }
+        }
+    }
+
+    private resolveAllowedTables(): Set<string> {
+        const allowed = new Set<string>();
+        const manifestPath = path.join(this.packsDir, 'manifest.json');
+        if (!fs.existsSync(manifestPath)) {
+            console.warn('Schema pack manifest not found:', manifestPath);
+            return allowed;
+        }
+
+        try {
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Record<
+                string,
+                PackManifestEntry
+            >;
+            for (const packName of this.schemaPacks) {
+                const entry = manifest[packName] ?? manifest[packName.toLowerCase()];
+                if (!entry) {
+                    console.warn(`Unknown schema pack '${packName}'`);
+                    continue;
+                }
+                if (entry.tables === null) {
+                    // "all" style pack — caller should have short-circuited
+                    continue;
+                }
+                for (const table of entry.tables) {
+                    allowed.add(table);
+                    allowed.add(table.toLowerCase());
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load schema pack manifest:', error);
+        }
+
+        return allowed;
     }
 
     private mergeSchemaFile(schemasPath: string, label: string): void {
@@ -39,7 +143,10 @@ export class SchemaStore {
                 return;
             }
 
-            const schemasJson = JSON.parse(fs.readFileSync(schemasPath, 'utf8')) as Record<string, TableSchema>;
+            const schemasJson = JSON.parse(fs.readFileSync(schemasPath, 'utf8')) as Record<
+                string,
+                TableSchema
+            >;
 
             for (const [tableName, schema] of Object.entries(schemasJson)) {
                 this.schemas.set(tableName, schema);
@@ -102,7 +209,10 @@ export class SchemaStore {
         return Object.keys(schema.columns);
     }
 
-    public suggestColumns(tableName: string, prefix: string): Array<{ label: string; type: string; description: string }> {
+    public suggestColumns(
+        tableName: string,
+        prefix: string
+    ): Array<{ label: string; type: string; description: string }> {
         const schema = this.getTableSchema(tableName);
         if (!schema) {
             return [];
@@ -159,6 +269,10 @@ export class SchemaStore {
         return this.schemas.size;
     }
 
+    public getActivePacks(): string[] {
+        return [...this.schemaPacks];
+    }
+
     private levenshteinDistance(a: string, b: string): number {
         const matrix: number[][] = [];
 
@@ -186,4 +300,12 @@ export class SchemaStore {
 
         return matrix[b.length][a.length];
     }
+}
+
+function normalizePacks(packs?: string[]): string[] {
+    if (!packs || packs.length === 0) {
+        return ['all'];
+    }
+    const normalized = packs.map(p => p.trim()).filter(p => p.length > 0);
+    return normalized.length > 0 ? normalized : ['all'];
 }

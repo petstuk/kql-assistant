@@ -1,0 +1,117 @@
+{
+  "all": {
+    "description": "Full bundled catalog (default).",
+    "tables": null
+  },
+  "sentinel-core": {
+    "description": "Common Microsoft Sentinel / LA security tables.",
+    "tables": [
+      "AADServicePrincipalSignInLogs",
+      "AggregatedSecurityAlert",
+      "Anomalies",
+      "AuditLogs",
+      "AzureActivity",
+      "AzureDiagnostics",
+      "BehaviorAnalytics",
+      "CommonSecurityLog",
+      "DnsEvents",
+      "Heartbeat",
+      "OfficeActivity",
+      "SecurityAlert",
+      "SecurityDetection",
+      "SecurityEvent",
+      "SecurityIncident",
+      "SecurityNestedRecommendation",
+      "SigninLogs",
+      "Syslog",
+      "ThreatIntelligenceIndicator",
+      "Usage",
+      "Watchlist"
+    ]
+  },
+  "mde": {
+    "description": "Microsoft Defender for Endpoint / XDR device and email tables.",
+    "tables": [
+      "AlertEvidence",
+      "AlertHistory",
+      "AlertInfo",
+      "CloudAppEvents",
+      "DeviceAppCrash",
+      "DeviceAppLaunch",
+      "DeviceBehaviorEntities",
+      "DeviceBehaviorInfo",
+      "DeviceCalendar",
+      "DeviceCleanup",
+      "DeviceConnectSession",
+      "DeviceEtw",
+      "DeviceEvents",
+      "DeviceFileCertificateInfo",
+      "DeviceFileEvents",
+      "DeviceHardwareHealth",
+      "DeviceHealth",
+      "DeviceHeartbeat",
+      "DeviceImageLoadEvents",
+      "DeviceInfo",
+      "DeviceLogonEvents",
+      "DeviceNetworkEvents",
+      "DeviceNetworkInfo",
+      "DeviceProcessEvents",
+      "DeviceRegistryEvents",
+      "DeviceSkypeHeartbeat",
+      "DeviceSkypeSignIn",
+      "DeviceTvmSecureConfigurationAssessment",
+      "DeviceTvmSoftwareInventory",
+      "DeviceTvmSoftwareVulnerabilities",
+      "DeviceTvmSoftwareVulnerabilitiesKB",
+      "EmailAttachmentInfo",
+      "EmailEvents",
+      "EmailPostDeliveryEvents",
+      "EmailUrlInfo",
+      "IdentityInfo",
+      "UrlClickEvents"
+    ]
+  },
+  "identity": {
+    "description": "Entra ID / identity-focused tables.",
+    "tables": [
+      "AADManagedIdentitySignInLogs",
+      "AADNonInteractiveUserSignInLogs",
+      "AADServicePrincipalSignInLogs",
+      "AADUserRiskEvents",
+      "AuditLogs",
+      "IdentityDirectoryEvents",
+      "IdentityInfo",
+      "IdentityLogonEvents",
+      "IdentityQueryEvents",
+      "SigninLogs"
+    ]
+  },
+  "asim": {
+    "description": "ASIM normalized activity log tables (ASim*).",
+    "tables": [
+      "ASimAuditEventLogs",
+      "ASimDhcpEventLogs",
+      "ASimDnsActivityLogs",
+      "ASimFileEventLogs",
+      "ASimNetworkSessionLogs",
+      "ASimProcessEventLogs",
+      "ASimRegistryEventLogs",
+      "ASimUserManagementActivityLogs",
+      "ASimWebSessionLogs"
+    ]
+  },
+  "asim-parsers": {
+    "description": "ASIM parser views (_Im_*), merged from schemas/asim-parsers.json.",
+    "tables": [
+      "_Im_AuditEvent",
+      "_Im_DhcpEvent",
+      "_Im_Dns",
+      "_Im_FileEvent",
+      "_Im_NetworkSession",
+      "_Im_ProcessEvent",
+      "_Im_RegistryEvent",
+      "_Im_UserManagementActivity",
+      "_Im_WebSession"
+    ]
+  }
+}

@@ -170,9 +170,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeConfiguration(e => {
             if (
                 e.affectsConfiguration('kqlAssistant.userSchemaPath') ||
-                e.affectsConfiguration('kqlAssistant.ignoredTables')
+                e.affectsConfiguration('kqlAssistant.ignoredTables') ||
+                e.affectsConfiguration('kqlAssistant.lintMode') ||
+                e.affectsConfiguration('kqlAssistant.schemaPacks')
             ) {
-                if (e.affectsConfiguration('kqlAssistant.userSchemaPath')) {
+                if (
+                    e.affectsConfiguration('kqlAssistant.userSchemaPath') ||
+                    e.affectsConfiguration('kqlAssistant.schemaPacks')
+                ) {
                     diagnosticsProvider?.reloadSchemas();
                 }
                 vscode.workspace.textDocuments.forEach(doc => {

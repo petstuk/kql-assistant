@@ -4,6 +4,12 @@ All notable changes to **KQL Assistant** are documented here. The [README](READM
 
 ## Unreleased
 
+**Sprint 2 — engineer value:**
+
+- **Lint pack**: New `kqlAssistant.lintMode` (`off` | `basic` | `strict`) with rules KQL101–KQL105 (early time filter, join `kind=`, prefer `has` over `contains`, bare `search`/`find`, strict project-after-join).
+- **CLI**: `kql-assistant lint` / `npm run lint:kql` for detection-as-code CI (`--format text|sarif`, `--packs`, `--fail-on`).
+- **Schema packs**: `kqlAssistant.schemaPacks` (`all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`) plus offline `_Im_*` ASIM parser stubs in `schemas/asim-parsers.json`.
+
 **Sprint 1 — security credibility:**
 
 - **Schema**: Added `SecurityAlert` and `Syslog` from Azure Monitor reference columns (catalog now 721 tables).

@@ -36,6 +36,13 @@ export class KqlDiagnosticsProvider {
         const ignoredTables = config.get<string[]>('ignoredTables', []) ?? [];
         this.syntaxChecker.setIgnoredTables(ignoredTables);
 
+        const lintMode = config.get<string>('lintMode', 'basic');
+        this.syntaxChecker.setLintMode(
+            lintMode === 'strict' || lintMode === 'off' || lintMode === 'basic'
+                ? lintMode
+                : 'basic'
+        );
+
         const text = document.getText();
         const errors = this.syntaxChecker.check(text);
         const diagnosticLevel = config.get<string>('diagnosticLevel', 'error');
@@ -74,12 +81,17 @@ export class KqlDiagnosticsProvider {
         let severity: vscode.DiagnosticSeverity;
         if (error.severity === 'information') {
             severity = vscode.DiagnosticSeverity.Information;
+        } else if (error.severity === 'warning') {
+            severity = vscode.DiagnosticSeverity.Warning;
         } else {
             severity = this.configLevelToSeverity(diagnosticLevel);
         }
 
         const diagnostic = new vscode.Diagnostic(range, error.message, severity);
         diagnostic.source = KQL_DIAGNOSTIC_SOURCE;
+        if (error.code) {
+            diagnostic.code = error.code;
+        }
         return diagnostic;
     }
 

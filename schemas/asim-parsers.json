@@ -1,0 +1,4652 @@
+{
+  "_Im_NetworkSession": {
+    "tableName": "_Im_NetworkSession",
+    "description": "ASIM parser view (offline stub modeled on ASimNetworkSessionLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DstAppId": {
+        "type": "string",
+        "description": "The ID of the destination application, as reported by the"
+      },
+      "DstAppName": {
+        "type": "string",
+        "description": "The name of the destination application."
+      },
+      "DstAppType": {
+        "type": "string",
+        "description": "The type of the destination application."
+      },
+      "DstBytes": {
+        "type": "long",
+        "description": "The number of bytes sent from the destination to the source"
+      },
+      "DstDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the destination."
+      },
+      "DstDeviceType": {
+        "type": "string",
+        "description": "The type of the destination device."
+      },
+      "DstDomain": {
+        "type": "string",
+        "description": "The domain of the destination device."
+      },
+      "DstDomainType": {
+        "type": "string",
+        "description": "The type of DstDomain."
+      },
+      "DstDvcId": {
+        "type": "string",
+        "description": "The ID of the destination device."
+      },
+      "DstDvcIdType": {
+        "type": "string",
+        "description": "The type of DstDvcId."
+      },
+      "DstFQDN": {
+        "type": "string",
+        "description": "The destination device hostname, including domain"
+      },
+      "DstGeoCity": {
+        "type": "string",
+        "description": "The city associated with the destination IP address."
+      },
+      "DstGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the destination IP address."
+      },
+      "DstGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "DstGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "DstGeoRegion": {
+        "type": "string",
+        "description": "The region, or state, within a country associated with the"
+      },
+      "DstHostname": {
+        "type": "string",
+        "description": "The destination device hostname, excluding domain"
+      },
+      "DstInterfaceGuid": {
+        "type": "string",
+        "description": "The GUID of the network interface used on the destination"
+      },
+      "DstInterfaceName": {
+        "type": "string",
+        "description": "The network interface used for the connection or session by"
+      },
+      "DstIpAddr": {
+        "type": "string",
+        "description": "The IP address of the connection or session destination."
+      },
+      "DstMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the network interface used for the"
+      },
+      "DstNatIpAddr": {
+        "type": "string",
+        "description": "The DstNatIpAddr represents either of: The original address of"
+      },
+      "DstNatPortNumber": {
+        "type": "int",
+        "description": "If reported by an intermediary NAT device, the port used by the"
+      },
+      "DstOriginalUserType": {
+        "type": "string",
+        "description": "The original destination user type, if provided by the source."
+      },
+      "DstPackets": {
+        "type": "long",
+        "description": "The number of packets sent from the destination to the source"
+      },
+      "DstPortNumber": {
+        "type": "int",
+        "description": "The destination IP port."
+      },
+      "DstSubscriptionId": {
+        "type": "string",
+        "description": "The cloud platform subscription ID the destination device"
+      },
+      "DstUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "DstUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the DstUserId field."
+      },
+      "DstUsername": {
+        "type": "string",
+        "description": "The destination username, including domain information when"
+      },
+      "DstUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the username stored in the DstUsername"
+      },
+      "DstUserType": {
+        "type": "string",
+        "description": "The type of destination user."
+      },
+      "DstVlanId": {
+        "type": "string",
+        "description": "The VLAN ID related to the destination device."
+      },
+      "DstZone": {
+        "type": "string",
+        "description": "The network zone of the destination, as defined by the"
+      },
+      "Dvc": {
+        "type": "string",
+        "description": "A unique identifier of the device on which the event occurred"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "The action taken on the network session."
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device. For example:"
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain. Possible values include 'Windows' and"
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInboundInterface": {
+        "type": "string",
+        "description": "If reported by an intermediary device, the network interface"
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured. This field is"
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device reporting the"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device reporting"
+      },
+      "DvcOutboundInterface": {
+        "type": "string",
+        "description": "If reported by an intermediary device, the network interface"
+      },
+      "DvcSubscriptionId": {
+        "type": "string",
+        "description": "The cloud platform subscription ID the device belongs to."
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "This value is used when the source supports aggregation, and a"
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source. This value is"
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device. This"
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source. For"
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "Reason or details for the result reported in the EventResult"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Additional description of the event type, if applicable."
+      },
+      "EventType": {
+        "type": "string",
+        "description": "The operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable"
+      },
+      "NetworkApplicationProtocol": {
+        "type": "string",
+        "description": "The application layer protocol used by the connection or"
+      },
+      "NetworkBytes": {
+        "type": "long",
+        "description": "Number of bytes sent in both directions. If both BytesReceived"
+      },
+      "NetworkConnectionHistory": {
+        "type": "string",
+        "description": "TCP flags and other potential IP header information."
+      },
+      "NetworkDirection": {
+        "type": "string",
+        "description": "The direction of the connection or session."
+      },
+      "NetworkDuration": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, for the completion of the"
+      },
+      "NetworkIcmpCode": {
+        "type": "int",
+        "description": "For an ICMP message, the ICMP message type numeric value"
+      },
+      "NetworkIcmpType": {
+        "type": "string",
+        "description": "For an ICMP message, the ICMP message type text"
+      },
+      "NetworkPackets": {
+        "type": "long",
+        "description": "The number of packets sent in both directions. If both"
+      },
+      "NetworkProtocol": {
+        "type": "string",
+        "description": "The IP protocol used by the connection or session as listed in"
+      },
+      "NetworkProtocolVersion": {
+        "type": "string",
+        "description": "The version of NetworkProtocol."
+      },
+      "NetworkRuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by which DvcAction was decided"
+      },
+      "NetworkRuleNumber": {
+        "type": "int",
+        "description": "The number of the rule by which DvcAction was decided upon."
+      },
+      "NetworkSessionId": {
+        "type": "string",
+        "description": "The session identifier as reported by the reporting device."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is"
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcAppId": {
+        "type": "string",
+        "description": "The ID of the source application, as reported by the reporting"
+      },
+      "SrcAppName": {
+        "type": "string",
+        "description": "The name of the source application."
+      },
+      "SrcAppType": {
+        "type": "string",
+        "description": "The type of the source application."
+      },
+      "SrcBytes": {
+        "type": "long",
+        "description": "The number of bytes sent from the source to the destination"
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the source."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information. If"
+      },
+      "SrcInterfaceGuid": {
+        "type": "string",
+        "description": "The GUID of the network interface used on the source device."
+      },
+      "SrcInterfaceName": {
+        "type": "string",
+        "description": "The network interface used for the connection or session by"
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address from which the connection or session"
+      },
+      "SrcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the network interface from which the"
+      },
+      "SrcNatIpAddr": {
+        "type": "string",
+        "description": "The SrcNatIpAddr represents either of: The original address of"
+      },
+      "SrcNatPortNumber": {
+        "type": "int",
+        "description": "If reported by an intermediary NAT device, the port used by the"
+      },
+      "SrcOriginalUserType": {
+        "type": "string",
+        "description": "The original destination user type, if provided by the by the"
+      },
+      "SrcPackets": {
+        "type": "long",
+        "description": "The number of packets sent from the source to the destination"
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "The IP port from which the connection originated. Might not be"
+      },
+      "SrcSubscriptionId": {
+        "type": "string",
+        "description": "The cloud platform subscription ID the source device belongs"
+      },
+      "SrcUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "SrcUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the SrcUserId field."
+      },
+      "SrcUsername": {
+        "type": "string",
+        "description": "The source username, including domain information when"
+      },
+      "SrcUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the username stored in the SrcUsername"
+      },
+      "SrcUserType": {
+        "type": "string",
+        "description": "The type of the source user."
+      },
+      "SrcVlanId": {
+        "type": "string",
+        "description": "The VLAN ID related to the source device."
+      },
+      "SrcZone": {
+        "type": "string",
+        "description": "The network zone of the source, as defined by the reporting"
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TcpFlagsAck": {
+        "type": "bool",
+        "description": "The TCP ACK flag reported. The acknowledgment flag is used"
+      },
+      "TcpFlagsFin": {
+        "type": "bool",
+        "description": "The TCP FIN flag reported. The finished flag means there is no"
+      },
+      "TcpFlagsPsh": {
+        "type": "bool",
+        "description": "The TCP PSH flag reported. The push flag is somewhat similar"
+      },
+      "TcpFlagsRst": {
+        "type": "bool",
+        "description": "The TCP RST flag reported. The reset flag gets sent from the"
+      },
+      "TcpFlagsSyn": {
+        "type": "bool",
+        "description": "The TCP SYN flag reported. The synchronisation flag is used as"
+      },
+      "TcpFlagsUrg": {
+        "type": "bool",
+        "description": "The TCP URG flag reported. The urgent flag is used to notify"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in the network"
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified. The value is either"
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the network"
+      },
+      "ThreatIpAddr": {
+        "type": "string",
+        "description": "An IP address for which a threat was identified. The field"
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the network"
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the session. The level is a number"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  },
+  "_Im_Dns": {
+    "tableName": "_Im_Dns",
+    "description": "ASIM parser view (offline stub modeled on ASimDnsActivityLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DnsFlags": {
+        "type": "string",
+        "description": "The DNS request flags, as provided by the reporting device. The"
+      },
+      "DnsFlagsAuthenticated": {
+        "type": "bool",
+        "description": "The DNS authenticated answer flag, which is related to DNSSEC,"
+      },
+      "DnsFlagsAuthoritative": {
+        "type": "bool",
+        "description": "The DNS authoritative answer flag indicates whether the"
+      },
+      "DnsFlagsCheckingDisabled": {
+        "type": "bool",
+        "description": "The DNS CD flag, which is related to DNSSEC, indicates in a"
+      },
+      "DnsFlagsRecursionAvailable": {
+        "type": "bool",
+        "description": "The DNS RA flag indicates in a response that that server"
+      },
+      "DnsFlagsRecursionDesired": {
+        "type": "bool",
+        "description": "The DNS recursion desired flag indicates in a request that that"
+      },
+      "DnsFlagsTruncated": {
+        "type": "bool",
+        "description": "The DNS TC flag indicates that a response was truncates as it"
+      },
+      "DnsFlagsZ": {
+        "type": "bool",
+        "description": "The DNS Z flag is a deprecated DNS flag, which might be"
+      },
+      "DnsNetworkDuration": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, for the completion of DNS"
+      },
+      "DnsQuery": {
+        "type": "string",
+        "description": "The domain that needs to be resolved."
+      },
+      "DnsQueryClass": {
+        "type": "int",
+        "description": "The DNS class ID as defined by the Internet Assigned Numbers"
+      },
+      "DnsQueryClassName": {
+        "type": "string",
+        "description": "The DNS class name as defined by the Internet Assigned"
+      },
+      "DnsQueryType": {
+        "type": "int",
+        "description": "The DNS resource record type codes as defined by the Internet"
+      },
+      "DnsQueryTypeName": {
+        "type": "string",
+        "description": "The DNS resource record type name as defined by the Internet"
+      },
+      "DnsResponseCode": {
+        "type": "int",
+        "description": "The DNS numerical response code as defined by the Internet"
+      },
+      "DnsResponseIpCity": {
+        "type": "string",
+        "description": "The city associated with the response IP address."
+      },
+      "DnsResponseIpCountry": {
+        "type": "string",
+        "description": "The country associated with the response IP address."
+      },
+      "DnsResponseIpLatitude": {
+        "type": "real",
+        "description": "The Latitude of the geographical coordinate associated with the"
+      },
+      "DnsResponseIpLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "DnsResponseIpRegion": {
+        "type": "string",
+        "description": "The region, or state, within a country, associated with the source"
+      },
+      "DnsResponseName": {
+        "type": "string",
+        "description": "The content of the response, as included in the record. The"
+      },
+      "DnsSessionId": {
+        "type": "string",
+        "description": "The DNS session identifier as reported by the reporting device."
+      },
+      "Dst": {
+        "type": "string",
+        "description": "A unique identifier of the server that received the DNS request."
+      },
+      "DstDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the destination."
+      },
+      "DstDeviceType": {
+        "type": "string",
+        "description": "The type of the destination device."
+      },
+      "DstDomain": {
+        "type": "string",
+        "description": "The domain of the destination device."
+      },
+      "DstDomainType": {
+        "type": "string",
+        "description": "The type of DstDomain."
+      },
+      "DstDvcId": {
+        "type": "string",
+        "description": "The ID of the destination device."
+      },
+      "DstDvcIdType": {
+        "type": "string",
+        "description": "The type of DstDvcId."
+      },
+      "DstDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the destination device belongs to."
+      },
+      "DstDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the destination device belongs to."
+      },
+      "DstFQDN": {
+        "type": "string",
+        "description": "The destination device hostname, including domain information"
+      },
+      "DstGeoCity": {
+        "type": "string",
+        "description": "The city associated with the destination IP address."
+      },
+      "DstGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the destination IP address."
+      },
+      "DstGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "DstGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "DstGeoRegion": {
+        "type": "string",
+        "description": "The region, or state, within a country, associated with the"
+      },
+      "DstHostname": {
+        "type": "string",
+        "description": "The destination device hostname, excluding domain"
+      },
+      "DstIpAddr": {
+        "type": "string",
+        "description": "The IP address of the server receiving the DNS request. For a"
+      },
+      "DstOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associated with the destination device as reported"
+      },
+      "DstPortNumber": {
+        "type": "int",
+        "description": "Destination Port number."
+      },
+      "DstRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the destination device."
+      },
+      "Dvc": {
+        "type": "string",
+        "description": "A unique identifier of the device reporting the event. The"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "The action taken by the the reporting device on the request,"
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device. For example:"
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain. Possible values include \"Windows\" and"
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The fully qualified hostname, including domain information, of"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device reporting the event."
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured. This field is"
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device reporting the event."
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device reporting the"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device reporting the"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope map"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to. DvcScopeId"
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network segment of the device reporting the event."
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record. This value is"
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time at which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device. This"
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, for example, the original Windows"
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL of a resource that provides additional information about"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "The DNS response code as defined by the Internet Assigned"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time at which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Either request or response."
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Indicates the operation reported by the record. For DNS activity"
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable"
+      },
+      "NetworkProtocol": {
+        "type": "string",
+        "description": "The transport protocol used by the network resolution event."
+      },
+      "NetworkProtocolVersion": {
+        "type": "string",
+        "description": "The version of the network protocol. Typically used to"
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is associated"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "Src": {
+        "type": "string",
+        "description": "A unique identifier of the source device."
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the source device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the source device belongs to."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information."
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region, or state, within a country, associated with the source"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information."
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the client sending the DNS request. For a"
+      },
+      "SrcOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associated with the source device as reported by"
+      },
+      "SrcOriginalUserType": {
+        "type": "string",
+        "description": "The original source user type, as provided by the source."
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "Source port of the DNS query."
+      },
+      "SrcProcessGuid": {
+        "type": "string",
+        "description": "A generated unique identifier (GUID) of the process that"
+      },
+      "SrcProcessId": {
+        "type": "string",
+        "description": "The process ID (PID) of the process that initiated the DNS"
+      },
+      "SrcProcessName": {
+        "type": "string",
+        "description": "The name of the process that initiated the DNS request."
+      },
+      "SrcRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the source device."
+      },
+      "SrcUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "SrcUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the SrcUserId field."
+      },
+      "SrcUsername": {
+        "type": "string",
+        "description": "The Source username, including domain information when"
+      },
+      "SrcUsernameType": {
+        "type": "string",
+        "description": "The type of the username stored in the SrcUsername field."
+      },
+      "SrcUserScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which SrcUserId and"
+      },
+      "SrcUserScopeId": {
+        "type": "string",
+        "description": "The ID of the scope, such as Azure AD tenant, in which"
+      },
+      "SrcUserSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the source user."
+      },
+      "SrcUserType": {
+        "type": "string",
+        "description": "The type of the source user."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "If a DNS event source also provides DNS security, it may also"
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified. The value is either"
+      },
+      "ThreatFirstReportedTime": {
+        "type": "string",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatFirstReportedTime_d": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the web session."
+      },
+      "ThreatIpAddr": {
+        "type": "string",
+        "description": "An IP address for which a threat was identified. The field"
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "string",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatLastReportedTime_d": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat identified, as reported by the reporting"
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "int",
+        "description": "The original risk level associated with the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel_s": {
+        "type": "string",
+        "description": "The risk level associated with the threat identified, normalized"
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the threat identified, normalized"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "TransactionIdHex": {
+        "type": "string",
+        "description": "The DNS unique hex transaction ID."
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      },
+      "UrlCategory": {
+        "type": "string",
+        "description": "A DNS event source may also look up the category of the"
+      }
+    }
+  },
+  "_Im_FileEvent": {
+    "tableName": "_Im_FileEvent",
+    "description": "ASIM parser view (offline stub modeled on ASimFileEventLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "ActingProcessCommandLine": {
+        "type": "string",
+        "description": "The command line used to run the acting process."
+      },
+      "ActingProcessGuid": {
+        "type": "string",
+        "description": "A generated unique identifier (GUID) of the acting process."
+      },
+      "ActingProcessId": {
+        "type": "string",
+        "description": "The process ID (PID) of the acting process."
+      },
+      "ActingProcessName": {
+        "type": "string",
+        "description": "The name of the acting process."
+      },
+      "ActorOriginalUserType": {
+        "type": "string",
+        "description": "The original actor user type as provided by the reporting"
+      },
+      "ActorScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which ActorUserId and"
+      },
+      "ActorScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD Directory ID, in which"
+      },
+      "ActorSessionId": {
+        "type": "string",
+        "description": "The unique ID of the login session of the Actor."
+      },
+      "ActorUserAadId": {
+        "type": "string",
+        "description": "The Azure Active Directory ID of the actor."
+      },
+      "ActorUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "ActorUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the ActorUserId field."
+      },
+      "ActorUsername": {
+        "type": "string",
+        "description": "The Actor username, including domain information when"
+      },
+      "ActorUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the user name stored in the"
+      },
+      "ActorUserSid": {
+        "type": "string",
+        "description": "The Windows user ID (SIDs) of the actor."
+      },
+      "ActorUserType": {
+        "type": "string",
+        "description": "The type of actor."
+      },
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "The action taken on the web session."
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain. Valid values include 'Windows' and"
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to."
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "This value is used when the source supports aggregation, and a"
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source. This value is"
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device. This"
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source. For"
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "The HTTP status code."
+      },
+      "EventSchema": {
+        "type": "string",
+        "description": "The schema the event is normalized to. Each schema"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Additional description of the event type, if applicable."
+      },
+      "EventType": {
+        "type": "string",
+        "description": "The operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "HashType": {
+        "type": "string",
+        "description": "The type of hash stored in the Hash alias field."
+      },
+      "HttpUserAgent": {
+        "type": "string",
+        "description": "When the operation is initiated using HTTP or HTTPS, the HTTP"
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When"
+      },
+      "NetworkApplicationProtocol": {
+        "type": "string",
+        "description": "When the operation is initiated by a remote system, the"
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to."
+      },
+      "SrcFileCreationTime": {
+        "type": "datetime",
+        "description": "The time at which the source file was created."
+      },
+      "SrcFileDirectory": {
+        "type": "string",
+        "description": "The source file folder or location."
+      },
+      "SrcFileExtension": {
+        "type": "string",
+        "description": "The source file extension."
+      },
+      "SrcFileMD5": {
+        "type": "string",
+        "description": "The MD5 hash of the source file."
+      },
+      "SrcFileMimeType": {
+        "type": "string",
+        "description": "The Mime or Media type of the source file."
+      },
+      "SrcFileName": {
+        "type": "string",
+        "description": "The name of the source file, without a path or a location, but"
+      },
+      "SrcFilePath": {
+        "type": "string",
+        "description": "The full, normalized path of the source file, including the folder"
+      },
+      "SrcFilePathType": {
+        "type": "string",
+        "description": "The type of SrcFilePath."
+      },
+      "SrcFileSHA1": {
+        "type": "string",
+        "description": "The SHA-1 hash of the source file."
+      },
+      "SrcFileSHA256": {
+        "type": "string",
+        "description": "The SHA-256 hash of the source file."
+      },
+      "SrcFileSHA512": {
+        "type": "string",
+        "description": "The SHA-512 hash of the source file."
+      },
+      "SrcFileSize": {
+        "type": "long",
+        "description": "The size of the source file in bytes."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information. If"
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "When the operation is initiated by a remote system, the IP"
+      },
+      "SrcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the source device."
+      },
+      "SrcOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associated with the source. As reported by the"
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "When the operation is initiated by a remote system, the port"
+      },
+      "SrcRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the source."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TargetAppId": {
+        "type": "string",
+        "description": "The ID of the destination application, as reported by the"
+      },
+      "TargetAppName": {
+        "type": "string",
+        "description": "The name of the destination application."
+      },
+      "TargetAppType": {
+        "type": "string",
+        "description": "The type of the destination application."
+      },
+      "TargetFileCreationTime": {
+        "type": "datetime",
+        "description": "The time at which the target file was created."
+      },
+      "TargetFileDirectory": {
+        "type": "string",
+        "description": "The target file folder or location."
+      },
+      "TargetFileExtension": {
+        "type": "string",
+        "description": "The target file extension."
+      },
+      "TargetFileMD5": {
+        "type": "string",
+        "description": "The MD5 hash of the target file."
+      },
+      "TargetFileMimeType": {
+        "type": "string",
+        "description": "The Mime or Media type of the target file."
+      },
+      "TargetFileName": {
+        "type": "string",
+        "description": "The name of the target file, without a path or a location, but"
+      },
+      "TargetFilePath": {
+        "type": "string",
+        "description": "The full, normalized path of the target file, including the folder"
+      },
+      "TargetFilePathType": {
+        "type": "string",
+        "description": "The type of TargetFilePath."
+      },
+      "TargetFileSHA1": {
+        "type": "string",
+        "description": "The SHA-1 hash of the target file."
+      },
+      "TargetFileSHA256": {
+        "type": "string",
+        "description": "The SHA-256 hash of the target file."
+      },
+      "TargetFileSHA512": {
+        "type": "string",
+        "description": "The SHA-512 hash of the source file."
+      },
+      "TargetFileSize": {
+        "type": "long",
+        "description": "The size of the target file in bytes."
+      },
+      "TargetOriginalAppType": {
+        "type": "string",
+        "description": "The target application type as reported by the reporting"
+      },
+      "TargetUrl": {
+        "type": "string",
+        "description": "When the operation is initiated using HTTP or HTTPS, the URL"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in the file"
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified. The value is either"
+      },
+      "ThreatFilePath": {
+        "type": "string",
+        "description": "A file path for which a threat was identified. The field"
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the file activity."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the file activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  },
+  "_Im_ProcessEvent": {
+    "tableName": "_Im_ProcessEvent",
+    "description": "ASIM parser view (offline stub modeled on ASimProcessEventLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "ActingProcessCommandLine": {
+        "type": "string",
+        "description": "The command line used to run the acting process."
+      },
+      "ActingProcessCreationTime": {
+        "type": "datetime",
+        "description": "The date and time when the acting process was started."
+      },
+      "ActingProcessFileCompany": {
+        "type": "string",
+        "description": "The company that created the acting process image file."
+      },
+      "ActingProcessFileDescription": {
+        "type": "string",
+        "description": "The description embedded in the version information of the"
+      },
+      "ActingProcessFileInternalName": {
+        "type": "string",
+        "description": "The product internal file name from the version information"
+      },
+      "ActingProcessFilename": {
+        "type": "string",
+        "description": "The product file name from the version information of the"
+      },
+      "ActingProcessFileOriginalName": {
+        "type": "string",
+        "description": "The product original file name from the version information"
+      },
+      "ActingProcessFileProduct": {
+        "type": "string",
+        "description": "The product name from the version information in the"
+      },
+      "ActingProcessFileSize": {
+        "type": "long",
+        "description": "The size of the file in bytes that ran the acting process."
+      },
+      "ActingProcessFileVersion": {
+        "type": "string",
+        "description": "The product version from the version information of the"
+      },
+      "ActingProcessGuid": {
+        "type": "string",
+        "description": "A GUID of the acting process."
+      },
+      "ActingProcessId": {
+        "type": "string",
+        "description": "The process ID of the acting process."
+      },
+      "ActingProcessIMPHASH": {
+        "type": "string",
+        "description": "The Import Hash of all the library DLLs that are used by the"
+      },
+      "ActingProcessInjectedAddress": {
+        "type": "string",
+        "description": "The memory address in which the responsible acting"
+      },
+      "ActingProcessIntegrityLevel": {
+        "type": "string",
+        "description": "Integrity Level for acting process."
+      },
+      "ActingProcessIsHidden": {
+        "type": "bool",
+        "description": "An indication of whether the acting process is in hidden"
+      },
+      "ActingProcessMD5": {
+        "type": "string",
+        "description": "The MD5 hash of the acting process image file."
+      },
+      "ActingProcessName": {
+        "type": "string",
+        "description": "The name of the acting process."
+      },
+      "ActingProcessSHA1": {
+        "type": "string",
+        "description": "The SHA-1 hash of the acting process image file."
+      },
+      "ActingProcessSHA256": {
+        "type": "string",
+        "description": "The SHA-256 hash of the acting process image file."
+      },
+      "ActingProcessSHA512": {
+        "type": "string",
+        "description": "The SHA-512 hash of the acting process image file."
+      },
+      "ActingProcessTokenElevation": {
+        "type": "string",
+        "description": "A token indicating the presence or absence of User Access"
+      },
+      "ActorOriginalUserType": {
+        "type": "string",
+        "description": "The user type as reported by the reporting device."
+      },
+      "ActorScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which ActorUserId"
+      },
+      "ActorScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which"
+      },
+      "ActorSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the Actor."
+      },
+      "ActorUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation"
+      },
+      "ActorUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the ActorUserId field."
+      },
+      "ActorUsername": {
+        "type": "string",
+        "description": "The Actor's username, including domain information when"
+      },
+      "ActorUsernameType": {
+        "type": "string",
+        "description": "The type of the Actor's username specified in"
+      },
+      "ActorUserType": {
+        "type": "string",
+        "description": "The type of the Actor."
+      },
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key and value"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "For reporting security systems, the action taken by the"
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain. Possible values include \"Windows\""
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to."
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record."
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source."
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device."
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source."
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "Reason or details for the result reported in the EventResult"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Describes a subdivision of the operation reported in the"
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Describes the operation reported by the record"
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When"
+      },
+      "ParentProcessCreationTime": {
+        "type": "datetime",
+        "description": "The date and time when the parent process was started."
+      },
+      "ParentProcessFileCompany": {
+        "type": "string",
+        "description": "The company that created the parent process image file."
+      },
+      "ParentProcessFileDescription": {
+        "type": "string",
+        "description": "The description from the version information of the parent"
+      },
+      "ParentProcessFileProduct": {
+        "type": "string",
+        "description": "The product name from the version information in the"
+      },
+      "ParentProcessFileVersion": {
+        "type": "string",
+        "description": "The product version from the version information of the"
+      },
+      "ParentProcessGuid": {
+        "type": "string",
+        "description": "A GUID of the parent process."
+      },
+      "ParentProcessId": {
+        "type": "string",
+        "description": "The process ID of the parent process."
+      },
+      "ParentProcessIMPHASH": {
+        "type": "string",
+        "description": "The Import Hash of all the library DLLs that are used by the"
+      },
+      "ParentProcessInjectedAddress": {
+        "type": "string",
+        "description": "The memory address in which the responsible parent"
+      },
+      "ParentProcessIntegrityLevel": {
+        "type": "string",
+        "description": "Integrity Level for parent process."
+      },
+      "ParentProcessIsHidden": {
+        "type": "bool",
+        "description": "An indication of whether the parent process is in hidden"
+      },
+      "ParentProcessMD5": {
+        "type": "string",
+        "description": "The MD5 hash of the parent process image file."
+      },
+      "ParentProcessName": {
+        "type": "string",
+        "description": "The name of the parent process."
+      },
+      "ParentProcessSHA1": {
+        "type": "string",
+        "description": "The SHA-1 hash of the parent process image file."
+      },
+      "ParentProcessSHA256": {
+        "type": "string",
+        "description": "The SHA-256 hash of the parent process image file."
+      },
+      "ParentProcessSHA512": {
+        "type": "string",
+        "description": "The SHA-512 hash of the parent process image file."
+      },
+      "ParentProcessTokenElevation": {
+        "type": "string",
+        "description": "A token indicating the presence or absence of User Access"
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection"
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TargetOriginalUserType": {
+        "type": "string",
+        "description": "The user type as reported by the reporting device."
+      },
+      "TargetProcessCommandLine": {
+        "type": "string",
+        "description": "The command line used to run the target process."
+      },
+      "TargetProcessCreationTime": {
+        "type": "datetime",
+        "description": "The date and time when the target process was started."
+      },
+      "TargetProcessCurrentDirectory": {
+        "type": "string",
+        "description": "The current directory in which the target process is"
+      },
+      "TargetProcessFileCompany": {
+        "type": "string",
+        "description": "The company that created the target process image file."
+      },
+      "TargetProcessFileDescription": {
+        "type": "string",
+        "description": "The description from the version information of the target"
+      },
+      "TargetProcessFileInternalName": {
+        "type": "string",
+        "description": "The product internal file name from the version information"
+      },
+      "TargetProcessFilename": {
+        "type": "string",
+        "description": "The product file name from the version information of the"
+      },
+      "TargetProcessFileOriginalName": {
+        "type": "string",
+        "description": "The product original file name from the version information"
+      },
+      "TargetProcessFileProduct": {
+        "type": "string",
+        "description": "The product name from the version information in the"
+      },
+      "TargetProcessFileSize": {
+        "type": "long",
+        "description": "Size of the file in bytes that ran the process responsible for"
+      },
+      "TargetProcessFileVersion": {
+        "type": "string",
+        "description": "The product version from the version information of the"
+      },
+      "TargetProcessGuid": {
+        "type": "string",
+        "description": "A GUID of the target process."
+      },
+      "TargetProcessId": {
+        "type": "string",
+        "description": "The process ID of the target process."
+      },
+      "TargetProcessIMPHASH": {
+        "type": "string",
+        "description": "The Import Hash of all the library DLLs that are used by the"
+      },
+      "TargetProcessInjectedAddress": {
+        "type": "string",
+        "description": "The memory address in which the responsible target"
+      },
+      "TargetProcessIntegrityLevel": {
+        "type": "string",
+        "description": "Integrity Level for target process."
+      },
+      "TargetProcessIsHidden": {
+        "type": "bool",
+        "description": "An indication of whether the target process is in hidden"
+      },
+      "TargetProcessMD5": {
+        "type": "string",
+        "description": "The MD5 hash of the target process image file."
+      },
+      "TargetProcessName": {
+        "type": "string",
+        "description": "The name of the target process."
+      },
+      "TargetProcessSHA1": {
+        "type": "string",
+        "description": "The SHA-1 hash of the target process image file."
+      },
+      "TargetProcessSHA256": {
+        "type": "string",
+        "description": "The SHA-256 hash of the target process image file."
+      },
+      "TargetProcessSHA512": {
+        "type": "string",
+        "description": "The SHA-512 hash of the target process image file."
+      },
+      "TargetProcessStatusCode": {
+        "type": "string",
+        "description": "The exit code returned by the target process when"
+      },
+      "TargetProcessTokenElevation": {
+        "type": "string",
+        "description": "A token indicating the presence or absence of User Access"
+      },
+      "TargetScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which TargetUserId"
+      },
+      "TargetScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which"
+      },
+      "TargetUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation"
+      },
+      "TargetUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the TargetUserId field."
+      },
+      "TargetUsername": {
+        "type": "string",
+        "description": "The Target actor's username, including domain information"
+      },
+      "TargetUsernameType": {
+        "type": "string",
+        "description": "The type of the Target actor's username specified in"
+      },
+      "TargetUserSessionGuid": {
+        "type": "string",
+        "description": "The unique guid of the sign-in session of the Target actor."
+      },
+      "TargetUserSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the Target actor."
+      },
+      "TargetUserType": {
+        "type": "string",
+        "description": "The type of the Target actor."
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in activity."
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified."
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the activity."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  },
+  "_Im_RegistryEvent": {
+    "tableName": "_Im_RegistryEvent",
+    "description": "ASIM parser view (offline stub modeled on ASimRegistryEventLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "ActingProcessCommandLine": {
+        "type": "string",
+        "description": "The command line used to run the process."
+      },
+      "ActingProcessGuid": {
+        "type": "string",
+        "description": "A generated unique identifier of the acting process."
+      },
+      "ActingProcessId": {
+        "type": "string",
+        "description": "The process ID of the acting process."
+      },
+      "ActingProcessName": {
+        "type": "string",
+        "description": "The file name of the acting process image file."
+      },
+      "ActorOriginalUserType": {
+        "type": "string",
+        "description": "The original actor user type, if provided by the source."
+      },
+      "ActorScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which ActorUserId and"
+      },
+      "ActorScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which ActorUserId"
+      },
+      "ActorSessionId": {
+        "type": "string",
+        "description": "The unique ID of the login session of the Actor."
+      },
+      "ActorUserAadId": {
+        "type": "string",
+        "description": "The Azure Active Directory ID of the actor."
+      },
+      "ActorUserId": {
+        "type": "string",
+        "description": "A unique ID of the Actor."
+      },
+      "ActorUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the ActorUserId field."
+      },
+      "ActorUsername": {
+        "type": "string",
+        "description": "The user name of the user who initiated the event."
+      },
+      "ActorUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the user name stored in the"
+      },
+      "ActorUserSid": {
+        "type": "string",
+        "description": "The Windows user ID (SIDs) of the actor."
+      },
+      "ActorUserType": {
+        "type": "string",
+        "description": "The type of the Actor."
+      },
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "For reporting security systems, the action taken by the system."
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain."
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to."
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record."
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source."
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device."
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source."
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "Reason or details for the result reported in the EventResult"
+      },
+      "EventSchema": {
+        "type": "string",
+        "description": "The name of the schema."
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Describes a subdivision of the operation reported in the"
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Describes the operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When"
+      },
+      "ParentProcessCommandLine": {
+        "type": "string",
+        "description": "The command line used to run the process."
+      },
+      "ParentProcessGuid": {
+        "type": "string",
+        "description": "A generated unique identifier of the parent process."
+      },
+      "ParentProcessId": {
+        "type": "string",
+        "description": "The process ID of the parent process."
+      },
+      "ParentProcessName": {
+        "type": "string",
+        "description": "The file name of the parent process image file."
+      },
+      "RegistryKey": {
+        "type": "string",
+        "description": "The registry key associated with the operation, normalized to"
+      },
+      "RegistryPreviousKey": {
+        "type": "string",
+        "description": "For operations that modify the registry, the original registry"
+      },
+      "RegistryPreviousValue": {
+        "type": "string",
+        "description": "For operations that modify the registry, the original value type,"
+      },
+      "RegistryPreviousValueData": {
+        "type": "string",
+        "description": "The original registry data, for operations that modify the"
+      },
+      "RegistryPreviousValueType": {
+        "type": "string",
+        "description": "For operations that modify the registry, the original value type."
+      },
+      "RegistryValue": {
+        "type": "string",
+        "description": "The registry value associated with the operation."
+      },
+      "RegistryValueData": {
+        "type": "string",
+        "description": "The data stored in the registry value."
+      },
+      "RegistryValueType": {
+        "type": "string",
+        "description": "The type of registry value, normalized to standard form."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in activity."
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified."
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the activity."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  },
+  "_Im_WebSession": {
+    "tableName": "_Im_WebSession",
+    "description": "ASIM parser view (offline stub modeled on ASimWebSessionLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DstAppId": {
+        "type": "string",
+        "description": "The ID of the destination application, as reported by the"
+      },
+      "DstAppName": {
+        "type": "string",
+        "description": "The name of the destination application."
+      },
+      "DstAppType": {
+        "type": "string",
+        "description": "The type of the destination application."
+      },
+      "DstBytes": {
+        "type": "long",
+        "description": "The number of bytes sent from the destination to the source"
+      },
+      "DstDeviceType": {
+        "type": "string",
+        "description": "The type of the destination device."
+      },
+      "DstDomain": {
+        "type": "string",
+        "description": "The domain of the destination device."
+      },
+      "DstDomainType": {
+        "type": "string",
+        "description": "The type of DstDomain."
+      },
+      "DstDvcId": {
+        "type": "string",
+        "description": "The ID of the destination device."
+      },
+      "DstDvcIdType": {
+        "type": "string",
+        "description": "The type of DstDvcId."
+      },
+      "DstDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the destination device belongs to."
+      },
+      "DstDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the destination device belongs to."
+      },
+      "DstFQDN": {
+        "type": "string",
+        "description": "The destination device hostname, including domain"
+      },
+      "DstGeoCity": {
+        "type": "string",
+        "description": "The city associated with the destination IP address."
+      },
+      "DstGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the destination IP address."
+      },
+      "DstGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "DstGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "DstGeoRegion": {
+        "type": "string",
+        "description": "The region, or state, within a country associated with the"
+      },
+      "DstHostname": {
+        "type": "string",
+        "description": "The destination device hostname, excluding domain"
+      },
+      "DstIpAddr": {
+        "type": "string",
+        "description": "The IP address of the connection or session destination."
+      },
+      "DstMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the network interface used for the"
+      },
+      "DstNatIpAddr": {
+        "type": "string",
+        "description": "The DstNatIpAddr represents either of: The original address of"
+      },
+      "DstNatPortNumber": {
+        "type": "int",
+        "description": "If reported by an intermediary NAT device, the port used by the"
+      },
+      "DstOriginalUserType": {
+        "type": "string",
+        "description": "The original destination user type, if provided by the source."
+      },
+      "DstPackets": {
+        "type": "long",
+        "description": "The number of packets sent from the destination to the source"
+      },
+      "DstPortNumber": {
+        "type": "int",
+        "description": "The destination IP port."
+      },
+      "DstUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "DstUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the DstUserId field."
+      },
+      "DstUsername": {
+        "type": "string",
+        "description": "The destination username, including domain information when"
+      },
+      "DstUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the username stored in the DstUsername"
+      },
+      "DstUserType": {
+        "type": "string",
+        "description": "The type of destination user."
+      },
+      "Dvc": {
+        "type": "string",
+        "description": "A unique identifier of the device on which the event occurred"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "The action taken on the web session."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain. Possible values include 'Windows' and"
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "This value is used when the source supports aggregation, and a"
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source. This value is"
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device. This"
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source. For"
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "The HTTP status code."
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Additional description of the event type, if applicable."
+      },
+      "EventType": {
+        "type": "string",
+        "description": "The operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "FileContentType": {
+        "type": "string",
+        "description": "For HTTP uploads, the content type of the uploaded file."
+      },
+      "FileMD5": {
+        "type": "string",
+        "description": "For HTTP uploads, the MD5 hash of the uploaded file."
+      },
+      "FileName": {
+        "type": "string",
+        "description": "For HTTP uploads, the name of the uploaded file."
+      },
+      "FileSHA1": {
+        "type": "string",
+        "description": "For HTTP uploads, the SHA1 hash of the uploaded file."
+      },
+      "FileSHA256": {
+        "type": "string",
+        "description": "For HTTP uploads, the SHA256 hash of the uploaded file."
+      },
+      "FileSHA512": {
+        "type": "string",
+        "description": "For HTTP uploads, the SHA512 hash of the uploaded file."
+      },
+      "FileSize": {
+        "type": "int",
+        "description": "For HTTP uploads, the size in bytes of the uploaded file."
+      },
+      "HttpContentFormat": {
+        "type": "string",
+        "description": "The content format part of the HttpContentType"
+      },
+      "HttpContentType": {
+        "type": "string",
+        "description": "The HTTP Response content type header."
+      },
+      "HttpHost": {
+        "type": "string",
+        "description": "The virtual web server the HTTP request has targeted."
+      },
+      "HttpReferrer": {
+        "type": "string",
+        "description": "The HTTP referrer header."
+      },
+      "HttpRequestMethod": {
+        "type": "string",
+        "description": "The HTTP Method."
+      },
+      "HttpRequestTime": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, it took to send the request"
+      },
+      "HttpRequestXff": {
+        "type": "string",
+        "description": "The HTTP X-Forwarded-For header."
+      },
+      "HttpResponseTime": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, it took to receive a"
+      },
+      "HttpUserAgent": {
+        "type": "string",
+        "description": "The HTTP user agent header."
+      },
+      "HttpVersion": {
+        "type": "string",
+        "description": "The HTTP Request Version."
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable"
+      },
+      "NetworkApplicationProtocol": {
+        "type": "string",
+        "description": "The application layer protocol used by the connection or"
+      },
+      "NetworkBytes": {
+        "type": "long",
+        "description": "Number of bytes sent in both directions. If both BytesReceived"
+      },
+      "NetworkConnectionHistory": {
+        "type": "string",
+        "description": "TCP flags and other potential IP header information."
+      },
+      "NetworkDirection": {
+        "type": "string",
+        "description": "The direction of the connection or session."
+      },
+      "NetworkDuration": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, for the completion of the"
+      },
+      "NetworkIcmpCode": {
+        "type": "int",
+        "description": "For an ICMP message, the ICMP message type numeric value"
+      },
+      "NetworkIcmpType": {
+        "type": "string",
+        "description": "For an ICMP message, the ICMP message type text"
+      },
+      "NetworkPackets": {
+        "type": "long",
+        "description": "The number of packets sent in both directions. If both"
+      },
+      "NetworkProtocol": {
+        "type": "string",
+        "description": "The IP protocol used by the connection or session as listed in"
+      },
+      "NetworkProtocolVersion": {
+        "type": "string",
+        "description": "The version of NetworkProtocol."
+      },
+      "NetworkSessionId": {
+        "type": "string",
+        "description": "The session identifier as reported by the reporting device."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is"
+      },
+      "Rule": {
+        "type": "string",
+        "description": "Either NetworkRuleName or NetworkRuleNumber"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by which DvcAction was decided"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule by which DvcAction was decided upon."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcAppId": {
+        "type": "string",
+        "description": "The ID of the source application, as reported by the reporting"
+      },
+      "SrcAppName": {
+        "type": "string",
+        "description": "The name of the source application."
+      },
+      "SrcAppType": {
+        "type": "string",
+        "description": "The type of the source application."
+      },
+      "SrcBytes": {
+        "type": "long",
+        "description": "The number of bytes sent from the source to the destination"
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the source device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the source device belongs to."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information. If"
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address from which the connection or session"
+      },
+      "SrcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the network interface from which the"
+      },
+      "SrcNatIpAddr": {
+        "type": "string",
+        "description": "The SrcNatIpAddr represents either of: The original address of"
+      },
+      "SrcNatPortNumber": {
+        "type": "int",
+        "description": "If reported by an intermediary NAT device, the port used by the"
+      },
+      "SrcOriginalUserType": {
+        "type": "string",
+        "description": "The original destination user type, if provided by the by the"
+      },
+      "SrcPackets": {
+        "type": "long",
+        "description": "The number of packets sent from the source to the destination"
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "The IP port from which the connection originated. Might not be"
+      },
+      "SrcProcessGuid": {
+        "type": "string",
+        "description": "A generated unique identifier (GUID) of the source process."
+      },
+      "SrcProcessId": {
+        "type": "string",
+        "description": "The process ID (PID) of the source process."
+      },
+      "SrcProcessName": {
+        "type": "string",
+        "description": "The name of the source process."
+      },
+      "SrcUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of"
+      },
+      "SrcUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the SrcUserId field."
+      },
+      "SrcUsername": {
+        "type": "string",
+        "description": "The source username, including domain information when"
+      },
+      "SrcUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the username stored in the SrcUsername"
+      },
+      "SrcUserScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which SrcUserId and"
+      },
+      "SrcUserScopeId": {
+        "type": "string",
+        "description": "The ID of the scope, such as Azure AD tenant, in which"
+      },
+      "SrcUserType": {
+        "type": "string",
+        "description": "The type of the source user."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in the web"
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified. The value is either"
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the web session."
+      },
+      "ThreatIpAddr": {
+        "type": "string",
+        "description": "An IP address for which a threat was identified. The field"
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a"
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the web"
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the session. The level is a number"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      },
+      "Url": {
+        "type": "string",
+        "description": "The full HTTP request URL, including parameters."
+      },
+      "UrlCategory": {
+        "type": "string",
+        "description": "The defined grouping of a URL or the domain part of the URL."
+      },
+      "UrlOriginal": {
+        "type": "string",
+        "description": "The original value of the URL, when the URL was modified by"
+      }
+    }
+  },
+  "_Im_AuditEvent": {
+    "tableName": "_Im_AuditEvent",
+    "description": "ASIM parser view (offline stub modeled on ASimAuditEventLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "ActingAppId": {
+        "type": "string",
+        "description": "The ID of the application authorizing on behalf of the actor,"
+      },
+      "ActingAppName": {
+        "type": "string",
+        "description": "The name of the application authorizing on behalf of the actor,"
+      },
+      "ActingAppType": {
+        "type": "string",
+        "description": "The type of acting application."
+      },
+      "ActingOriginalAppType": {
+        "type": "string",
+        "description": "The acting application type as reported by the reporting device."
+      },
+      "ActorOriginalUserType": {
+        "type": "string",
+        "description": "The user type as reported by the reporting device."
+      },
+      "ActorScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which ActorUserId and"
+      },
+      "ActorScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which ActorUserId"
+      },
+      "ActorSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the Actor."
+      },
+      "ActorUserAadId": {
+        "type": "string",
+        "description": "The Azure Active Directory ID of the actor."
+      },
+      "ActorUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "ActorUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the ActorUserId field."
+      },
+      "ActorUsername": {
+        "type": "string",
+        "description": "The Actor's username, including domain information when"
+      },
+      "ActorUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the user name stored in the ActorUsername"
+      },
+      "ActorUserSid": {
+        "type": "string",
+        "description": "The Windows user ID (SIDs) of the actor."
+      },
+      "ActorUserType": {
+        "type": "string",
+        "description": "The type of the Actor."
+      },
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "For reporting security systems, the action taken by the system."
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain."
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the event"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which the"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope map"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to. DvcScopeId"
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported the"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record."
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source."
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device."
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source."
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "The details associated with the event result. This field is typically"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "The sign-in type for example System, Interactive,"
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Describes the operation reported by the record"
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "HttpUserAgent": {
+        "type": "string",
+        "description": "When authentication is performed over HTTP or HTTPS, this"
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable is"
+      },
+      "NewValue": {
+        "type": "string",
+        "description": "The new value of Object after the operation was performed."
+      },
+      "Object": {
+        "type": "string",
+        "description": "The name of the object on which the operation identified by"
+      },
+      "ObjectId": {
+        "type": "string",
+        "description": "The name of the object on which the operation identified by"
+      },
+      "ObjectType": {
+        "type": "string",
+        "description": "The type of Object."
+      },
+      "OldValue": {
+        "type": "string",
+        "description": "The old value of Object prior to the operation."
+      },
+      "Operation": {
+        "type": "string",
+        "description": "The operation audited as reported by the reporting device."
+      },
+      "OriginalObjectType": {
+        "type": "string",
+        "description": "The object type as reported by the reporting device."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is associated"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule associated with the inspection results."
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the source device."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the source device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the source device belongs to."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information when"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information."
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the source device."
+      },
+      "SrcOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associaeted with the identified Source as reported"
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "The IP port from which the connection originated."
+      },
+      "SrcRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified Source."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TargetAppId": {
+        "type": "string",
+        "description": "The ID of the application to which the authorization is required,"
+      },
+      "TargetAppName": {
+        "type": "string",
+        "description": "The name of the application to which the authorization is"
+      },
+      "TargetAppType": {
+        "type": "string",
+        "description": "The type of the application authorizing on behalf of the Actor."
+      },
+      "TargetDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the target device."
+      },
+      "TargetDeviceType": {
+        "type": "string",
+        "description": "The type of the target device."
+      },
+      "TargetDomain": {
+        "type": "string",
+        "description": "The domain of the target device."
+      },
+      "TargetDomainType": {
+        "type": "string",
+        "description": "The type of TargetDomain."
+      },
+      "TargetDvcId": {
+        "type": "string",
+        "description": "The ID of the target device."
+      },
+      "TargetDvcIdType": {
+        "type": "string",
+        "description": "The type of TargetDvcId."
+      },
+      "TargetDvcOs": {
+        "type": "string",
+        "description": "The OS of the target device."
+      },
+      "TargetDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the target device belongs to."
+      },
+      "TargetDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the target device belongs to."
+      },
+      "TargetFQDN": {
+        "type": "string",
+        "description": "The target device hostname, including domain information when"
+      },
+      "TargetGeoCity": {
+        "type": "string",
+        "description": "The city associated with the target IP address."
+      },
+      "TargetGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the target IP address."
+      },
+      "TargetGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "TargetGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with the"
+      },
+      "TargetGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the target IP address."
+      },
+      "TargetHostname": {
+        "type": "string",
+        "description": "The target device hostname, excluding domain information."
+      },
+      "TargetIpAddr": {
+        "type": "string",
+        "description": "The IP address of the target device."
+      },
+      "TargetOriginalAppType": {
+        "type": "string",
+        "description": "The target application type as reported by the reporting device."
+      },
+      "TargetOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associated with the target, as reported by the"
+      },
+      "TargetPortNumber": {
+        "type": "int",
+        "description": "The port of the target device."
+      },
+      "TargetRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the target."
+      },
+      "TargetUrl": {
+        "type": "string",
+        "description": "A URL associated with the target application."
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in audit activity."
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified."
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the audit activity."
+      },
+      "ThreatIpAddr": {
+        "type": "string",
+        "description": "An IP address for which a threat was identified."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True if the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a threat."
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the audit activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as reported"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      },
+      "ValueType": {
+        "type": "string",
+        "description": "The type of the old and new values."
+      },
+      "LogonMethod": {
+        "type": "string",
+        "description": "The method used to perform authentication."
+      },
+      "LogonProtocol": {
+        "type": "string",
+        "description": "The protocol used to perform authentication."
+      },
+      "SrcDvcOs": {
+        "type": "string",
+        "description": "The OS of the source device."
+      },
+      "SrcIsp": {
+        "type": "string",
+        "description": "The Internet Service Provider (ISP) used by the source device to"
+      },
+      "TargetOriginalUserType": {
+        "type": "string",
+        "description": "The user type as reported by the reporting device."
+      },
+      "TargetSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the Target actor."
+      },
+      "TargetUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "TargetUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the TargetUserId field."
+      },
+      "TargetUsername": {
+        "type": "string",
+        "description": "The Target actor's username, including domain information when"
+      },
+      "TargetUsernameType": {
+        "type": "string",
+        "description": "The type of the Target actor's username specified in"
+      },
+      "TargetUserScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which TargetUserId and"
+      },
+      "TargetUserScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which TargetUserId"
+      },
+      "TargetUserType": {
+        "type": "string",
+        "description": "The type of the Target actor."
+      }
+    }
+  },
+  "_Im_DhcpEvent": {
+    "tableName": "_Im_DhcpEvent",
+    "description": "ASIM parser view (offline stub modeled on ASimDhcpEventLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DhcpCircuitId": {
+        "type": "string",
+        "description": "The DHCP circuit ID, as defined by RFC3046."
+      },
+      "DhcpLeaseDuration": {
+        "type": "int",
+        "description": "The length of the lease granted to a client, in seconds."
+      },
+      "DhcpSessionDuration": {
+        "type": "int",
+        "description": "The amount of time, in milliseconds, for the completion of the"
+      },
+      "DhcpSessionId": {
+        "type": "string",
+        "description": "The session identifier as reported by the reporting device. For the"
+      },
+      "DhcpSrcDHCId": {
+        "type": "string",
+        "description": "The DHCP client ID, as defined by RFC4701."
+      },
+      "DhcpSubscriberId": {
+        "type": "string",
+        "description": "The DHCP subscriber ID, as defined by RFC3993."
+      },
+      "DhcpUserClass": {
+        "type": "string",
+        "description": "The DHCP User Class, as defined by RFC3004."
+      },
+      "DhcpUserClassId": {
+        "type": "string",
+        "description": "The DHCP User Class Id, as defined by RFC3004."
+      },
+      "DhcpVendorClass": {
+        "type": "string",
+        "description": "The DHCP Vendor Class, as defined by RFC3925."
+      },
+      "DhcpVendorClassId": {
+        "type": "string",
+        "description": "The DHCP Vendor Class Id, as defined by RFC3925."
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "For reporting security systems, the action taken by the system, if"
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device on which the event occurred or which"
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain."
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured. This field is"
+      },
+      "an": {
+        "type": "int",
+        "description": "ermediate or tap device."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the device on which the event occurred or"
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the event"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which the"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope map"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to. DvcScopeId"
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported the"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record. This value is used"
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description, either included in or generated"
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source. This value is"
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device. This"
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source."
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event. The value should be one of"
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "Reason or details for the result reported in the EventResult field."
+      },
+      "EventSchema": {
+        "type": "string",
+        "description": "The schema the event is normalized to. Each schema documents"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema. Each schema documents its current"
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event."
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Describes a subdivision of the operation reported in the"
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Describes the operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event. The value"
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable is"
+      },
+      "RequestedIpAddr": {
+        "type": "string",
+        "description": "The IP address requested by the DHCP client, when available."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is associated"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of the domain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the device."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of the DvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The device hostname, including domain information when"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The device hostname, excluding domain information."
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the source device."
+      },
+      "SrcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the network interface from which the"
+      },
+      "SrcOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associaeted with the identified Source as reported"
+      },
+      "SrcOriginalUserType": {
+        "type": "string",
+        "description": "The original source user type, if provided by the source."
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "The IP port on which the device communicated, if applicable."
+      },
+      "SrcRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified Source."
+      },
+      "SrcUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "SrcUserIdType": {
+        "type": "string",
+        "description": "The type of SrcUserId."
+      },
+      "SrcUsername": {
+        "type": "string",
+        "description": "The user's username, including domain information when"
+      },
+      "SrcUsernameType": {
+        "type": "string",
+        "description": "The type of username."
+      },
+      "SrcUserScope": {
+        "type": "string",
+        "description": "The type of username."
+      },
+      "SrcUserScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which UserId and"
+      },
+      "SrcUserSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the user."
+      },
+      "SrcUserType": {
+        "type": "string",
+        "description": "The type of user"
+      },
+      "SrcUserUid": {
+        "type": "string",
+        "description": "The Unix or Linux user ID of the user."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in activity."
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified."
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the activity."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a threat."
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as reported"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  },
+  "_Im_UserManagementActivity": {
+    "tableName": "_Im_UserManagementActivity",
+    "description": "ASIM parser view (offline stub modeled on ASimUserManagementActivityLogs). Prefer workspace schema for exact columns.",
+    "columns": {
+      "ActingAppId": {
+        "type": "string",
+        "description": "The ID of the application used by the actor to perform the"
+      },
+      "ActingAppName": {
+        "type": "string",
+        "description": "The name of the application used by the actor to perform the"
+      },
+      "ActingAppType": {
+        "type": "string",
+        "description": "The type of acting application."
+      },
+      "ActingOriginalAppType": {
+        "type": "string",
+        "description": "The acting application type as reported by the reporting device."
+      },
+      "ActorOriginalUserType": {
+        "type": "string",
+        "description": "The original actor user type, if provided by the source."
+      },
+      "ActorScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant, in which ActorUserId and"
+      },
+      "ActorScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which ActorUserId"
+      },
+      "ActorSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the Actor."
+      },
+      "ActorUserAadId": {
+        "type": "string",
+        "description": "The Azure Active Directory ID of the actor."
+      },
+      "ActorUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "ActorUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the ActorUserId field."
+      },
+      "ActorUsername": {
+        "type": "string",
+        "description": "The Actor's username, including domain information when"
+      },
+      "ActorUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the user name stored in the ActorUsername"
+      },
+      "ActorUserSid": {
+        "type": "string",
+        "description": "The Windows user ID (SIDs) of the actor."
+      },
+      "ActorUserType": {
+        "type": "string",
+        "description": "The type of the Actor."
+      },
+      "AdditionalFields": {
+        "type": "dynamic",
+        "description": "Additional information, represented using key/value pairs"
+      },
+      "_BilledSize": {
+        "type": "real",
+        "description": "The record size in bytes"
+      },
+      "DvcAction": {
+        "type": "string",
+        "description": "For reporting security systems, the action taken by the system."
+      },
+      "DvcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the device."
+      },
+      "DvcDomain": {
+        "type": "string",
+        "description": "The domain of the device reporting the event."
+      },
+      "DvcDomainType": {
+        "type": "string",
+        "description": "The type of DvcDomain."
+      },
+      "DvcFQDN": {
+        "type": "string",
+        "description": "The hostname of the device on which the event occurred or"
+      },
+      "DvcHostname": {
+        "type": "string",
+        "description": "The hostname of the device reporting the event."
+      },
+      "DvcId": {
+        "type": "string",
+        "description": "The unique ID of the device on which the event occurred or"
+      },
+      "DvcIdType": {
+        "type": "string",
+        "description": "The type of DvcId."
+      },
+      "DvcInterface": {
+        "type": "string",
+        "description": "The network interface on which data was captured."
+      },
+      "DvcIpAddr": {
+        "type": "string",
+        "description": "The IP Address of the device reporting the event."
+      },
+      "DvcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the device on which the event occurred or"
+      },
+      "DvcOriginalAction": {
+        "type": "string",
+        "description": "The original DvcAction as provided by the reporting device."
+      },
+      "DvcOs": {
+        "type": "string",
+        "description": "The operating system running on the device on which the event"
+      },
+      "DvcOsVersion": {
+        "type": "string",
+        "description": "The version of the operating system on the device on which the"
+      },
+      "DvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the device belongs to. DvcScope map"
+      },
+      "DvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the device belongs to. DvcScopeId"
+      },
+      "DvcZone": {
+        "type": "string",
+        "description": "The network on which the event occurred or which reported the"
+      },
+      "EventCount": {
+        "type": "int",
+        "description": "The number of events described by the record."
+      },
+      "EventEndTime": {
+        "type": "datetime",
+        "description": "The time in which the event ended. If the source supports"
+      },
+      "EventMessage": {
+        "type": "string",
+        "description": "A general message or description."
+      },
+      "EventOriginalResultDetails": {
+        "type": "string",
+        "description": "The original result details provided by the source."
+      },
+      "EventOriginalSeverity": {
+        "type": "string",
+        "description": "The original severity as provided by the reporting device."
+      },
+      "EventOriginalSubType": {
+        "type": "string",
+        "description": "The original event subtype or ID, if provided by the source."
+      },
+      "EventOriginalType": {
+        "type": "string",
+        "description": "The original event type or ID, if provided by the source."
+      },
+      "EventOriginalUid": {
+        "type": "string",
+        "description": "A unique ID of the original record, if provided by the source."
+      },
+      "EventOwner": {
+        "type": "string",
+        "description": "The owner of the event, which is usually the department or"
+      },
+      "EventProduct": {
+        "type": "string",
+        "description": "The product generating the event."
+      },
+      "EventProductVersion": {
+        "type": "string",
+        "description": "The version of the product generating the event."
+      },
+      "EventReportUrl": {
+        "type": "string",
+        "description": "A URL provided in the event for a resource that provides more"
+      },
+      "EventResult": {
+        "type": "string",
+        "description": "The outcome of the event, represented by one of the following"
+      },
+      "EventResultDetails": {
+        "type": "string",
+        "description": "Reason or details for the result reported in the EventResult field."
+      },
+      "EventSchema": {
+        "type": "string",
+        "description": "The name of the schema"
+      },
+      "EventSchemaVersion": {
+        "type": "string",
+        "description": "The version of the schema."
+      },
+      "EventSeverity": {
+        "type": "string",
+        "description": "The severity of the event. Valid values are: Informational, Low,"
+      },
+      "EventStartTime": {
+        "type": "datetime",
+        "description": "The time in which the event started. If the source supports"
+      },
+      "EventSubType": {
+        "type": "string",
+        "description": "Describes a subdivision of the operation reported in the"
+      },
+      "EventType": {
+        "type": "string",
+        "description": "Describes the operation reported by the record."
+      },
+      "EventVendor": {
+        "type": "string",
+        "description": "The vendor of the product generating the event."
+      },
+      "GroupId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "GroupIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the GroupId field."
+      },
+      "GroupName": {
+        "type": "string",
+        "description": "The group name, including domain information when available,"
+      },
+      "GroupNameType": {
+        "type": "string",
+        "description": "Specifies the type of the group name stored in the GroupName"
+      },
+      "GroupOriginalType": {
+        "type": "string",
+        "description": "The original group type, if provided by the source."
+      },
+      "GroupType": {
+        "type": "string",
+        "description": "The type of the group, for activities involving a group."
+      },
+      "HttpUserAgent": {
+        "type": "string",
+        "description": "When authentication is performed over HTTP or HTTPS, this"
+      },
+      "_IsBillable": {
+        "type": "string",
+        "description": "Specifies whether ingesting the data is billable. When _IsBillable is"
+      },
+      "NewPropertyValue": {
+        "type": "string",
+        "description": "The new value stored in the specified property."
+      },
+      "PreviousPropertyValue": {
+        "type": "string",
+        "description": "The previous value that was stored in the specified property."
+      },
+      "_ResourceId": {
+        "type": "string",
+        "description": "A unique identifier for the resource that the record is associated"
+      },
+      "RuleName": {
+        "type": "string",
+        "description": "The name or ID of the rule by associated with the inspection"
+      },
+      "RuleNumber": {
+        "type": "int",
+        "description": "The number of the rule associated with the inspection results."
+      },
+      "SourceSystem": {
+        "type": "string",
+        "description": "The type of agent the event was collected by. For example,"
+      },
+      "SrcDescription": {
+        "type": "string",
+        "description": "A descriptive text associated with the source device."
+      },
+      "SrcDeviceType": {
+        "type": "string",
+        "description": "The type of the source device."
+      },
+      "SrcDomain": {
+        "type": "string",
+        "description": "The domain of the source device."
+      },
+      "SrcDomainType": {
+        "type": "string",
+        "description": "The type of SrcDomain."
+      },
+      "SrcDvcId": {
+        "type": "string",
+        "description": "The ID of the source device as reported in the record."
+      },
+      "SrcDvcIdType": {
+        "type": "string",
+        "description": "The type of SrcDvcId."
+      },
+      "SrcDvcScope": {
+        "type": "string",
+        "description": "The cloud platform scope the source device belongs to."
+      },
+      "SrcDvcScopeId": {
+        "type": "string",
+        "description": "The cloud platform scope ID the source device belongs to."
+      },
+      "SrcFQDN": {
+        "type": "string",
+        "description": "The source device hostname, including domain information when"
+      },
+      "SrcGeoCity": {
+        "type": "string",
+        "description": "The city associated with the source IP address."
+      },
+      "SrcGeoCountry": {
+        "type": "string",
+        "description": "The country associated with the source IP address."
+      },
+      "SrcGeoLatitude": {
+        "type": "real",
+        "description": "The latitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoLongitude": {
+        "type": "real",
+        "description": "The longitude of the geographical coordinate associated with the"
+      },
+      "SrcGeoRegion": {
+        "type": "string",
+        "description": "The region within a country associated with the source IP"
+      },
+      "SrcHostname": {
+        "type": "string",
+        "description": "The source device hostname, excluding domain information."
+      },
+      "SrcIpAddr": {
+        "type": "string",
+        "description": "The IP address of the source device."
+      },
+      "SrcMacAddr": {
+        "type": "string",
+        "description": "The MAC address of the source device."
+      },
+      "SrcOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level associaeted with the identified Source as reported"
+      },
+      "SrcPortNumber": {
+        "type": "int",
+        "description": "The Source IP port from which the connection originated."
+      },
+      "SrcRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified Source."
+      },
+      "_SubscriptionId": {
+        "type": "string",
+        "description": "A unique identifier for the subscription that the record is"
+      },
+      "TargetOriginalUserType": {
+        "type": "string",
+        "description": "The original destination user type, if provided by the source."
+      },
+      "TargetUserId": {
+        "type": "string",
+        "description": "A machine-readable, alphanumeric, unique representation of the"
+      },
+      "TargetUserIdType": {
+        "type": "string",
+        "description": "The type of the ID stored in the TargetUserId field."
+      },
+      "TargetUsername": {
+        "type": "string",
+        "description": "The target username, including domain information when"
+      },
+      "TargetUsernameType": {
+        "type": "string",
+        "description": "Specifies the type of the username stored in the TargetUsername"
+      },
+      "TargetUserScope": {
+        "type": "string",
+        "description": "The scope, such as Azure AD tenant name, in which TargetUserId"
+      },
+      "TargetUserScopeId": {
+        "type": "string",
+        "description": "The scope ID, such as Azure AD tenant ID, in which TargetUserId"
+      },
+      "TargetUserSessionId": {
+        "type": "string",
+        "description": "The unique ID of the sign-in session of the user."
+      },
+      "TargetUserType": {
+        "type": "string",
+        "description": "The type of target user."
+      },
+      "TargetUserUid": {
+        "type": "string",
+        "description": "The Unix or Linux user ID of the user."
+      },
+      "TenantId": {
+        "type": "string",
+        "description": "The Log Analytics workspace ID"
+      },
+      "ThreatCategory": {
+        "type": "string",
+        "description": "The category of the threat or malware identified in activity."
+      },
+      "ThreatConfidence": {
+        "type": "int",
+        "description": "The confidence level of the threat identified, normalized to a"
+      },
+      "ThreatField": {
+        "type": "string",
+        "description": "The field for which a threat was identified."
+      },
+      "ThreatFirstReportedTime": {
+        "type": "datetime",
+        "description": "The first time the IP address or domain were identified as a"
+      },
+      "ThreatId": {
+        "type": "string",
+        "description": "The ID of the threat or malware identified in the activity."
+      },
+      "ThreatIsActive": {
+        "type": "bool",
+        "description": "True ID the threat identified is considered an active threat."
+      },
+      "ThreatLastReportedTime": {
+        "type": "datetime",
+        "description": "The last time the IP address or domain were identified as a threat."
+      },
+      "ThreatName": {
+        "type": "string",
+        "description": "The name of the threat or malware identified in the activity."
+      },
+      "ThreatOriginalConfidence": {
+        "type": "string",
+        "description": "The original confidence level of the threat identified, as reported"
+      },
+      "ThreatOriginalRiskLevel": {
+        "type": "string",
+        "description": "The risk level as reported by the reporting device."
+      },
+      "ThreatRiskLevel": {
+        "type": "int",
+        "description": "The risk level associated with the identified threat. The level"
+      },
+      "TimeGenerated": {
+        "type": "datetime",
+        "description": "The timestamp (UTC) reflecting the time in which the event was"
+      },
+      "Type": {
+        "type": "string",
+        "description": "The name of the table"
+      }
+    }
+  }
+}

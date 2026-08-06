@@ -39,6 +39,9 @@
     "onLanguage:kql"
   ],
   "main": "./out/src/extension.js",
+  "bin": {
+    "kql-assistant": "./out/src/cli.js"
+  },
   "contributes": {
     "languages": [
       {
@@ -110,6 +113,34 @@
           },
           "default": [],
           "description": "Table names to skip when reporting unknown-table diagnostics (case-insensitive). Also set via the Ignore unknown table lightbulb."
+        },
+        "kqlAssistant.lintMode": {
+          "type": "string",
+          "enum": [
+            "off",
+            "basic",
+            "strict"
+          ],
+          "default": "basic",
+          "description": "Detection/cost lint pack: off, basic (time filter, contains→has, bare search, join kind), or strict (adds project-after-join guidance; stronger severities)."
+        },
+        "kqlAssistant.schemaPacks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "all",
+              "sentinel-core",
+              "mde",
+              "identity",
+              "asim",
+              "asim-parsers"
+            ]
+          },
+          "default": [
+            "all"
+          ],
+          "description": "Schema packs to load. Use \"all\" for the full catalog (default). Combine packs (e.g. mde + sentinel-core) to reduce completion noise. asim / asim-parsers also merge _Im_* parser stubs."
         }
       }
     },
@@ -127,6 +158,7 @@
     "pretest": "npm run compile",
     "test": "mocha \"out/test/**/*.test.js\"",
     "lint": "eslint src test --ext ts",
+    "lint:kql": "node out/src/cli.js lint",
     "package": "vsce package"
   },
   "devDependencies": {

@@ -1,7 +1,8 @@
 import { KqlSchemaValidator } from './schemaValidator';
 import { buildQueryModel, ColumnReference, QuerySchemaProvider, QueryStep } from './queryModel';
+import { LintMode, runLintRules } from './lintRules';
 
-export type SyntaxIssueSeverity = 'error' | 'information';
+export type SyntaxIssueSeverity = 'error' | 'warning' | 'information';
 
 export interface SyntaxError {
     line: number;
@@ -10,11 +11,14 @@ export interface SyntaxError {
     message: string;
     /** When set, overrides kqlAssistant.diagnosticLevel for this issue */
     severity?: SyntaxIssueSeverity;
+    /** Stable rule id (e.g. KQL101) for CI suppressions */
+    code?: string;
 }
 
 export class KqlSyntaxChecker {
     private schemaValidator: QuerySchemaProvider | undefined;
     private ignoredTables = new Set<string>();
+    private lintMode: LintMode = 'off';
 
     /** Operators that must be preceded by `|` when used as a line-leading tabular step */
     private readonly pipeRequiredOperators = [
@@ -75,6 +79,11 @@ export class KqlSyntaxChecker {
                 .map(t => t.trim().toLowerCase())
                 .filter(t => t.length > 0)
         );
+    }
+
+    /** Detection / cost lint pack: off | basic | strict */
+    public setLintMode(mode: LintMode): void {
+        this.lintMode = mode;
     }
 
     public check(text: string): SyntaxError[] {
@@ -163,6 +172,8 @@ export class KqlSyntaxChecker {
         if (this.schemaValidator) {
             this.checkTableAndColumnsWithModel(text, errors);
         }
+
+        errors.push(...runLintRules(text, { mode: this.lintMode }));
 
         return errors;
     }

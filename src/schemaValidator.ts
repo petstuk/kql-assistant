@@ -1,39 +1,71 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { SchemaStore, ColumnSchema, TableSchema } from './schemaStore';
+import { SchemaStore, ColumnSchema, TableSchema, SchemaStoreOptions } from './schemaStore';
 
 export type { ColumnSchema, TableSchema };
 
 export interface SchemaValidatorOptions {
     bundledSchemaPath: string;
     userSchemaPath?: string;
+    schemaPacks?: string[];
+    packsDir?: string;
+    overlaySchemaPaths?: string[];
 }
 
 export class KqlSchemaValidator {
     private store: SchemaStore;
     private readonly useWorkspaceConfig: boolean;
+    private readonly extensionPath: string | undefined;
 
     constructor(context: vscode.ExtensionContext);
     constructor(options: SchemaValidatorOptions);
     constructor(contextOrOptions: vscode.ExtensionContext | SchemaValidatorOptions) {
         if ('bundledSchemaPath' in contextOrOptions) {
             this.useWorkspaceConfig = false;
+            this.extensionPath = path.dirname(contextOrOptions.bundledSchemaPath);
             this.store = new SchemaStore(
                 contextOrOptions.bundledSchemaPath,
-                contextOrOptions.userSchemaPath
+                contextOrOptions.userSchemaPath,
+                {
+                    schemaPacks: contextOrOptions.schemaPacks,
+                    packsDir: contextOrOptions.packsDir,
+                    overlaySchemaPaths: contextOrOptions.overlaySchemaPaths
+                }
             );
         } else {
             this.useWorkspaceConfig = true;
+            this.extensionPath = contextOrOptions.extensionPath;
             const bundledSchemaPath = path.join(contextOrOptions.extensionPath, 'schemas', 'all-tables.json');
-            this.store = new SchemaStore(bundledSchemaPath, this.resolveUserSchemaPath());
+            this.store = new SchemaStore(
+                bundledSchemaPath,
+                this.resolveUserSchemaPath(),
+                this.resolveStoreOptions()
+            );
         }
-        console.log(`Loaded ${this.store.getTableCount()} table schemas`);
+        console.log(
+            `Loaded ${this.store.getTableCount()} table schemas (packs: ${this.store.getActivePacks().join(', ')})`
+        );
     }
 
     public reloadSchemas(): void {
         const userPath = this.useWorkspaceConfig ? this.resolveUserSchemaPath() : undefined;
-        this.store.reload(userPath);
-        console.log(`Loaded ${this.store.getTableCount()} table schemas`);
+        const options = this.useWorkspaceConfig ? this.resolveStoreOptions() : undefined;
+        this.store.reload(userPath, options);
+        console.log(
+            `Loaded ${this.store.getTableCount()} table schemas (packs: ${this.store.getActivePacks().join(', ')})`
+        );
+    }
+
+    private resolveStoreOptions(): SchemaStoreOptions {
+        const packs = vscode.workspace
+            .getConfiguration('kqlAssistant')
+            .get<string[]>('schemaPacks', ['all']) ?? ['all'];
+        return {
+            schemaPacks: packs,
+            packsDir: this.extensionPath
+                ? path.join(this.extensionPath, 'schemas', 'packs')
+                : undefined
+        };
     }
 
     private resolveUserSchemaPath(): string | undefined {
