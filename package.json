@@ -80,6 +80,10 @@
       {
         "command": "kql-assistant.ignoreUnknownTable",
         "title": "KQL: Ignore Unknown Table"
+      },
+      {
+        "command": "kql-assistant.exportAnalyticsRule",
+        "title": "KQL: Export Analytics Rule YAML"
       }
     ],
     "configuration": {

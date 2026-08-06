@@ -4,6 +4,12 @@ All notable changes to **KQL Assistant** are documented here. The [README](READM
 
 ## Unreleased
 
+**Sprint 3 — SOC packaging:**
+
+- **Analytics rule export**: `KQL: Export Analytics Rule YAML` (+ CodeLens) builds a Sentinel scheduled-rule stub from `## Rule ##` blocks.
+- **Rule metadata**: Parse `// tactic:`, `// technique:`, `// severity:`, `// description:`, `// queryFrequency:` under headers; surface in CodeLens and Outline.
+- **Lookup / IOC**: Join-shaped `lookup` column validation; `datatable(...)` IOC lists via `let` get column scope; removed legacy line-scanner dead code from `syntaxChecker`.
+
 **Sprint 2 — engineer value:**
 
 - **Lint pack**: New `kqlAssistant.lintMode` (`off` | `basic` | `strict`) with rules KQL101–KQL105 (early time filter, join `kind=`, prefer `has` over `contains`, bare `search`/`find`, strict project-after-join).

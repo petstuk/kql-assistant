@@ -140,13 +140,20 @@ describe('KqlSyntaxChecker', () => {
         assert.ok(!hasMessage(errors, "Unknown column 'UserPrincipalName'"));
     });
 
-    it('keeps lookup transparency notice', () => {
+    it('validates lookup keys like join', () => {
         const errors = checker.check(
-            'SigninLogs\n| lookup AuditLogs on Id'
+            'SigninLogs\n| lookup kind=leftouter (AuditLogs) on BadLookupKey'
         );
-        const notice = errors.find(e => e.severity === 'information');
-        assert.ok(notice);
-        assert.ok(notice!.message.includes('lookup'));
+        assert.ok(hasMessage(errors, "Lookup key column 'BadLookupKey'"));
+        assert.ok(!errors.some(e => e.message.includes('Column validation is limited')));
+    });
+
+    it('accepts datatable IOC list columns', () => {
+        const errors = checker.check(
+            'let Iocs = datatable(IpAddress:string) ["1.2.3.4"];\nIocs\n| where IpAddress == "1.2.3.4"'
+        );
+        assert.ok(!hasMessage(errors, "Unknown table 'Iocs'"));
+        assert.ok(!hasMessage(errors, "Unknown column 'IpAddress'"));
     });
 
     it('loads user schema for custom tables', () => {

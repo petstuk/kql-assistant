@@ -111,6 +111,26 @@ describe('QueryModel', () => {
         assert.strictEqual(model.blocks[0].sourceTable, 'SigninLogs');
     });
 
+    it('tracks lookup like join', () => {
+        const model = buildQueryModel(
+            'SigninLogs\n| lookup kind=leftouter (AuditLogs) on Id',
+            schema
+        );
+        const step = model.blocks[0].steps[0];
+        assert.strictEqual(step.operator, 'lookup');
+        assert.strictEqual(step.join?.rightTable, 'AuditLogs');
+        assert.ok(step.join?.keys.some(k => k.name === 'Id'));
+    });
+
+    it('tracks datatable IOC list columns via let', () => {
+        const model = buildQueryModel(
+            'let Iocs = datatable(IpAddress:string, Note:string) ["1.2.3.4", "c2"];\nIocs\n| where IpAddress == "1.2.3.4"',
+            schema
+        );
+        assert.strictEqual(model.blocks[0].sourceName, 'Iocs');
+        assert.deepStrictEqual(model.blocks[0].sourceColumns, ['IpAddress', 'Note']);
+    });
+
     it('provides scope at a cursor line', () => {
         const model = buildQueryModel(
             'SigninLogs\n| project OfficeTime = TimeGenerated, UserPrincipalName\n| where OfficeTime > ago(1d)',

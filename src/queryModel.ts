@@ -17,6 +17,8 @@ export interface ColumnReference {
 export interface LetBinding {
     name: string;
     sourceTable?: string;
+    /** Columns from datatable(...) IOC lists */
+    columns?: string[];
     line: number;
 }
 
@@ -47,6 +49,8 @@ export interface QueryBlock {
     endLine: number;
     sourceName?: string;
     sourceTable?: string;
+    /** Initial columns when source is datatable / let-bound IOC list (not a schema table) */
+    sourceColumns?: string[];
     sourceLine?: number;
     sourceColumn?: number;
     letBindings: LetBinding[];
@@ -67,7 +71,7 @@ const BUILTINS = new Set([
     'iff', 'iif', 'case', 'tostring', 'toint', 'tolong', 'todouble', 'todatetime', 'dynamic',
     'parse_json', 'extract', 'format_datetime', 'project', 'extend', 'summarize', 'where',
     'join', 'union', 'mv-expand', 'lookup', 'project-away', 'project-keep', 'project-rename',
-    'order', 'sort', 'take', 'limit', 'render'
+    'order', 'sort', 'take', 'limit', 'render', 'datatable'
 ]);
 
 export function buildQueryModel(text: string, schema?: QuerySchemaProvider): QueryModel {
@@ -107,7 +111,7 @@ export function getScopeAtLine(model: QueryModel, line: number): { tables: strin
 
     return {
         tables: block.sourceTable ? [block.sourceTable] : [],
-        columns: []
+        columns: block.sourceColumns ?? []
     };
 }
 
@@ -116,8 +120,23 @@ function collectLetBindings(blocks: ParsedQueryBlock[], schema?: QuerySchemaProv
     for (const block of blocks) {
         for (let offset = 0; offset < block.lines.length; offset++) {
             const line = block.lines[offset];
+            const datatableMatch = line.match(
+                /^\s*let\s+([A-Za-z_]\w*)\s*=\s*datatable\s*\(([^)]*)\)/i
+            );
+            if (datatableMatch) {
+                bindings.set(datatableMatch[1].toLowerCase(), {
+                    name: datatableMatch[1],
+                    columns: parseDatatableColumns(datatableMatch[2]),
+                    line: block.startLine + offset
+                });
+                continue;
+            }
+
             const match = line.match(/^\s*let\s+([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)/i);
             if (!match) {
+                continue;
+            }
+            if (match[2].toLowerCase() === 'datatable') {
                 continue;
             }
             const name = match[1];
@@ -140,12 +159,13 @@ function buildBlock(
     const ownLetBindings: LetBinding[] = [];
     let sourceName: string | undefined;
     let sourceTable: string | undefined;
+    let sourceColumns: string[] | undefined;
     let sourceLine: number | undefined;
     let sourceColumn: number | undefined;
 
     for (let offset = 0; offset < parsedBlock.lines.length; offset++) {
         const line = parsedBlock.lines[offset];
-        const letMatch = line.match(/^\s*let\s+([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)/i);
+        const letMatch = line.match(/^\s*let\s+([A-Za-z_]\w*)\s*=/i);
         if (letMatch) {
             const binding = allLetBindings.get(letMatch[1].toLowerCase());
             if (binding) {
@@ -160,12 +180,21 @@ function buildBlock(
             sourceLine = parsedBlock.startLine + offset;
             sourceColumn = line.indexOf(sourceName);
             sourceTable = resolveSourceTable(sourceName, allLetBindings, schema);
+
+            if (sourceName.toLowerCase() === 'datatable') {
+                sourceColumns = parseDatatableColumnsFromBlock(parsedBlock);
+            } else {
+                const binding = allLetBindings.get(sourceName.toLowerCase());
+                if (binding?.columns) {
+                    sourceColumns = binding.columns;
+                }
+            }
             break;
         }
     }
 
     let currentTables = sourceTable ? [sourceTable] : [];
-    let currentColumns = columnsForTables(currentTables, schema);
+    let currentColumns = sourceColumns ?? columnsForTables(currentTables, schema);
     const steps: QueryStep[] = [];
 
     for (const pipe of parsedBlock.pipes) {
@@ -182,6 +211,7 @@ function buildBlock(
         endLine: parsedBlock.endLine,
         sourceName,
         sourceTable,
+        sourceColumns,
         sourceLine,
         sourceColumn,
         letBindings: ownLetBindings,
@@ -283,7 +313,8 @@ function analyzeStep(
                 }
             }
             break;
-        case 'join': {
+        case 'join':
+        case 'lookup': {
             join = parseJoin(pipe, schema);
             if (join.rightTable) {
                 outputTables = unique([...outputTables, join.rightTable]);
@@ -369,11 +400,32 @@ function resolveSourceTable(
     letBindings: Map<string, LetBinding>,
     schema?: QuerySchemaProvider
 ): string | undefined {
+    if (sourceName.toLowerCase() === 'datatable') {
+        return undefined;
+    }
     const table = canonicalTable(sourceName, schema);
     if (table) {
         return table;
     }
     return letBindings.get(sourceName.toLowerCase())?.sourceTable;
+}
+
+/** Parse `Col:type, Col2:type` lists from datatable(...) headers. */
+export function parseDatatableColumns(header: string): string[] {
+    const columns: string[] = [];
+    for (const part of header.split(',')) {
+        const match = part.trim().match(/^([A-Za-z_]\w*)\s*(?::|$)/);
+        if (match) {
+            columns.push(match[1]);
+        }
+    }
+    return columns;
+}
+
+function parseDatatableColumnsFromBlock(block: ParsedQueryBlock): string[] {
+    const text = block.lines.join('\n');
+    const match = text.match(/datatable\s*\(([^)]*)\)/i);
+    return match ? parseDatatableColumns(match[1]) : [];
 }
 
 function canonicalTable(name: string, schema?: QuerySchemaProvider): string | undefined {

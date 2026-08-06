@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
+import { findRuleAtLine, formatMetadataSummary } from './ruleMetadata';
 
 export class KqlDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     provideDocumentSymbols(
         document: vscode.TextDocument,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.DocumentSymbol[]> {
         const symbols: vscode.DocumentSymbol[] = [];
         const text = document.getText();
@@ -60,24 +61,26 @@ export class KqlDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
                 new vscode.Position(header.line, header.text.length)
             );
 
-            // Determine symbol kind and detail based on level
             let symbolKind: vscode.SymbolKind;
             let detail: string;
             switch (header.level) {
-                case 1: 
-                    symbolKind = vscode.SymbolKind.Module; 
+                case 1:
+                    symbolKind = vscode.SymbolKind.Module;
                     detail = 'Category';
                     break;
-                case 2: 
-                    symbolKind = vscode.SymbolKind.Class; 
-                    detail = 'Detection Rule';
+                case 2: {
+                    symbolKind = vscode.SymbolKind.Class;
+                    const rule = findRuleAtLine(text, header.line);
+                    const meta = rule ? formatMetadataSummary(rule) : '';
+                    detail = meta ? `Detection Rule · ${meta}` : 'Detection Rule';
                     break;
-                case 3: 
-                    symbolKind = vscode.SymbolKind.Method; 
+                }
+                case 3:
+                    symbolKind = vscode.SymbolKind.Method;
                     detail = 'Query Section';
                     break;
-                default: 
-                    symbolKind = vscode.SymbolKind.Function; 
+                default:
+                    symbolKind = vscode.SymbolKind.Function;
                     detail = 'Section';
                     break;
             }

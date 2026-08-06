@@ -10,6 +10,8 @@ import { showFeedbackPrompt, initializeFeedback } from './feedback';
 import { KqlFoldingRangeProvider, findQueryBoundaries, getQueryText } from './foldingProvider';
 import { KqlCodeLensProvider } from './codeLensProvider';
 import { KqlSchemaValidator } from './schemaValidator';
+import { findRuleAtLine } from './ruleMetadata';
+import { buildAnalyticsRuleYaml } from './analyticsRuleExport';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 const DIAGNOSTICS_DEBOUNCE_MS = 250;
@@ -291,6 +293,39 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage('Query copied to clipboard');
             showFeedbackPrompt();
         })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'kql-assistant.exportAnalyticsRule',
+            async (args?: { line?: number }) => {
+                const editor = vscode.window.activeTextEditor;
+                if (!editor || editor.document.languageId !== 'kql') {
+                    vscode.window.showWarningMessage('Please open a KQL file');
+                    return;
+                }
+
+                const lineNumber = args?.line ?? editor.selection.active.line;
+                const rule = findRuleAtLine(editor.document.getText(), lineNumber);
+                if (!rule) {
+                    vscode.window.showInformationMessage(
+                        'Place the cursor in a ## Rule ## section (with optional // tactic / technique / severity metadata).'
+                    );
+                    return;
+                }
+
+                const yaml = buildAnalyticsRuleYaml(editor.document.getText(), rule);
+                const doc = await vscode.workspace.openTextDocument({
+                    content: yaml,
+                    language: 'yaml'
+                });
+                await vscode.window.showTextDocument(doc, { preview: false, viewColumn: vscode.ViewColumn.Beside });
+                vscode.window.showInformationMessage(
+                    `Exported analytics rule stub for "${rule.title}" — review before deploying.`
+                );
+                showFeedbackPrompt();
+            }
+        )
     );
 }
 

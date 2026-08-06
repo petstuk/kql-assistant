@@ -102,9 +102,23 @@ Fold arrows in the gutter collapse sections; use the **Outline** view to jump be
 |--------|--------|
 | **KQL: Check Syntax** | Re-run offline diagnostics; message clarifies this is not execution validation |
 | **KQL: Select Current Query** | Select the query section around the cursor (respects header boundaries) |
-| **KQL: Copy Current Query** | Copy query body to the clipboard (without the header line) |
+| **KQL: Copy Current Query** | Copy query body to the clipboard (without the header line / metadata comments) |
+| **KQL: Export Analytics Rule YAML** | Open a Sentinel scheduled analytics-rule YAML stub for the current `## Rule ##` |
 
 Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+
+Optional metadata under a rule header (shown in CodeLens / Outline):
+
+```kql
+## Suspicious sign-ins ##
+// tactic: TA0006
+// technique: T1110
+// severity: Medium
+// description: Failed sign-in burst
+
+SigninLogs
+| where TimeGenerated > ago(1h)
+```
 
 ## Configuration
 

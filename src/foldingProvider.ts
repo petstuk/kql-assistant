@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { findRuleAtLine, getRuleQueryText } from './ruleMetadata';
 
 /**
  * Provides folding ranges for KQL files based on header markers:
@@ -171,15 +172,20 @@ function hasMoreContent(document: vscode.TextDocument, startLine: number, curren
 }
 
 /**
- * Get the query text for a given section
+ * Get the query text for a given section (strips // metadata: comments under ## Rule ##).
  */
 export function getQueryText(document: vscode.TextDocument, lineNumber: number): string | undefined {
+    const rule = findRuleAtLine(document.getText(), lineNumber);
+    if (rule) {
+        const query = getRuleQueryText(document.getText(), rule);
+        return query.trim() === '' ? undefined : query;
+    }
+
     const boundaries = findQueryBoundaries(document, lineNumber);
     if (!boundaries) {
         return undefined;
     }
 
-    // Get text from the line after the header to the end
     const startLine = boundaries.headerLine + 1;
     const endLine = boundaries.endLine;
 
@@ -192,7 +198,6 @@ export function getQueryText(document: vscode.TextDocument, lineNumber: number):
         lines.push(document.lineAt(i).text);
     }
 
-    // Trim leading and trailing empty lines from the content
     while (lines.length > 0 && lines[0].trim() === '') {
         lines.shift();
     }

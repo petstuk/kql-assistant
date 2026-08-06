@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
+import { findRuleAtLine, formatMetadataSummary, isCategoryHeader, isRuleHeader } from './ruleMetadata';
 
 /**
  * Provides CodeLens actions inline on ## rule and # category header lines.
- *
- * ## Signinlogs Lookup ##    📋 Copy Query    ✓ Select Query    · 8 lines
- * # Identity Threats #    · 4 rules    ✓ Select All
  */
 export class KqlCodeLensProvider implements vscode.CodeLensProvider {
 
@@ -13,30 +11,36 @@ export class KqlCodeLensProvider implements vscode.CodeLensProvider {
 
     provideCodeLenses(
         document: vscode.TextDocument,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.CodeLens[] {
         const lenses: vscode.CodeLens[] = [];
         const lineCount = document.lineCount;
+        const text = document.getText();
 
-        // Pre-scan: collect all header positions for rule counting
         const headers: { line: number; level: number }[] = [];
         for (let i = 0; i < lineCount; i++) {
-            const text = document.lineAt(i).text.trim();
-            if (isRuleHeader(text)) {
+            const lineText = document.lineAt(i).text.trim();
+            if (isRuleHeader(lineText)) {
                 headers.push({ line: i, level: 2 });
-            } else if (isCategoryHeader(text)) {
+            } else if (isCategoryHeader(lineText)) {
                 headers.push({ line: i, level: 1 });
             }
         }
 
         for (let idx = 0; idx < headers.length; idx++) {
             const header = headers[idx];
-            const range = new vscode.Range(header.line, 0, header.line, document.lineAt(header.line).text.length);
+            const range = new vscode.Range(
+                header.line,
+                0,
+                header.line,
+                document.lineAt(header.line).text.length
+            );
 
             if (header.level === 2) {
-                // ## Rule ## — count query body lines
                 const endLine = findSectionEnd(document, header.line, headers, idx);
                 const queryLines = countQueryLines(document, header.line, endLine);
+                const rule = findRuleAtLine(text, header.line);
+                const metaSummary = rule ? formatMetadataSummary(rule) : '';
 
                 lenses.push(new vscode.CodeLens(range, {
                     title: '$(copy) Copy Query',
@@ -53,13 +57,27 @@ export class KqlCodeLensProvider implements vscode.CodeLensProvider {
                 }));
 
                 lenses.push(new vscode.CodeLens(range, {
+                    title: '$(export) Export Rule',
+                    command: 'kql-assistant.exportAnalyticsRule',
+                    arguments: [{ line: header.line }],
+                    tooltip: 'Export a Sentinel analytics rule YAML stub'
+                }));
+
+                if (metaSummary) {
+                    lenses.push(new vscode.CodeLens(range, {
+                        title: `· ${metaSummary}`,
+                        command: '',
+                        tooltip: 'Parsed from // tactic / technique / severity metadata'
+                    }));
+                }
+
+                lenses.push(new vscode.CodeLens(range, {
                     title: `· ${queryLines} ${queryLines === 1 ? 'line' : 'lines'}`,
                     command: '',
                     tooltip: `This query has ${queryLines} lines`
                 }));
 
             } else if (header.level === 1) {
-                // # Category # — count how many ## rules are directly inside it
                 const endLine = findSectionEnd(document, header.line, headers, idx);
                 const ruleCount = headers.filter(h =>
                     h.level === 2 && h.line > header.line && h.line <= endLine
@@ -88,20 +106,6 @@ export class KqlCodeLensProvider implements vscode.CodeLensProvider {
     }
 }
 
-/** Matches ## Rule Name ## */
-function isRuleHeader(text: string): boolean {
-    return /^##\s+.+\s+##\s*$/.test(text);
-}
-
-/** Matches # Category Name # (but not ## or ###) */
-function isCategoryHeader(text: string): boolean {
-    return /^#\s+[^#].+[^#]\s*#\s*$/.test(text) && !text.startsWith('##');
-}
-
-/**
- * Returns the last line index that belongs to this section,
- * stopping before the next header at the same or higher level.
- */
 function findSectionEnd(
     document: vscode.TextDocument,
     startLine: number,
@@ -116,7 +120,6 @@ function findSectionEnd(
         }
     }
 
-    // Last section - extend to end of document
     let end = document.lineCount - 1;
     while (end > startLine && document.lineAt(end).text.trim() === '') {
         end--;
@@ -124,9 +127,6 @@ function findSectionEnd(
     return end;
 }
 
-/**
- * Counts non-empty, non-header lines in the section after the header.
- */
 function countQueryLines(
     document: vscode.TextDocument,
     headerLine: number,
