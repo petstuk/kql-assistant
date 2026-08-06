@@ -138,9 +138,7 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vscode/vsce": "^2.19.0",
     "eslint": "^8.45.0",
+    "pdf-parse": "^2.2.2",
     "typescript": "^5.1.6"
-  },
-  "dependencies": {
-    "pdf-parse": "^2.2.2"
   }
 }

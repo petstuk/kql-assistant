@@ -2,6 +2,15 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## Unreleased
+
+**Sprint 1 — security credibility:**
+
+- **Schema**: Added `SecurityAlert` and `Syslog` from Azure Monitor reference columns (catalog now 721 tables).
+- **Snippets**: Fixed `securityalerts` to use `AlertSeverity` (not `Severity`); added MDE process/network, ASIM network, watchlist join, TI IP match, syslog auth, and `hasfilter` starters with early `TimeGenerated` filters.
+- **Tests**: Snippet table existence + security-snippet offline validation coverage.
+- **Packaging**: Moved `pdf-parse` to `devDependencies` (schema tooling only; not needed at extension runtime). `.gitignore` already excludes `*.vsix`.
+
 ## 0.9.1
 
 **Logo and quick UX fixes:**

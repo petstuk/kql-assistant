@@ -95,31 +95,32 @@
     "prefix": "failedlogins",
     "body": [
       "SecurityEvent",
-      "| where EventID == 4625",
       "| where TimeGenerated > ago(${1:24h})",
+      "| where EventID == 4625",
       "| summarize FailedAttempts = count() by Account, IPAddress = IpAddress",
       "| where FailedAttempts > ${2:5}",
       "| order by FailedAttempts desc",
       "$0"
     ],
-    "description": "Security: Failed login attempts query"
+    "description": "Security: Failed Windows logons (4625) with early time filter"
   },
   "Successful Logins After Failed Attempts": {
     "prefix": "suspiciouslogin",
     "body": [
-      "let FailedLogins = SecurityEvent",
-      "| where EventID == 4625",
-      "| where TimeGenerated > ago(${1:1h})",
-      "| project Account, FailedTime = TimeGenerated, IpAddress;",
       "SecurityEvent",
-      "| where EventID == 4624",
       "| where TimeGenerated > ago(${1:1h})",
-      "| join kind=inner (FailedLogins) on Account",
+      "| where EventID == 4624",
+      "| join kind=inner (",
+      "    SecurityEvent",
+      "    | where TimeGenerated > ago(${1:1h})",
+      "    | where EventID == 4625",
+      "    | project Account, FailedTime = TimeGenerated, IpAddress",
+      ") on Account",
       "| where TimeGenerated > FailedTime",
       "| project Account, SuccessTime = TimeGenerated, FailedTime, IpAddress",
       "$0"
     ],
-    "description": "Security: Suspicious login pattern detection"
+    "description": "Security: Success after failure logon pattern (4625 then 4624)"
   },
   "Parse JSON Field": {
     "prefix": "parsejson",
@@ -182,7 +183,17 @@
       "| where ${2:FieldName} contains \"${3:searchText}\"",
       "| $0"
     ],
-    "description": "Filter rows where field contains text"
+    "description": "Filter with contains (prefer 'has' / 'has_any' for term matches on large tables)"
+  },
+  "Indexed Term Filter": {
+    "prefix": "hasfilter",
+    "body": [
+      "${1:TableName}",
+      "| where TimeGenerated > ago(${2:24h})",
+      "| where ${3:FieldName} has \"${4:term}\"",
+      "| $0"
+    ],
+    "description": "Security-friendly term filter using has() with early time bound"
   },
   "Multiple OR Conditions": {
     "prefix": "wherein",
@@ -287,7 +298,7 @@
       "| order by Count desc",
       "$0"
     ],
-    "description": "Email security analysis"
+    "description": "Security: Blocked/quarantined email summary (MDO EmailEvents)"
   },
   "Sign-in Analysis": {
     "prefix": "signinanalysis",
@@ -300,7 +311,92 @@
       "| order by FailedAttempts desc",
       "$0"
     ],
-    "description": "Azure AD sign-in failure analysis"
+    "description": "Security: Entra ID failed sign-in summary (TA0006)"
+  },
+  "MDE Process Hunt": {
+    "prefix": "mdeprocess",
+    "body": [
+      "DeviceProcessEvents",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where FileName has \"${2:powershell.exe}\"",
+      "| project TimeGenerated, DeviceName, AccountName, FileName, ProcessCommandLine, InitiatingProcessFileName, SHA256",
+      "| take ${3:100}",
+      "$0"
+    ],
+    "description": "Security: MDE process hunt with has() + early time filter (TA0002)"
+  },
+  "MDE Network Hunt": {
+    "prefix": "mdenetwork",
+    "body": [
+      "DeviceNetworkEvents",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where isnotempty(RemoteIP)",
+      "| where ActionType has \"${2:ConnectionSuccess}\"",
+      "| summarize Connections = count() by DeviceName, RemoteIP, RemoteUrl, InitiatingProcessFileName",
+      "| order by Connections desc",
+      "| take ${3:50}",
+      "$0"
+    ],
+    "description": "Security: MDE outbound network summary (TA0011)"
+  },
+  "ASIM Network Session": {
+    "prefix": "asimnet",
+    "body": [
+      "ASimNetworkSessionLogs",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where DstPortNumber == ${2:22}",
+      "| project TimeGenerated, SrcIpAddr, DstIpAddr, DstPortNumber, SrcHostname, DstHostname, EventResult, EventProduct",
+      "| take ${3:100}",
+      "$0"
+    ],
+    "description": "Security: ASIM network session hunt by destination port"
+  },
+  "Watchlist Join": {
+    "prefix": "watchlistjoin",
+    "body": [
+      "DeviceProcessEvents",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| join kind=inner (",
+      "    Watchlist",
+      "    | where WatchlistAlias == \"${2:SuspiciousHashes}\"",
+      "    | project-rename SHA256 = SearchKey",
+      ") on SHA256",
+      "| project TimeGenerated, DeviceName, FileName, SHA256, ProcessCommandLine, AccountName",
+      "$0"
+    ],
+    "description": "Security: Join MDE processes to a Sentinel watchlist of hashes"
+  },
+  "Threat Intel IP Match": {
+    "prefix": "timatch",
+    "body": [
+      "DeviceNetworkEvents",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where isnotempty(RemoteIP)",
+      "| join kind=inner (",
+      "    ThreatIntelligenceIndicator",
+      "    | where TimeGenerated > ago(${2:7d})",
+      "    | where Active == true",
+      "    | where isnotempty(NetworkIP)",
+      "    | distinct NetworkIP, ThreatType, Description",
+      "    | project-rename RemoteIP = NetworkIP",
+      ") on RemoteIP",
+      "| project TimeGenerated, DeviceName, RemoteIP, RemoteUrl, ThreatType, Description, InitiatingProcessFileName",
+      "$0"
+    ],
+    "description": "Security: Match MDE network traffic to TI NetworkIP indicators"
+  },
+  "Syslog Auth Failures": {
+    "prefix": "syslogauth",
+    "body": [
+      "Syslog",
+      "| where TimeGenerated > ago(${1:24h})",
+      "| where Facility in (\"auth\", \"authpriv\")",
+      "| where SyslogMessage has \"${2:Failed}\"",
+      "| summarize Failures = count() by Computer, HostName, ProcessName",
+      "| order by Failures desc",
+      "$0"
+    ],
+    "description": "Security: Linux auth syslog failures with has() term match"
   },
   "Performance Counter Query": {
     "prefix": "perfcounter",
@@ -332,11 +428,11 @@
     "body": [
       "SecurityAlert",
       "| where TimeGenerated > ago(${1:24h})",
-      "| summarize AlertCount = count() by AlertName, Severity",
-      "| order by Severity asc, AlertCount desc",
+      "| summarize AlertCount = count() by AlertName, AlertSeverity, Tactics",
+      "| order by AlertCount desc",
       "$0"
     ],
-    "description": "Summarize security alerts"
+    "description": "Security: Summarize Sentinel SecurityAlert by name/severity/tactics"
   },
   "Case Statement": {
     "prefix": "case",
