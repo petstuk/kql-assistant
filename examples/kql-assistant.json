@@ -1,0 +1,15 @@
+{
+  "lint": "basic",
+  "packs": ["sentinel-core", "mde"],
+  "userSchemaPath": "./schemas/workspace-tables.json",
+  "failOn": "warning",
+  "ignorePatterns": [
+    "**/generated/**",
+    "**/*.skip.kql"
+  ],
+  "severity": {
+    "KQL101": "information",
+    "KQL103": "warning",
+    "KQL013": "error"
+  }
+}

@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { KqlSyntaxChecker, SyntaxError } from './syntaxChecker';
 import { KqlSchemaValidator } from './schemaValidator';
+import { extractYamlQueryBlocks, remapYamlQueryIssues } from './sentinelYaml';
+import { applySeverityOverrides, isIgnoredPath, loadLintConfig } from './lintConfig';
 
 export const KQL_DIAGNOSTIC_SOURCE = 'KQL Assistant';
 
@@ -20,7 +23,7 @@ export class KqlDiagnosticsProvider {
     }
 
     public updateDiagnostics(document: vscode.TextDocument): void {
-        if (document.languageId !== 'kql') {
+        if (!isLintableDocument(document)) {
             return;
         }
 
@@ -28,6 +31,19 @@ export class KqlDiagnosticsProvider {
         const enableDiagnostics = config.get<boolean>('enableDiagnostics', true);
 
         if (!enableDiagnostics) {
+            this.diagnosticCollection.delete(document.uri);
+            this.lastDiagnosticsByUri.delete(document.uri.toString());
+            return;
+        }
+
+        const loaded =
+            document.uri.scheme === 'file' ? loadLintConfig(path.dirname(document.fileName)) : { config: {} };
+        const lintConfig = loaded.config;
+        const ignoreRoot = loaded.path ? path.dirname(loaded.path) : path.dirname(document.fileName);
+        if (
+            document.uri.scheme === 'file' &&
+            isIgnoredPath(document.fileName, ignoreRoot, lintConfig.ignorePatterns)
+        ) {
             this.diagnosticCollection.delete(document.uri);
             this.lastDiagnosticsByUri.delete(document.uri.toString());
             return;
@@ -44,7 +60,10 @@ export class KqlDiagnosticsProvider {
         );
 
         const text = document.getText();
-        const errors = this.syntaxChecker.check(text);
+        const errors = applySeverityOverrides(
+            lintDocumentText(document, text, this.syntaxChecker),
+            lintConfig.severity
+        );
         const diagnosticLevel = config.get<string>('diagnosticLevel', 'error');
         const diagnostics = errors.map(error => this.toDiagnostic(error, diagnosticLevel));
 
@@ -105,4 +124,28 @@ export class KqlDiagnosticsProvider {
                 return vscode.DiagnosticSeverity.Error;
         }
     }
+}
+
+function isLintableDocument(document: vscode.TextDocument): boolean {
+    return document.languageId === 'kql' || isYamlDocument(document);
+}
+
+function isYamlDocument(document: vscode.TextDocument): boolean {
+    return (
+        document.languageId === 'yaml' ||
+        document.fileName.toLowerCase().endsWith('.yaml') ||
+        document.fileName.toLowerCase().endsWith('.yml')
+    );
+}
+
+function lintDocumentText(
+    document: vscode.TextDocument,
+    text: string,
+    checker: KqlSyntaxChecker
+): SyntaxError[] {
+    if (!isYamlDocument(document)) {
+        return checker.check(text);
+    }
+    const blocks = extractYamlQueryBlocks(text);
+    return blocks.flatMap(block => remapYamlQueryIssues(block, checker.check(block.text)));
 }

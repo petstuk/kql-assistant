@@ -28,6 +28,7 @@ export interface ParseIssue {
     column: number;
     length: number;
     message: string;
+    code?: string;
 }
 
 export interface ParseResult {
@@ -125,51 +126,87 @@ export function splitTopLevelPipes(line: string): Array<{ text: string; column: 
     return parts;
 }
 
+/** Replace quoted strings with spaces so column indexes stay aligned. */
+export function maskQuotedStrings(text: string): string {
+    return text
+        .replace(/@?"(?:[^"\\]|\\.)*"/g, match => ' '.repeat(match.length))
+        .replace(/'(?:[^'\\]|\\.)*'/g, match => ' '.repeat(match.length));
+}
+
 function extractPipes(blockLines: string[], startLine: number, issues: ParseIssue[]): ParsedPipe[] {
     const pipes: ParsedPipe[] = [];
-    for (let offset = 0; offset < blockLines.length; offset++) {
-        const line = stripLineComment(blockLines[offset]);
-        const pipeParts = splitTopLevelPipes(line);
-        for (let pipeIndex = 0; pipeIndex < pipeParts.length; pipeIndex++) {
-            const pipe = pipeParts[pipeIndex];
-            let rawText = pipe.text;
-            if (pipeIndex === pipeParts.length - 1) {
-                rawText = appendContinuationLines(rawText, blockLines, offset);
-            }
-            const raw = rawText.trim();
-            const operatorMatch = raw.match(/^([a-zA-Z][\w-]*)\b([\s\S]*)$/);
-            if (!operatorMatch) {
-                issues.push({
-                    line: startLine + offset,
-                    column: pipe.column,
-                    length: 1,
-                    message: 'Pipe operator must be followed by a KQL operator'
-                });
-                continue;
-            }
+    let quote: string | undefined;
+    let parenDepth = 0;
+    let bracketDepth = 0;
+    let braceDepth = 0;
+    let inPipe = false;
+    let pipeLine = 0;
+    let pipeColumn = 0;
+    let buf = '';
+
+    const flush = (): void => {
+        if (!inPipe) {
+            return;
+        }
+        const raw = buf.trim();
+        const operatorMatch = raw.match(/^([a-zA-Z][\w-]*)\b([\s\S]*)$/);
+        if (!operatorMatch) {
+            issues.push({
+                line: pipeLine,
+                column: pipeColumn,
+                length: 1,
+                code: 'KQL012',
+                message: 'Pipe operator must be followed by a KQL operator'
+            });
+        } else {
             pipes.push({
                 operator: operatorMatch[1].toLowerCase(),
                 args: operatorMatch[2].trim(),
                 raw,
-                line: startLine + offset,
-                column: pipe.column
+                line: pipeLine,
+                column: pipeColumn
             });
         }
-    }
-    return pipes;
-}
+        inPipe = false;
+        buf = '';
+    };
 
-function appendContinuationLines(firstPipeText: string, blockLines: string[], offset: number): string {
-    const rawLines = [firstPipeText];
-    for (let next = offset + 1; next < blockLines.length; next++) {
-        const candidate = stripLineComment(blockLines[next]);
-        if (splitTopLevelPipes(candidate).length > 0) {
-            break;
+    for (let offset = 0; offset < blockLines.length; offset++) {
+        const line = stripLineComment(blockLines[offset]);
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if ((char === '"' || char === "'") && line[i - 1] !== '\\') {
+                quote = quote === char ? undefined : quote ?? char;
+            }
+
+            const atTopLevel = !quote && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0;
+            if (atTopLevel && char === '|') {
+                flush();
+                inPipe = true;
+                pipeLine = startLine + offset;
+                pipeColumn = i;
+                continue;
+            }
+
+            if (inPipe) {
+                buf += char;
+            }
+
+            if (quote) {
+                continue;
+            }
+            if (char === '(') { parenDepth++; }
+            else if (char === ')' && parenDepth > 0) { parenDepth--; }
+            else if (char === '[') { bracketDepth++; }
+            else if (char === ']' && bracketDepth > 0) { bracketDepth--; }
+            else if (char === '{') { braceDepth++; }
+            else if (char === '}' && braceDepth > 0) { braceDepth--; }
         }
-        if (candidate.trim() === '') {
-            break;
+        if (inPipe) {
+            buf += '\n';
         }
-        rawLines.push(candidate);
     }
-    return rawLines.join('\n');
+
+    flush();
+    return pipes;
 }

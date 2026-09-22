@@ -12,6 +12,8 @@ import { KqlCodeLensProvider } from './codeLensProvider';
 import { KqlSchemaValidator } from './schemaValidator';
 import { findRuleAtLine } from './ruleMetadata';
 import { buildAnalyticsRuleYaml } from './analyticsRuleExport';
+import { sentinelYamlToKql } from './sentinelYaml';
+import { KqlLetDefinitionProvider, KqlLetReferenceProvider, KqlLetRenameProvider } from './letSymbolProvider';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 const DIAGNOSTICS_DEBOUNCE_MS = 250;
@@ -116,6 +118,16 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
+        vscode.languages.registerDefinitionProvider('kql', new KqlLetDefinitionProvider())
+    );
+    context.subscriptions.push(
+        vscode.languages.registerReferenceProvider('kql', new KqlLetReferenceProvider())
+    );
+    context.subscriptions.push(
+        vscode.languages.registerRenameProvider('kql', new KqlLetRenameProvider())
+    );
+
+    context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.languageId === 'kql') {
                 codeLensProvider.refresh();
@@ -125,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidOpenTextDocument(doc => {
-            if (doc.languageId === 'kql') {
+            if (isLintableDocument(doc)) {
                 diagnosticsProvider?.updateDiagnostics(doc);
             }
         })
@@ -133,7 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeTextDocument(e => {
-            if (e.document.languageId === 'kql') {
+            if (isLintableDocument(e.document)) {
                 scheduleDiagnosticsUpdate(e.document);
             }
         })
@@ -141,7 +153,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidSaveTextDocument(doc => {
-            if (doc.languageId === 'kql') {
+            if (isLintableDocument(doc)) {
                 const key = doc.uri.toString();
                 const pending = diagnosticDebounceTimers.get(key);
                 if (pending) {
@@ -156,7 +168,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.workspace.onDidCloseTextDocument(doc => {
-            if (doc.languageId === 'kql') {
+            if (isLintableDocument(doc)) {
                 const key = doc.uri.toString();
                 const pending = diagnosticDebounceTimers.get(key);
                 if (pending) {
@@ -183,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
                     diagnosticsProvider?.reloadSchemas();
                 }
                 vscode.workspace.textDocuments.forEach(doc => {
-                    if (doc.languageId === 'kql') {
+                    if (isLintableDocument(doc)) {
                         diagnosticsProvider?.updateDiagnostics(doc);
                     }
                 });
@@ -192,19 +204,19 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     vscode.workspace.textDocuments.forEach(doc => {
-        if (doc.languageId === 'kql') {
+        if (isLintableDocument(doc)) {
             diagnosticsProvider?.updateDiagnostics(doc);
         }
     });
 
     const checkSyntaxCommand = vscode.commands.registerCommand('kql-assistant.checkSyntax', () => {
         const editor = vscode.window.activeTextEditor;
-        if (editor && editor.document.languageId === 'kql') {
+        if (editor && isLintableDocument(editor.document)) {
             diagnosticsProvider?.updateDiagnostics(editor.document);
             vscode.window.showInformationMessage(CHECK_SYNTAX_SCOPE_MESSAGE);
             setTimeout(() => checkSuccessAndShowFeedback(editor.document.uri), 100);
         } else {
-            vscode.window.showWarningMessage('Please open a KQL file to check syntax');
+            vscode.window.showWarningMessage('Please open a KQL or Sentinel YAML file to check syntax');
         }
     });
 
@@ -239,7 +251,7 @@ export function activate(context: vscode.ExtensionContext) {
                     `Ignoring unknown table '${tableName}' in this workspace (kqlAssistant.ignoredTables).`
                 );
                 vscode.workspace.textDocuments.forEach(doc => {
-                    if (doc.languageId === 'kql') {
+                    if (isLintableDocument(doc)) {
                         diagnosticsProvider?.updateDiagnostics(doc);
                     }
                 });
@@ -321,12 +333,68 @@ export function activate(context: vscode.ExtensionContext) {
                 });
                 await vscode.window.showTextDocument(doc, { preview: false, viewColumn: vscode.ViewColumn.Beside });
                 vscode.window.showInformationMessage(
-                    `Exported analytics rule stub for "${rule.title}" — review before deploying.`
+                    `Exported analytics rule for "${rule.title}" — review mappings and connectors before deploying.`
                 );
                 showFeedbackPrompt();
             }
         )
     );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('kql-assistant.importAnalyticsRule', async () => {
+            const editor = vscode.window.activeTextEditor;
+            let yamlText: string | undefined;
+
+            if (editor && isYamlDocument(editor.document)) {
+                yamlText = editor.document.getText();
+            } else {
+                const picked = await vscode.window.showOpenDialog({
+                    canSelectMany: false,
+                    filters: { YAML: ['yaml', 'yml'] }
+                });
+                if (!picked || picked.length === 0) {
+                    return;
+                }
+                const bytes = await vscode.workspace.fs.readFile(picked[0]);
+                yamlText = Buffer.from(bytes).toString('utf8');
+            }
+
+            const kql = sentinelYamlToKql(yamlText);
+            if (!kql) {
+                vscode.window.showWarningMessage(
+                    'No Sentinel query: | block found in this YAML.'
+                );
+                return;
+            }
+
+            const doc = await vscode.workspace.openTextDocument({
+                content: kql,
+                language: 'kql'
+            });
+            await vscode.window.showTextDocument(doc, {
+                preview: false,
+                viewColumn: vscode.ViewColumn.Beside
+            });
+            vscode.window.showInformationMessage('Imported analytics rule into a KQL document.');
+            showFeedbackPrompt();
+        })
+    );
+}
+
+function isKqlDocument(document: vscode.TextDocument): boolean {
+    return document.languageId === 'kql';
+}
+
+function isYamlDocument(document: vscode.TextDocument): boolean {
+    return (
+        document.languageId === 'yaml' ||
+        document.fileName.toLowerCase().endsWith('.yaml') ||
+        document.fileName.toLowerCase().endsWith('.yml')
+    );
+}
+
+function isLintableDocument(document: vscode.TextDocument): boolean {
+    return isKqlDocument(document) || isYamlDocument(document);
 }
 
 export function deactivate() {

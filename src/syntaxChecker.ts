@@ -1,6 +1,7 @@
 import { KqlSchemaValidator } from './schemaValidator';
-import { buildQueryModel, ColumnReference, QuerySchemaProvider, QueryStep } from './queryModel';
+import { buildQueryModel, ColumnReference, OPEN_COLUMN, QueryModel, QuerySchemaProvider, QueryStep } from './queryModel';
 import { LintMode, runLintRules } from './lintRules';
+import { maskQuotedStrings } from './parserAdapter';
 
 export type SyntaxIssueSeverity = 'error' | 'warning' | 'information';
 
@@ -61,6 +62,7 @@ export class KqlSyntaxChecker {
         'row_number', 'row_rank', 'prev', 'next', 'todynamic', 'toguid', 'totimespan',
         'format_bytes', 'format_ipv4', 'format_ipv4_mask', 'has_any_ipv4', 'has_any_ipv4_prefix',
         'ipv4_compare', 'ipv4_is_match', 'ipv6_compare', 'ipv6_is_match', 'parse_ipv4', 'parse_ipv6',
+        'has_any', 'has_all', 'has_cs', 'contains_cs', 'startswith_cs', 'endswith_cs',
         'translate', 'reverse', 'repeat', 'replace_regex', 'replace_string', 'replace_strings',
         'trim_regex', 'unicode_codepoints_from_string', 'unicode_codepoints_to_string',
         'weekofyear', 'monthofyear', 'dayofyear', 'datetime_add', 'datetime_diff', 'datetime_part',
@@ -175,17 +177,32 @@ export class KqlSyntaxChecker {
 
         errors.push(...runLintRules(text, { mode: this.lintMode }));
 
-        return errors;
+        return filterSuppressedDiagnostics(text, errors);
     }
 
     private checkTableAndColumnsWithModel(text: string, errors: SyntaxError[]): void {
         const model = buildQueryModel(text, this.schemaValidator);
+        this.validateQueryModel(model, errors);
+    }
 
+    private validateQueryModel(
+        model: QueryModel,
+        errors: SyntaxError[],
+        extraLetNames: Set<string> = new Set()
+    ): void {
         for (const issue of model.parseIssues) {
-            errors.push(issue);
+            errors.push({
+                ...issue,
+                code: issue.code ?? 'KQL012'
+            });
         }
 
         for (const block of model.blocks) {
+            const letNames = new Set<string>([
+                ...extraLetNames,
+                ...block.letBindings.map(binding => binding.name.toLowerCase())
+            ]);
+
             if (
                 block.sourceName &&
                 !block.sourceTable &&
@@ -200,6 +217,7 @@ export class KqlSyntaxChecker {
                     line: block.sourceLine ?? block.startLine,
                     column: block.sourceColumn ?? 0,
                     length: block.sourceName.length,
+                    code: 'KQL013',
                     message: suggestion
                         ? `Unknown table '${block.sourceName}'. Did you mean '${suggestion}'?`
                         : `Unknown table '${block.sourceName}'`
@@ -210,22 +228,34 @@ export class KqlSyntaxChecker {
             for (const step of block.steps) {
                 const validColumns = this.getValidColumnsForStep(step);
                 for (const reference of step.referencedColumns) {
+                    if (letNames.has(reference.name.toLowerCase())) {
+                        continue;
+                    }
                     this.validateColumnReference(reference, validColumns, step, errors);
                 }
 
                 for (const removed of step.removedColumns) {
+                    if (letNames.has(removed.name.toLowerCase())) {
+                        continue;
+                    }
                     this.validateColumnReference(removed, step.inputColumns, step, errors);
+                }
+
+                if (step.join?.innerModel) {
+                    this.validateQueryModel(step.join.innerModel, errors, letNames);
                 }
             }
         }
     }
 
     private getValidColumnsForStep(step: QueryStep): string[] {
-        if ((step.operator === 'join' || step.operator === 'lookup') && step.join?.rightTable) {
-            return [
-                ...step.inputColumns,
-                ...this.schemaValidator!.getColumns(step.join.rightTable)
-            ];
+        if ((step.operator === 'join' || step.operator === 'lookup') && step.join) {
+            const rightColumns = step.join.subqueryColumns.length > 0
+                ? step.join.subqueryColumns
+                : step.join.rightTable
+                  ? this.schemaValidator!.getColumns(step.join.rightTable)
+                  : [];
+            return [...step.inputColumns, ...rightColumns];
         }
         return step.inputColumns;
     }
@@ -240,6 +270,9 @@ export class KqlSyntaxChecker {
             return;
         }
         if (this.schemaValidator!.validateTableExists(reference.name)) {
+            return;
+        }
+        if (validColumns.includes('*') || validColumns.includes(OPEN_COLUMN)) {
             return;
         }
         if (validColumns.some(column => column.toLowerCase() === reference.name.toLowerCase())) {
@@ -258,6 +291,7 @@ export class KqlSyntaxChecker {
             line: reference.line,
             column: reference.column,
             length: reference.name.length,
+            code: step.operator === 'join' || step.operator === 'lookup' ? 'KQL015' : 'KQL014',
             message:
                 step.operator === 'join' || step.operator === 'lookup'
                 ? `${step.operator === 'lookup' ? 'Lookup' : 'Join'} key column '${reference.name}' not found in joined tables`
@@ -330,6 +364,7 @@ export class KqlSyntaxChecker {
                 line: lineNum,
                 column: line.indexOf('|'),
                 length: 1,
+                code: 'KQL003',
                 message: 'Query cannot start with pipe operator'
             });
         }
@@ -341,6 +376,7 @@ export class KqlSyntaxChecker {
                 line: lineNum,
                 column: index,
                 length: 2,
+                code: 'KQL002',
                 message: 'Double pipe operator - use single | to chain operators'
             });
         }
@@ -367,6 +403,7 @@ export class KqlSyntaxChecker {
                     line: lineNum,
                     column: startCol >= 0 ? startCol : 0,
                     length: op.length,
+                    code: 'KQL001',
                     message: `Missing pipe operator before '${op}'`
                 });
                 return;
@@ -396,13 +433,15 @@ export class KqlSyntaxChecker {
                 line: lineNum,
                 column: stringStart,
                 length: 1,
+                code: 'KQL004',
                 message: 'Unclosed string literal'
             });
         }
     }
 
     private checkCommonMistakes(line: string, lineNum: number, errors: SyntaxError[], inOperatorBlock: boolean): void {
-        const trimmedLine = line.trim().toLowerCase();
+        const unquoted = maskQuotedStrings(line);
+        const trimmedLine = unquoted.trim().toLowerCase();
 
         // Skip markdown headers (lines that start with # and end with # or just have #)
         const isMarkdownHeader = /^#{1,6}\s+.*/.test(trimmedLine);
@@ -412,11 +451,12 @@ export class KqlSyntaxChecker {
 
         // Check for common SQL keywords used incorrectly
         if (trimmedLine.includes('select ') && !trimmedLine.includes('//')) {
-            const index = line.toLowerCase().indexOf('select');
+            const index = unquoted.toLowerCase().indexOf('select');
             errors.push({
                 line: lineNum,
                 column: index,
                 length: 6,
+                code: 'KQL008',
                 message: 'KQL uses "project" instead of "select"'
             });
         }
@@ -424,11 +464,12 @@ export class KqlSyntaxChecker {
         if (trimmedLine.includes('from ') && !trimmedLine.includes('//')) {
             const match = trimmedLine.match(/\bfrom\s+/);
             if (match) {
-                const index = line.toLowerCase().indexOf(match[0]);
+                const index = unquoted.toLowerCase().indexOf(match[0]);
                 errors.push({
                     line: lineNum,
                     column: index,
                     length: 4,
+                    code: 'KQL009',
                     message: 'KQL starts with table name, no "from" keyword needed'
                 });
             }
@@ -470,6 +511,7 @@ export class KqlSyntaxChecker {
                     line: lineNum,
                     column: index,
                     length: assignmentMatch[0].length,
+                    code: 'KQL010',
                     message: 'Assignment requires extend, summarize, project, or let statement'
                 });
             }
@@ -514,6 +556,7 @@ export class KqlSyntaxChecker {
                 line: 0,
                 column: 0,
                 length: 1,
+                code: 'KQL005',
                 message: parenCount > 0 ? 'Unclosed parenthesis in query' : 'Unmatched closing parenthesis in query'
             });
         }
@@ -522,6 +565,7 @@ export class KqlSyntaxChecker {
                 line: 0,
                 column: 0,
                 length: 1,
+                code: 'KQL006',
                 message: bracketCount > 0 ? 'Unclosed bracket in query' : 'Unmatched closing bracket in query'
             });
         }
@@ -530,6 +574,7 @@ export class KqlSyntaxChecker {
                 line: 0,
                 column: 0,
                 length: 1,
+                code: 'KQL007',
                 message: braceCount > 0 ? 'Unclosed brace in query' : 'Unmatched closing brace in query'
             });
         }
@@ -553,10 +598,95 @@ export class KqlSyntaxChecker {
                 line: 0,
                 column: 0,
                 length: 1,
+                code: 'KQL011',
                 message: 'Query must start with a table name or valid KQL command'
             });
         }
     }
 
+}
+
+const DISABLE_COMMENT =
+    /\/\/\s*kql-(disable|enable)(?:-(next-line|line))?(?:\s+([^\n]*))?/i;
+
+/**
+ * Honour `// kql-disable`, `// kql-disable-line`, and `// kql-disable-next-line`
+ * comments (optional `KQL001,KQL103` code list). `// kql-enable` ends a file-range disable.
+ */
+export function filterSuppressedDiagnostics(text: string, errors: SyntaxError[]): SyntaxError[] {
+    const lines = text.split('\n');
+    const lineCodes = new Map<number, Set<string> | 'all'>();
+    const fileRanges: Array<{ start: number; codes: Set<string> | 'all' }> = [];
+
+    const parseCodes = (raw: string | undefined): Set<string> | 'all' => {
+        if (!raw) {
+            return 'all';
+        }
+        const codes = raw
+            .split('--')[0]
+            .split(/[,\s]+/)
+            .map(part => part.trim().toUpperCase())
+            .filter(part => /^KQL\d+$/.test(part));
+        return codes.length === 0 ? 'all' : new Set(codes);
+    };
+
+    const merge = (
+        map: Map<number, Set<string> | 'all'>,
+        line: number,
+        codes: Set<string> | 'all'
+    ): void => {
+        const existing = map.get(line);
+        if (!existing || existing === 'all' || codes === 'all') {
+            map.set(line, 'all');
+            return;
+        }
+        for (const code of codes) {
+            existing.add(code);
+        }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+        const match = DISABLE_COMMENT.exec(lines[i]);
+        if (!match) {
+            continue;
+        }
+        const action = match[1].toLowerCase();
+        const scope = match[2]?.toLowerCase();
+        const codes = parseCodes(match[3]);
+
+        if (action === 'enable') {
+            if (fileRanges.length > 0) {
+                fileRanges.pop();
+            }
+            continue;
+        }
+
+        if (scope === 'next-line') {
+            merge(lineCodes, i + 1, codes);
+        } else if (scope === 'line') {
+            merge(lineCodes, i, codes);
+        } else {
+            fileRanges.push({ start: i, codes });
+        }
+    }
+
+    const matches = (line: number, code: string | undefined): boolean => {
+        const rule = (code ?? 'KQL000').toUpperCase();
+        const lineRule = lineCodes.get(line);
+        if (lineRule === 'all' || (lineRule && lineRule.has(rule))) {
+            return true;
+        }
+        for (const range of fileRanges) {
+            if (line < range.start) {
+                continue;
+            }
+            if (range.codes === 'all' || range.codes.has(rule)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    return errors.filter(error => !matches(error.line, error.code));
 }
 

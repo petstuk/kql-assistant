@@ -20,6 +20,7 @@ export interface LetBinding {
     /** Columns from datatable(...) IOC lists */
     columns?: string[];
     line: number;
+    column?: number;
 }
 
 export interface JoinInfo {
@@ -27,6 +28,9 @@ export interface JoinInfo {
     column: number;
     rightTable?: string;
     keys: ColumnReference[];
+    /** Columns produced by the right-hand subquery (table schema or project/summarize output). */
+    subqueryColumns: string[];
+    innerModel?: QueryModel;
 }
 
 export interface QueryStep {
@@ -68,11 +72,20 @@ const BUILTINS = new Set([
     'nulls', 'first', 'last', 'contains', 'has', 'startswith', 'endswith', 'matches', 'regex',
     'in', 'between', 'ago', 'now', 'datetime', 'timespan', 'guid', 'bin', 'count', 'sum',
     'avg', 'min', 'max', 'dcount', 'countif', 'sumif', 'make_list', 'make_set', 'make_bag',
+    'has_any', 'has_all', 'has_cs', 'contains_cs', 'startswith_cs', 'endswith_cs', 'matches',
     'iff', 'iif', 'case', 'tostring', 'toint', 'tolong', 'todouble', 'todatetime', 'dynamic',
     'parse_json', 'extract', 'format_datetime', 'project', 'extend', 'summarize', 'where',
     'join', 'union', 'mv-expand', 'lookup', 'project-away', 'project-keep', 'project-rename',
-    'order', 'sort', 'take', 'limit', 'render', 'datatable'
+    'order', 'sort', 'take', 'limit', 'render', 'datatable', 'columnchart', 'timechart',
+    'barchart', 'piechart', 'scatterchart', 'areachart', 'linechart', 'anomalychart',
+    'simple', 'relaxed', 'flags', 'materialize', 'invoke', 'fork', 'hint'
 ]);
+
+/** Sentinel watchlist tabular function — extra columns are workspace-specific. */
+export const WATCHLIST_COLUMNS = ['SearchKey', 'LastUpdated', '*'];
+
+/** Marks a scope where unknown columns should not be flagged (bag_unpack / watchlist extras). */
+export const OPEN_COLUMN = '*';
 
 export function buildQueryModel(text: string, schema?: QuerySchemaProvider): QueryModel {
     const parsed = parseKqlDocument(text);
@@ -120,31 +133,50 @@ function collectLetBindings(blocks: ParsedQueryBlock[], schema?: QuerySchemaProv
     for (const block of blocks) {
         for (let offset = 0; offset < block.lines.length; offset++) {
             const line = block.lines[offset];
+            const letMatch = line.match(/^\s*let\s+([A-Za-z_]\w*)\s*=/i);
+            if (!letMatch) {
+                continue;
+            }
+
+            const name = letMatch[1];
+            const lineNumber = block.startLine + offset;
+            const nameColumn = Math.max(0, line.toLowerCase().indexOf(name.toLowerCase()));
             const datatableMatch = line.match(
-                /^\s*let\s+([A-Za-z_]\w*)\s*=\s*datatable\s*\(([^)]*)\)/i
+                /^\s*let\s+[A-Za-z_]\w*\s*=\s*datatable\s*\(([^)]*)\)/i
             );
             if (datatableMatch) {
-                bindings.set(datatableMatch[1].toLowerCase(), {
-                    name: datatableMatch[1],
-                    columns: parseDatatableColumns(datatableMatch[2]),
-                    line: block.startLine + offset
+                bindings.set(name.toLowerCase(), {
+                    name,
+                    columns: parseDatatableColumns(datatableMatch[1]),
+                    line: lineNumber,
+                    column: nameColumn
                 });
                 continue;
             }
 
-            const match = line.match(/^\s*let\s+([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)/i);
-            if (!match) {
+            if (/=\s*_GetWatchlist\s*\(/i.test(line)) {
+                bindings.set(name.toLowerCase(), {
+                    name,
+                    columns: [...WATCHLIST_COLUMNS],
+                    line: lineNumber,
+                    column: nameColumn
+                });
                 continue;
             }
-            if (match[2].toLowerCase() === 'datatable') {
-                continue;
-            }
-            const name = match[1];
-            const source = canonicalTable(match[2], schema);
+
+            const tableMatch = line.match(/^\s*let\s+[A-Za-z_]\w*\s*=\s*([A-Za-z_]\w*)/i);
+            const rhsName = tableMatch?.[1];
+            const skipTableNames = new Set(['datatable', 'dynamic', 'datetime', 'timespan', 'guid', 'materialize']);
+            const sourceTable =
+                rhsName && !skipTableNames.has(rhsName.toLowerCase())
+                    ? canonicalTable(rhsName, schema)
+                    : undefined;
+
             bindings.set(name.toLowerCase(), {
                 name,
-                sourceTable: source,
-                line: block.startLine + offset
+                sourceTable,
+                line: lineNumber,
+                column: nameColumn
             });
         }
     }
@@ -162,6 +194,7 @@ function buildBlock(
     let sourceColumns: string[] | undefined;
     let sourceLine: number | undefined;
     let sourceColumn: number | undefined;
+    let unionTables: string[] | undefined;
 
     for (let offset = 0; offset < parsedBlock.lines.length; offset++) {
         const line = parsedBlock.lines[offset];
@@ -183,6 +216,16 @@ function buildBlock(
 
             if (sourceName.toLowerCase() === 'datatable') {
                 sourceColumns = parseDatatableColumnsFromBlock(parsedBlock);
+            } else if (sourceName.toLowerCase() === 'union') {
+                const unionInfo = parseUnionSource(line, schema);
+                unionTables = unionInfo.tables;
+                sourceTable = unionInfo.tables[0];
+                sourceColumns = unique([
+                    ...columnsForTables(unionInfo.tables, schema),
+                    ...unionInfo.extraColumns
+                ]);
+            } else if (sourceName.toLowerCase() === '_getwatchlist') {
+                sourceColumns = [...WATCHLIST_COLUMNS];
             } else {
                 const binding = allLetBindings.get(sourceName.toLowerCase());
                 if (binding?.columns) {
@@ -193,14 +236,14 @@ function buildBlock(
         }
     }
 
-    let currentTables = sourceTable ? [sourceTable] : [];
+    let currentTables = unionTables ?? (sourceTable ? [sourceTable] : []);
     let currentColumns = sourceColumns ?? columnsForTables(currentTables, schema);
     const steps: QueryStep[] = [];
 
     for (const pipe of parsedBlock.pipes) {
         const inputTables = [...currentTables];
         const inputColumns = [...currentColumns];
-        const analyzed = analyzeStep(pipe, inputTables, inputColumns, schema);
+        const analyzed = analyzeStep(pipe, inputTables, inputColumns, schema, allLetBindings);
         currentTables = analyzed.outputTables;
         currentColumns = analyzed.outputColumns;
         steps.push(analyzed);
@@ -214,7 +257,8 @@ function buildBlock(
         sourceColumns,
         sourceLine,
         sourceColumn,
-        letBindings: ownLetBindings,
+        // Empty lines split let statements into their own block; keep document lets in scope.
+        letBindings: uniqueBindings([...allLetBindings.values(), ...ownLetBindings]),
         steps
     };
 }
@@ -223,7 +267,8 @@ function analyzeStep(
     pipe: ParsedPipe,
     inputTables: string[],
     inputColumns: string[],
-    schema?: QuerySchemaProvider
+    schema?: QuerySchemaProvider,
+    letBindings?: Map<string, LetBinding>
 ): QueryStep {
     const referencedColumns: ColumnReference[] = [];
     const definedColumns: ColumnReference[] = [];
@@ -289,9 +334,21 @@ function analyzeStep(
                     addRefs(extractIdentifiers(item.text, pipe.line, pipe.column + item.column));
                 }
             }
-            const byRefs = extractIdentifiers(byText, pipe.line, pipe.column + Math.max(byIndex + 2, 0));
-            addRefs(byRefs);
-            outputColumns = unique([...aggregateColumns, ...byRefs.map(ref => ref.name)]);
+            const byBaseColumn = pipe.column + Math.max(byIndex + 2, 0);
+            const byColumns: string[] = [];
+            for (const item of splitCommaList(byText)) {
+                const assignment = parseAssignment(item.text, pipe.line, byBaseColumn + item.column);
+                if (assignment) {
+                    definedColumns.push(assignment.left);
+                    byColumns.push(assignment.left.name);
+                    addRefs(extractIdentifiers(assignment.right, pipe.line, assignment.rightColumn));
+                } else {
+                    const refs = extractIdentifiers(item.text, pipe.line, byBaseColumn + item.column);
+                    addRefs(refs);
+                    byColumns.push(...refs.map(ref => ref.name));
+                }
+            }
+            outputColumns = unique([...aggregateColumns, ...byColumns]);
             outputTables = [];
             break;
         }
@@ -313,13 +370,63 @@ function analyzeStep(
                 }
             }
             break;
+        case 'parse':
+        case 'parse-where': {
+            const parsedColumns = extractParseColumns(pipe.args);
+            addRefs(extractIdentifiers(pipe.args.replace(/\bwith\b[\s\S]*$/i, ''), pipe.line, pipe.column));
+            for (const column of parsedColumns) {
+                definedColumns.push({ name: column, line: pipe.line, column: pipe.column });
+            }
+            outputColumns = unique([...outputColumns, ...parsedColumns]);
+            break;
+        }
+        case 'evaluate':
+            addRefs(extractIdentifiers(pipe.args, pipe.line, pipe.column));
+            if (/\bbag_unpack\s*\(/i.test(pipe.args)) {
+                outputColumns = unique([...outputColumns, OPEN_COLUMN]);
+            }
+            break;
+        case 'fork':
+        case 'invoke':
+            outputColumns = unique([...outputColumns, OPEN_COLUMN]);
+            break;
+        case 'project-rename':
+            for (const assignment of extractAssignments(pipe.args, pipe.line, pipe.column)) {
+                definedColumns.push(assignment.left);
+                const oldRefs = extractIdentifiers(assignment.right, pipe.line, assignment.rightColumn);
+                addRefs(oldRefs);
+                const oldName = oldRefs[0]?.name;
+                outputColumns = outputColumns.filter(
+                    column => !oldName || !equalsIgnoreCase(column, oldName)
+                );
+                outputColumns = unique([...outputColumns, assignment.left.name]);
+            }
+            break;
+        case 'union': {
+            const unionInfo = parseUnionSource(pipe.args, schema);
+            outputTables = unique([...outputTables, ...unionInfo.tables]);
+            outputColumns = unique([
+                ...outputColumns,
+                ...columnsForTables(unionInfo.tables, schema),
+                ...unionInfo.extraColumns
+            ]);
+            break;
+        }
+        case 'render':
+            break;
         case 'join':
         case 'lookup': {
-            join = parseJoin(pipe, schema);
+            join = parseJoin(pipe, schema, letBindings);
             if (join.rightTable) {
                 outputTables = unique([...outputTables, join.rightTable]);
-                outputColumns = unique([...outputColumns, ...columnsForTables([join.rightTable], schema)]);
             }
+            const rightColumns =
+                join.subqueryColumns.length > 0
+                    ? join.subqueryColumns
+                    : join.rightTable
+                      ? columnsForTables([join.rightTable], schema)
+                      : [];
+            outputColumns = unique([...outputColumns, ...rightColumns]);
             referencedColumns.push(...join.keys);
             break;
         }
@@ -344,10 +451,44 @@ function analyzeStep(
     };
 }
 
-function parseJoin(pipe: ParsedPipe, schema?: QuerySchemaProvider): JoinInfo {
-    const rightTableMatch = pipe.args.match(/\(\s*([A-Za-z_]\w*)/);
-    const rightTable = rightTableMatch ? canonicalTable(rightTableMatch[1], schema) : undefined;
-    const onIndex = pipe.args.search(/\bon\b/i);
+function parseJoin(
+    pipe: ParsedPipe,
+    schema?: QuerySchemaProvider,
+    letBindings?: Map<string, LetBinding>
+): JoinInfo {
+    const subquery = extractFirstParenGroup(pipe.args);
+    let rightTable: string | undefined;
+    let subqueryColumns: string[] = [];
+    let innerModel: QueryModel | undefined;
+
+    if (subquery && subquery.text.trim()) {
+        innerModel = buildQueryModel(`${'\n'.repeat(pipe.line)}${subquery.text}`, schema);
+        const innerBlock = innerModel.blocks[0];
+        if (innerBlock) {
+            rightTable = innerBlock.sourceTable;
+            const lastStep = innerBlock.steps[innerBlock.steps.length - 1];
+            subqueryColumns = lastStep
+                ? lastStep.outputColumns
+                : innerBlock.sourceColumns ?? columnsForTables(rightTable ? [rightTable] : [], schema);
+        }
+    }
+
+    if (!rightTable) {
+        const rightTableMatch = pipe.args.match(/\(\s*([A-Za-z_]\w*)/);
+        rightTable = rightTableMatch ? canonicalTable(rightTableMatch[1], schema) : undefined;
+    }
+
+    if (!rightTable && subqueryColumns.length === 0) {
+        const bareName = extractBareRightSourceName(pipe.args);
+        const binding = bareName ? letBindings?.get(bareName.toLowerCase()) : undefined;
+        if (binding?.columns) {
+            subqueryColumns = [...binding.columns];
+        } else if (bareName) {
+            rightTable = binding?.sourceTable ?? canonicalTable(bareName, schema);
+        }
+    }
+
+    const onIndex = findJoinOnIndex(pipe.args);
     const onText = onIndex === -1 ? '' : pipe.args.substring(onIndex + 2);
     const keys: ColumnReference[] = [];
 
@@ -376,8 +517,59 @@ function parseJoin(pipe: ParsedPipe, schema?: QuerySchemaProvider): JoinInfo {
         line: pipe.line,
         column: pipe.column,
         rightTable,
-        keys
+        keys,
+        subqueryColumns,
+        innerModel
     };
+}
+
+/** Source name of a join / lookup written without parentheses (`| lookup kind=leftouter Watchlist on ...`). */
+function extractBareRightSourceName(args: string): string | undefined {
+    const onIndex = findJoinOnIndex(args);
+    const head = onIndex === -1 ? args : args.substring(0, onIndex);
+    const withoutParameters = head.replace(/[\w.$]+\s*=\s*[\w.$]+/g, ' ');
+    const match = withoutParameters.match(/([A-Za-z_]\w*)\s*$/);
+    if (!match || isBuiltin(match[1])) {
+        return undefined;
+    }
+    return match[1];
+}
+
+/** Index of `on` after the first top-level parenthesized subquery. */
+function findJoinOnIndex(args: string): number {
+    const group = extractFirstParenGroup(args);
+    const searchFrom = group ? group.end : 0;
+    const tail = args.substring(searchFrom);
+    const match = tail.match(/\bon\b/i);
+    return match && match.index !== undefined ? searchFrom + match.index : args.search(/\bon\b/i);
+}
+
+function extractFirstParenGroup(text: string): { text: string; end: number } | undefined {
+    let quote: string | undefined;
+    let depth = 0;
+    let start = -1;
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if ((char === '"' || char === "'") && text[i - 1] !== '\\') {
+            quote = quote === char ? undefined : quote ?? char;
+            continue;
+        }
+        if (quote) {
+            continue;
+        }
+        if (char === '(') {
+            if (depth === 0) {
+                start = i + 1;
+            }
+            depth++;
+        } else if (char === ')' && depth > 0) {
+            depth--;
+            if (depth === 0 && start >= 0) {
+                return { text: text.substring(start, i), end: i + 1 };
+            }
+        }
+    }
+    return undefined;
 }
 
 function positionInPipeArgs(pipe: ParsedPipe, argIndex: number): { line: number; column: number } {
@@ -420,6 +612,34 @@ export function parseDatatableColumns(header: string): string[] {
         }
     }
     return columns;
+}
+
+function parseUnionSource(
+    text: string,
+    schema?: QuerySchemaProvider
+): { tables: string[]; extraColumns: string[] } {
+    const extraColumns: string[] = [];
+    const withsource = text.match(/\bwithsource\s*=\s*([A-Za-z_]\w*)/i);
+    if (withsource) {
+        extraColumns.push(withsource[1]);
+    }
+
+    const skip = new Set([
+        'union', 'withsource', 'isfuzzy', 'true', 'false', 'kind', 'hint',
+        'leftouter', 'inner', 'outer'
+    ]);
+    const tables: string[] = [];
+    for (const match of text.matchAll(/\b([A-Za-z_]\w*)\b/g)) {
+        const name = match[1];
+        if (skip.has(name.toLowerCase())) {
+            continue;
+        }
+        const table = canonicalTable(name, schema);
+        if (table) {
+            tables.push(table);
+        }
+    }
+    return { tables: unique(tables), extraColumns };
 }
 
 function parseDatatableColumnsFromBlock(block: ParsedQueryBlock): string[] {
@@ -466,6 +686,27 @@ function parseAssignment(text: string, line: number, baseColumn: number): { left
     };
 }
 
+function extractParseColumns(args: string): string[] {
+    const withMatch = args.match(/\bwith\b/i);
+    const pattern = withMatch && withMatch.index !== undefined
+        ? args.slice(withMatch.index + withMatch[0].length)
+        : args;
+    const cleaned = stripStringsAndBracketedColumns(pattern);
+    const skip = new Set([
+        'string', 'int', 'long', 'real', 'double', 'bool', 'boolean', 'datetime',
+        'timespan', 'guid', 'decimal', 'dynamic', 'kind', 'simple', 'regex', 'relaxed', 'flags'
+    ]);
+    const columns: string[] = [];
+    for (const match of cleaned.matchAll(/\b([A-Za-z_]\w*)\b/g)) {
+        const name = match[1];
+        if (skip.has(name.toLowerCase()) || isBuiltin(name)) {
+            continue;
+        }
+        columns.push(name);
+    }
+    return unique(columns);
+}
+
 function extractIdentifiers(text: string, line: number, baseColumn: number): ColumnReference[] {
     const cleaned = stripStringsAndBracketedColumns(text);
     const refs: ColumnReference[] = [];
@@ -474,8 +715,11 @@ function extractIdentifiers(text: string, line: number, baseColumn: number): Col
         if (isBuiltin(name) || /^\d/.test(name)) {
             continue;
         }
-        const next = cleaned[match.index + name.length];
-        if (next === '(') {
+        if (match.index > 0 && cleaned[match.index - 1] === '.') {
+            continue;
+        }
+        const rest = cleaned.slice(match.index + name.length);
+        if (/^\s*\(/.test(rest)) {
             continue;
         }
         refs.push({
@@ -541,6 +785,19 @@ function unique(values: string[]): string[] {
         if (!seen.has(key)) {
             seen.add(key);
             result.push(value);
+        }
+    }
+    return result;
+}
+
+function uniqueBindings(bindings: LetBinding[]): LetBinding[] {
+    const seen = new Set<string>();
+    const result: LetBinding[] = [];
+    for (const binding of bindings) {
+        const key = binding.name.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(binding);
         }
     }
     return result;

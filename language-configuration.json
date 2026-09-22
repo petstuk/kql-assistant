@@ -27,6 +27,15 @@
             "start": "^\\s*//\\s*#?region\\b",
             "end": "^\\s*//\\s*#?endregion\\b"
         }
-    }
+    },
+    "onEnterRules": [
+        {
+            "beforeText": "^\\s*\\|.*$",
+            "action": {
+                "indent": "none",
+                "appendText": "| "
+            }
+        }
+    ]
 }
 

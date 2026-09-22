@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { KqlSchemaValidator } from './schemaValidator';
 import { buildQueryModel, getScopeAtLine } from './queryModel';
+import { lookupMitre } from './mitre';
 
 export class KqlHoverProvider implements vscode.HoverProvider {
     constructor(private validator: KqlSchemaValidator) {}
@@ -12,7 +13,7 @@ export class KqlHoverProvider implements vscode.HoverProvider {
         ['summarize', { detail: 'Aggregate data', doc: 'Produces a table that aggregates the content of the input table.\n\n**Syntax:** `| summarize <aggregation> by <grouping_columns>`\n\n**Example:**\n```kql\nStormEvents\n| summarize EventCount = count(), TotalDamage = sum(DamageProperty) by State\n```' }],
         ['extend', { detail: 'Add computed columns', doc: 'Creates calculated columns and appends them to the result set.\n\n**Syntax:** `| extend <column> = <expression>`\n\n**Example:**\n```kql\nStormEvents\n| extend Duration = EndTime - StartTime\n| extend Year = getyear(StartTime)\n```' }],
         ['join', { detail: 'Merge rows', doc: 'Merges rows of two tables by matching values of specified columns.\n\n**Syntax:** `| join kind=<jointype> (<righttable>) on <key>`\n\n**Join kinds:** inner, leftouter, rightouter, fullouter, leftanti, rightanti, leftsemi, rightsemi\n\n**Example:**\n```kql\nTable1\n| join kind=inner (Table2) on Key\n```' }],
-        ['lookup', { detail: 'Dimension lookup', doc: 'Extends a fact table with values looked-up in a dimension table.\n\n**Syntax:** `| lookup [kind=<jointype>] <dimtable> on <key>`\n\n**Example:**\n```kql\nFactTable\n| lookup kind=leftouter DimTable on Key\n```\n\nColumn validation for `lookup` is limited in this extension; verify columns in Azure when unsure.' }],
+        ['lookup', { detail: 'Dimension lookup', doc: 'Extends a fact table with values looked-up in a dimension table.\n\n**Syntax:** `| lookup [kind=<jointype>] <dimtable> on <key>`\n\n**Example:**\n```kql\nFactTable\n| lookup kind=leftouter DimTable on Key\n```' }],
         ['order', { detail: 'Sort results', doc: 'Sorts the rows of the input table by one or more columns.\n\n**Syntax:** `| order by <column> [asc|desc]`\n\n**Example:**\n```kql\nStormEvents\n| order by StartTime desc\n```' }],
         ['sort', { detail: 'Sort results', doc: 'Alias for `order by`. Sorts the rows of the input table.\n\n**Syntax:** `| sort by <column> [asc|desc]`\n\n**Example:**\n```kql\nStormEvents\n| sort by DamageProperty desc\n```' }],
         ['take', { detail: 'Return N rows', doc: 'Returns up to the specified number of rows.\n\n**Syntax:** `| take <number>`\n\n**Example:**\n```kql\nStormEvents\n| take 100\n```' }],
@@ -24,7 +25,10 @@ export class KqlHoverProvider implements vscode.HoverProvider {
         ['render', { detail: 'Visualize results', doc: 'Renders results as a graphical output.\n\n**Chart types:** timechart, barchart, columnchart, piechart, scatterchart, areachart, linechart, card, table\n\n**Example:**\n```kql\nStormEvents\n| summarize count() by bin(StartTime, 1d)\n| render timechart\n```' }],
         ['let', { detail: 'Define variable', doc: 'Defines a name for an expression. Can be a scalar value, tabular expression, or function.\n\n**Syntax:** `let <name> = <expression>;`\n\n**Example:**\n```kql\nlet threshold = 100;\nlet recentEvents = StormEvents | where StartTime > ago(7d);\nrecentEvents | where DamageProperty > threshold\n```' }],
         ['mv-expand', { detail: 'Expand multi-value', doc: 'Expands multi-value dynamic arrays or property bags into multiple records.\n\n**Syntax:** `| mv-expand <column>`\n\n**Example:**\n```kql\nTable\n| mv-expand Tags\n| extend Tag = tostring(Tags)\n```' }],
-        ['parse', { detail: 'Extract fields', doc: 'Evaluates a string expression and parses its value into one or more calculated columns.\n\n**Syntax:** `| parse <source> with <pattern>`\n\n**Example:**\n```kql\nLogs\n| parse Message with "User: " User " logged in from " Location\n```' }]
+        ['parse', { detail: 'Extract fields', doc: 'Evaluates a string expression and parses its value into one or more calculated columns.\n\n**Syntax:** `| parse <source> with <pattern>`\n\n**Example:**\n```kql\nLogs\n| parse Message with "User: " User " logged in from " Location\n```' }],
+        ['parse-where', { detail: 'Parse with filter', doc: 'Like parse, but drops rows that do not match.\n\n**Syntax:** `| parse-where <source> with <pattern>`' }],
+        ['evaluate', { detail: 'Invoke plugin', doc: 'Invokes a query plugin such as `bag_unpack`.\n\n**Example:** `| evaluate bag_unpack(AdditionalFields)`' }],
+        ['invoke', { detail: 'Invoke function', doc: 'Runs a tabular function on the current result set.\n\n**Example:** `| invoke MyFunction()`' }]
     ]);
 
     private aggregationFunctions = new Map<string, { detail: string; doc: string }>([
@@ -81,12 +85,37 @@ export class KqlHoverProvider implements vscode.HoverProvider {
             return undefined;
         }
 
+        const techniqueRange = document.getWordRangeAtPosition(position, /T\d{4}(?:\.\d{3})?|TA\d{4}/i);
+        if (techniqueRange) {
+            const mitre = lookupMitre(document.getText(techniqueRange));
+            if (mitre) {
+                const markdown = new vscode.MarkdownString();
+                markdown.appendMarkdown(
+                    `**${mitre.id}** — ${mitre.name} *(MITRE ATT&CK ${mitre.kind})*\n\n[${mitre.url}](${mitre.url})`
+                );
+                markdown.isTrusted = true;
+                return new vscode.Hover(markdown, techniqueRange);
+            }
+        }
+
         const range = document.getWordRangeAtPosition(position, /[\w-]+/);
         if (!range) {
             return undefined;
         }
 
-        const word = document.getText(range).toLowerCase();
+        const originalWord = document.getText(range);
+        if (originalWord.toLowerCase() === '_getwatchlist') {
+            const markdown = new vscode.MarkdownString();
+            markdown.appendMarkdown(
+                '**_GetWatchlist** *(tabular function)*\n\nReturns a Microsoft Sentinel watchlist as a table. ' +
+                'Standard columns: `SearchKey`, `LastUpdated`. Extra columns depend on the watchlist.\n\n' +
+                '```kql\n_GetWatchlist("HighRiskUsers")\n| where TimeGenerated > ago(1d)\n```'
+            );
+            markdown.isTrusted = true;
+            return new vscode.Hover(markdown, range);
+        }
+
+        const word = originalWord.toLowerCase();
         
         // Check operators first
         if (this.operatorDocs.has(word)) {
@@ -117,7 +146,6 @@ export class KqlHoverProvider implements vscode.HoverProvider {
         }
 
         // Schema-backed: check if word is a known table name (use original case for lookup)
-        const originalWord = document.getText(range);
         if (this.validator.validateTableExists(originalWord)) {
             const tableSchema = this.validator.getTableSchema(originalWord)!;
             const markdown = new vscode.MarkdownString();
@@ -164,24 +192,6 @@ export class KqlHoverProvider implements vscode.HoverProvider {
             }
         }
 
-        return undefined;
-    }
-
-    private detectTableContext(document: vscode.TextDocument, position: vscode.Position): string | undefined {
-        for (let lineNum = position.line; lineNum >= 0; lineNum--) {
-            const lineText = document.lineAt(lineNum).text;
-            if (lineText.trim() === '') { continue; }
-            if (lineText.trim().startsWith('//') || lineText.trim().startsWith('#')) { continue; }
-            if (/^#{1,6}\s/.test(lineText.trim())) { return undefined; }
-
-            const trimmed = lineText.trim();
-            if (!trimmed.startsWith('|') && !trimmed.startsWith('let ')) {
-                const firstWord = trimmed.split(/[\s|]/)[0];
-                if (this.validator.validateTableExists(firstWord)) {
-                    return this.validator.getCanonicalTableName(firstWord);
-                }
-            }
-        }
         return undefined;
     }
 }

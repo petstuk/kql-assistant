@@ -55,4 +55,20 @@ describe('lintRules', () => {
         );
         assert.ok(issues.some(i => i.code === 'KQL105'));
     });
+
+    it('strict mode flags mv-expand without limit (KQL106)', () => {
+        const issues = runLintRules(
+            'SigninLogs\n| where TimeGenerated > ago(1d)\n| mv-expand Extra = ExtendedProperties',
+            { mode: 'strict' }
+        );
+        assert.ok(issues.some(i => i.code === 'KQL106'));
+    });
+
+    it('strict mode flags union isfuzzy=true (KQL107)', () => {
+        const issues = runLintRules(
+            'SigninLogs\n| where TimeGenerated > ago(1d)\n| union isfuzzy=true AuditLogs',
+            { mode: 'strict' }
+        );
+        assert.ok(issues.some(i => i.code === 'KQL107'));
+    });
 });

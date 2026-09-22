@@ -2,6 +2,18 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.10.1
+
+**Detection-as-code loop and hunt-notebook scope:** YAML lint, CLI config, `let` navigation, and fewer false unknown-column errors in multi-query files.
+
+- **CLI:** real globs (`detections/**/*.kql`), `--ignore-pattern`, `kql-assistant.json` (severity overrides, ignore list, packs), `schema convert` for Azure CLI / getschema JSON.
+- **Editor:** Go to Definition / references / rename for `let`; MITRE hover; `_GetWatchlist` completion/hover; `.csl` association; pipe `onEnterRules`; Check Syntax / Copy / Export keybindings.
+- **Parser:** `parse` / `parse-where` extracted columns; `evaluate bag_unpack` and `fork`/`invoke` open column scope; aliases assigned in a `summarize … by` clause; `join` / `lookup` against an unparenthesized source (including a `let`-bound `_GetWatchlist`).
+- **Column scope:** `let` scalars stay valid across blank lines; dotted dynamic paths, `has_any`, `render` chart types, and `union withsource=` columns are not flagged as unknown; quoted `"Sent From …"` is not treated as SQL `from`.
+- **Lint:** KQL106 (`mv-expand` without limit) and KQL107 (`union isfuzzy=true`) in strict mode.
+- **Activation:** drop redundant `onLanguage:kql` (VS Code generates it from the language contribution).
+- **Docs:** GitHub Actions SARIF example in `examples/github-kql-lint.yml`.
+
 ## 0.10.0
 
 **Detection engineering release** — offline lint, CI CLI, schema packs, analytics-rule export, and SOC-oriented schema/snippet fixes.

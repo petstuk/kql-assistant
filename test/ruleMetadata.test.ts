@@ -18,6 +18,7 @@ const sample = `# Identity #
 SigninLogs
 | where TimeGenerated > ago(1h)
 | where ResultType != 0
+| project TimeGenerated, UserPrincipalName, IPAddress
 
 ## Other ##
 SecurityEvent
@@ -61,6 +62,11 @@ describe('ruleMetadata', () => {
         assert.ok(yaml.includes('T1110.001'));
         assert.ok(yaml.includes('kind: Scheduled'));
         assert.ok(yaml.includes('SigninLogs'));
+        assert.ok(yaml.includes('connectorId: AzureActiveDirectory'));
+        assert.ok(yaml.includes('entityType: Account'));
+        assert.ok(yaml.includes('columnName: UserPrincipalName'));
+        assert.ok(yaml.includes('entityType: IP'));
+        assert.ok(yaml.includes('columnName: IPAddress'));
         assert.ok(!yaml.includes('// tactic'));
     });
 });

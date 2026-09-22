@@ -446,6 +446,33 @@
       "| $0"
     ],
     "description": "Multi-condition case statement"
+  },
+  "Rule metadata header": {
+    "prefix": "rulemeta",
+    "body": [
+      "## ${1:Rule name} ##",
+      "// tactic: ${2:TA0006}",
+      "// technique: ${3:T1110.001}",
+      "// severity: ${4:Medium}",
+      "// description: ${5:What this detection finds}",
+      "// queryFrequency: ${6:1h}",
+      "// kind: ${7:Scheduled}",
+      "",
+      "${8:SigninLogs}",
+      "| where TimeGenerated > ago(${6:1h})",
+      "| $0"
+    ],
+    "description": "Detection rule header with MITRE / severity metadata"
+  },
+  "GetWatchlist": {
+    "prefix": "getwatchlist",
+    "body": [
+      "_GetWatchlist(\"${1:WatchlistName}\")",
+      "| where TimeGenerated > ago(${2:1d})",
+      "| project SearchKey, LastUpdated",
+      "$0"
+    ],
+    "description": "Sentinel _GetWatchlist tabular function"
   }
 }
 

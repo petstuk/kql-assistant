@@ -38,6 +38,8 @@ export function runLintRules(text: string, options: LintOptions): LintIssue[] {
         lintJoinWithoutKind(block, lines, issues);
         if (options.mode === 'strict') {
             lintProjectAfterHeavyOps(block, issues);
+            lintMvExpandWithoutLimit(block, lines, issues);
+            lintFuzzyUnion(block, lines, issues);
         }
     }
 
@@ -206,4 +208,62 @@ function lintProjectAfterHeavyOps(block: QueryBlock, issues: LintIssue[]): void 
         message:
             'Consider project/project-keep before or soon after join/union to reduce shuffled columns'
     });
+}
+
+function lintMvExpandWithoutLimit(
+    block: QueryBlock,
+    lines: string[],
+    issues: LintIssue[]
+): void {
+    for (const step of block.steps) {
+        if (step.operator !== 'mv-expand') {
+            continue;
+        }
+        const lineText = `${lines[step.line] ?? ''} ${step.args}`;
+        if (/\blimit\s*=/i.test(lineText)) {
+            continue;
+        }
+        issues.push({
+            line: step.line,
+            column: step.column,
+            length: 'mv-expand'.length,
+            code: 'KQL106',
+            severity: 'information',
+            message: 'mv-expand without limit= can explode row counts — add limit= to cap expansion'
+        });
+    }
+}
+
+function lintFuzzyUnion(block: QueryBlock, lines: string[], issues: LintIssue[]): void {
+    for (const step of block.steps) {
+        if (step.operator !== 'union') {
+            continue;
+        }
+        const lineText = `${lines[step.line] ?? ''} ${step.args}`;
+        if (!/\bisfuzzy\s*=\s*true\b/i.test(lineText)) {
+            continue;
+        }
+        issues.push({
+            line: step.line,
+            column: step.column,
+            length: 'union'.length,
+            code: 'KQL107',
+            severity: 'information',
+            message: 'union isfuzzy=true can scan unexpected tables — list explicit tables when possible'
+        });
+    }
+    const source = block.sourceName ?? '';
+    if (/^union$/i.test(source)) {
+        const lineText = lines[block.sourceLine ?? block.startLine] ?? '';
+        if (/\bisfuzzy\s*=\s*true\b/i.test(lineText)) {
+            issues.push({
+                line: block.sourceLine ?? block.startLine,
+                column: block.sourceColumn ?? 0,
+                length: 'union'.length,
+                code: 'KQL107',
+                severity: 'information',
+                message: 'union isfuzzy=true can scan unexpected tables — list explicit tables when possible'
+            });
+        }
+    }
 }

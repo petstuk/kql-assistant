@@ -12,7 +12,7 @@
 
 ## At a glance
 
-KQL Assistant is a **language support** extension for `.kql` / `.kusto` files: highlighting, diagnostics, completions, hover text, formatting, query organization, and detection-engineering helpers. It ships a large **offline** table/column catalog (**721** tables, plus optional ASIM `_Im_*` parser stubs) so you get validation and suggestions without signing in to Azure.
+KQL Assistant is a **language support** extension for `.kql` / `.kusto` / `.csl` files: highlighting, diagnostics, completions, hover text, formatting, query organization, and detection-engineering helpers. It ships a large **offline** table/column catalog (**721** tables, plus optional ASIM `_Im_*` parser stubs) so you get validation and suggestions without signing in to Azure.
 
 **Validation is offline, not execution:** diagnostics use parser-backed query structure plus the bundled (or user-supplied) schema to catch many typos, scope mistakes, structural issues, and common cost anti-patterns. They do **not** prove a query will run in your workspace. Always run queries in Azure to confirm.
 
@@ -24,27 +24,29 @@ KQL Assistant is a **language support** extension for `.kql` / `.kusto` files: h
 
 - Syntax highlighting, bracket/quote behavior, comments, folding
 - Real-time diagnostics (debounced while typing): brackets and strings, pipes, SQL-style patterns (`select` / `from`), table/column names against schema, multiline join / lookup keys, `let` bindings, `datatable` IOC lists, and query-block scope
-- Optional **detection/cost lint** (`kqlAssistant.lintMode`): early time filters, prefer `has` over `contains`, bare `search`/`find`, join `kind=`, and more (rules KQL101–KQL105)
+- Optional **detection/cost lint** (`kqlAssistant.lintMode`): early time filters, prefer `has` over `contains`, bare `search`/`find`, join `kind=`, `mv-expand` limit, fuzzy union (rules KQL101–KQL107)
 
 **IntelliSense and schemas**
 
 - Completions for 721+ bundled tables, operators, chart types, and 100+ functions
 - Column suggestions (with type and description) from the same query scope used by diagnostics
 - **Schema packs** (`kqlAssistant.schemaPacks`): `all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`
-- Optional **custom schema** via `kqlAssistant.userSchemaPath` for tenant-specific tables (merged over bundled data)
-- Hover documentation for operators and functions; hover on **table names** and **column names** when the schema and context apply
+- Optional **custom schema** via `kqlAssistant.userSchemaPath` for tenant-specific tables (merged over bundled data). Convert an Azure CLI table-list JSON with `kql-assistant schema convert` (see CI section).
+- Hover documentation for operators and functions; hover on **table names**, **column names**, **`_GetWatchlist`**, and MITRE `TA####` / `T####` IDs
 - Signature help while typing function arguments
 
 **Detection engineering**
 
 - Organize hunts with `# Category #` / `## Rule ##` headers (folding, Outline, CodeLens)
 - Rule metadata comments (`// tactic:`, `// technique:`, `// severity:`, …) shown on CodeLens and in Outline
-- **KQL: Export Analytics Rule YAML** — Sentinel scheduled-rule stub from the current rule block
+- **KQL: Export Analytics Rule YAML** — Sentinel scheduled-rule YAML from the current rule block (infers connectors and entity mappings)
+- **KQL: Import Analytics Rule YAML** — Sentinel `query: |` YAML back into a `## Rule ##` KQL document
 - Security-oriented snippets (MDE, ASIM, watchlist, TI, syslog, sign-in / SecurityEvent patterns)
-- Headless **CLI** for CI: `npm run lint:kql` / `kql-assistant lint` (text or SARIF)
+- Headless **CLI** for CI: `kql-assistant lint` with globs, SARIF, `kql-assistant.json`, and `--ignore-pattern`
 
 **Productivity**
 
+- **Go to Definition / Find All References / Rename** on `let` bindings
 - Format Document and Format Selection
 - Code actions (lightbulb): typos, SQL-style fixes, brackets, missing `|`, ignore unknown tables
 - Inline CodeLens on headers (copy / select / export, metadata summary, line counts)
@@ -70,11 +72,11 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.10.0.vsix`
+  `code --install-extension kql-assistant-0.10.1.vsix`
 
 ## Quick start
 
-1. Open or create a file with extension `.kql` or `.kusto`
+1. Open or create a file with extension `.kql`, `.kusto`, or `.csl`
 2. Start from a table name, then chain operators with `|`
 3. Use **Format Document** (`Shift+Alt+F`) and **KQL: Check Syntax** when you want a full offline validation pass (does not run against Azure)
 
@@ -113,9 +115,14 @@ Fold arrows in the gutter collapse sections; use the **Outline** view to jump be
 | **KQL: Check Syntax** | Re-run offline diagnostics; message clarifies this is not execution validation |
 | **KQL: Select Current Query** | Select the query section around the cursor (respects header boundaries) |
 | **KQL: Copy Current Query** | Copy query body to the clipboard (without the header line / metadata comments) |
-| **KQL: Export Analytics Rule YAML** | Open a Sentinel scheduled analytics-rule YAML stub for the current `## Rule ##` |
+| **KQL: Export Analytics Rule YAML** | Open a Sentinel scheduled analytics-rule YAML for the current `## Rule ##` |
+| **KQL: Import Analytics Rule YAML** | Open a `## Rule ##` KQL document from Sentinel YAML with `query: |` |
 
-Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`), the editor context menu, or:
+
+- `Ctrl+Alt+Shift+K` / `Cmd+Alt+Shift+K` — Check Syntax
+- `Ctrl+Alt+Shift+C` / `Cmd+Alt+Shift+C` — Copy Current Query
+- `Ctrl+Alt+Shift+E` / `Cmd+Alt+Shift+E` — Export Analytics Rule YAML
 
 ## Configuration
 
@@ -125,7 +132,7 @@ Open via **Command Palette** (`Ctrl+Shift+P` / `Cmd+Shift+P`).
 | `kqlAssistant.diagnosticLevel` | `error` | Severity for syntax/schema issues: `error`, `warning`, or `information` |
 | `kqlAssistant.userSchemaPath` | *(empty)* | Optional JSON file with custom tables/columns (same shape as bundled `schemas/all-tables.json`); merged over bundled schemas |
 | `kqlAssistant.ignoredTables` | `[]` | Table names to skip for unknown-table diagnostics (also set via lightbulb **Ignore unknown table**) |
-| `kqlAssistant.lintMode` | `basic` | Detection/cost lint: `off`, `basic`, or `strict` (rules KQL101–KQL105) |
+| `kqlAssistant.lintMode` | `basic` | Detection/cost lint: `off`, `basic`, or `strict` (rules KQL101–KQL107) |
 | `kqlAssistant.schemaPacks` | `["all"]` | Schema packs to load (`all`, `sentinel-core`, `mde`, `identity`, `asim`, `asim-parsers`) |
 
 In Settings, search for **KQL Assistant**.
@@ -135,13 +142,53 @@ In Settings, search for **KQL Assistant**.
 After `npm run compile`:
 
 ```bash
-npm run lint:kql -- path/to/detections --lint basic
-node out/src/cli.js lint path/to/detections --format sarif --fail-on warning --packs sentinel-core,mde
+npm run lint:kql -- detections/**/*.kql --lint basic
+node out/src/cli.js lint detections/**/*.{kql,yaml} --format sarif --fail-on warning --ignore-pattern '**/generated/**'
 ```
+
+Copy [`examples/github-kql-lint.yml`](examples/github-kql-lint.yml) into `.github/workflows/` to upload SARIF on PRs.
+
+Repo baseline (`kql-assistant.json` in the workspace root, example at [`examples/kql-assistant.json`](examples/kql-assistant.json)):
+
+```json
+{
+  "lint": "basic",
+  "ignorePatterns": ["**/generated/**"],
+  "severity": { "KQL101": "off" }
+}
+```
+
+Inline suppressions: `// kql-disable-next-line KQL103`, `// kql-disable-line`, `// kql-disable` / `// kql-enable`.
+
+| Code | Meaning |
+|------|---------|
+| KQL001–015 | Syntax / schema (pipes, SQL keywords, unknown table **KQL013**, unknown column **KQL014**, join key **KQL015**, …) |
+| KQL101 | No early time filter |
+| KQL102 | Join without `kind=` |
+| KQL103 | Prefer `has` over `contains` |
+| KQL104 | Bare `search` / `find` |
+| KQL105 | Project after join/union (strict) |
+| KQL106 | `mv-expand` without `limit=` (strict) |
+| KQL107 | `union isfuzzy=true` (strict) |
+
+### Export a workspace schema (offline)
+
+The extension never signs in to Azure. Export tables yourself, then convert:
+
+```bash
+az monitor log-analytics workspace table list \
+  --resource-group <rg> \
+  --workspace-name <workspace> \
+  --output json > tables.json
+
+node out/src/cli.js schema convert tables.json -o workspace-tables.json
+```
+
+Or export `| getschema` JSON for one table and pass `--table TableName`. Point `kqlAssistant.userSchemaPath` (or `"userSchemaPath"` in `kql-assistant.json`) at the converted file.
 
 ## Snippets
 
-There are **39** snippets: type a prefix (e.g. `timerange`, `mdeprocess`, `failedlogins`, `hasfilter`) and press **Tab**. The full set is defined in [`snippets/kql.json`](snippets/kql.json).
+There are **41** snippets: type a prefix (e.g. `timerange`, `rulemeta`, `getwatchlist`, `mdeprocess`) and press **Tab**. The full set is defined in [`snippets/kql.json`](snippets/kql.json).
 
 Security-oriented prefixes include: `failedlogins`, `suspiciouslogin`, `signinanalysis`, `securityalerts`, `emailsecurity`, `mdeprocess`, `mdenetwork`, `asimnet`, `watchlistjoin`, `timatch`, `syslogauth`, `hasfilter`.
 
@@ -179,8 +226,9 @@ KQL is large; the extension focuses on common **keywords**, **tabular operators*
 - Join / lookup validation covers common single-line and multiline `on` keys; complex join shapes are still partial
 - Heavy use of subqueries, `dynamic`, or macros may produce imperfect diagnostics
 - Function parameter **types** are not deeply validated
-- Schemas are not fetched from Azure automatically; use `kqlAssistant.userSchemaPath` for a local JSON export of custom tables
-- Analytics-rule YAML export is a **stub** (review entity mappings, connectors, and thresholds before deploy)
+- Schemas are not fetched from Azure automatically; convert a local JSON export with `kql-assistant schema convert` and set `kqlAssistant.userSchemaPath`
+- Analytics-rule YAML export infers connectors and entity mappings — still review thresholds before deploy
+- Completions/hover inside Sentinel YAML `query: |` blocks are not injected (CLI and editor still lint those queries)
 
 ## Contributing
 
@@ -195,6 +243,13 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.10.1
+
+- Hunt-notebook column scope: `let` scalars, dotted JSON paths, `union withsource=`, `has_any`, and `render` no longer false-positive
+- CLI globs, `kql-assistant.json`, `--ignore-pattern`, and `schema convert`
+- Go to Definition / references / rename for `let`; MITRE and `_GetWatchlist` hover
+- Import Sentinel analytics-rule YAML; KQL106/KQL107 in strict lint
 
 ### 0.10.0
 

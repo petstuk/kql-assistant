@@ -23,6 +23,7 @@ export interface RuleMetadata {
     queryPeriod?: string;
     triggerOperator?: string;
     triggerThreshold?: string;
+    kind?: string;
 }
 
 const TACTIC_NAMES: Record<string, string> = {
@@ -124,6 +125,9 @@ export function parseMetadataLines(lines: string[]): Partial<RuleMetadata> {
             case 'threshold':
                 meta.triggerThreshold = value;
                 break;
+            case 'kind':
+                meta.kind = capitalizeKind(value);
+                break;
             default:
                 break;
         }
@@ -196,7 +200,8 @@ export function findRuleAtLine(text: string, lineNumber: number): RuleMetadata |
         queryFrequency: parsed.queryFrequency,
         queryPeriod: parsed.queryPeriod,
         triggerOperator: parsed.triggerOperator,
-        triggerThreshold: parsed.triggerThreshold
+        triggerThreshold: parsed.triggerThreshold,
+        kind: parsed.kind
     };
 }
 
@@ -245,6 +250,17 @@ function capitalizeSeverity(value: string): string {
         return 'Informational';
     }
     if (lower === 'low' || lower === 'medium' || lower === 'high') {
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }
+    return value;
+}
+
+function capitalizeKind(value: string): string {
+    const lower = value.toLowerCase();
+    if (lower === 'scheduled' || lower === 'nrt' || lower === 'hunting' || lower === 'fusion') {
+        if (lower === 'nrt') {
+            return 'NRT';
+        }
         return lower.charAt(0).toUpperCase() + lower.slice(1);
     }
     return value;

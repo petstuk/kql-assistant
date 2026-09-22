@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Offline KQL validation, detection/cost lint, schema packs, analytics-rule export, IntelliSense, and query organization for Azure Log Analytics and Microsoft Sentinel",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {
@@ -39,7 +39,7 @@
     "siem"
   ],
   "activationEvents": [
-    "onLanguage:kql"
+    "onLanguage:yaml"
   ],
   "main": "./out/src/extension.js",
   "bin": {
@@ -55,7 +55,8 @@
         ],
         "extensions": [
           ".kql",
-          ".kusto"
+          ".kusto",
+          ".csl"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -87,6 +88,49 @@
       {
         "command": "kql-assistant.exportAnalyticsRule",
         "title": "KQL: Export Analytics Rule YAML"
+      },
+      {
+        "command": "kql-assistant.importAnalyticsRule",
+        "title": "KQL: Import Analytics Rule YAML"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "kql-assistant.checkSyntax",
+          "when": "editorLangId == kql || editorLangId == yaml",
+          "group": "kqlAssistant@1"
+        },
+        {
+          "command": "kql-assistant.exportAnalyticsRule",
+          "when": "editorLangId == kql",
+          "group": "kqlAssistant@2"
+        },
+        {
+          "command": "kql-assistant.importAnalyticsRule",
+          "when": "editorLangId == yaml",
+          "group": "kqlAssistant@2"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "kql-assistant.checkSyntax",
+        "key": "ctrl+alt+shift+k",
+        "mac": "cmd+alt+shift+k",
+        "when": "editorTextFocus && (editorLangId == kql || editorLangId == yaml)"
+      },
+      {
+        "command": "kql-assistant.copyCurrentQuery",
+        "key": "ctrl+alt+shift+c",
+        "mac": "cmd+alt+shift+c",
+        "when": "editorTextFocus && editorLangId == kql"
+      },
+      {
+        "command": "kql-assistant.exportAnalyticsRule",
+        "key": "ctrl+alt+shift+e",
+        "mac": "cmd+alt+shift+e",
+        "when": "editorTextFocus && editorLangId == kql"
       }
     ],
     "configuration": {

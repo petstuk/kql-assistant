@@ -38,6 +38,7 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         if (startOfLine && !afterPipe) {
             // At start of line - suggest let, table names, or table operators
             completions.push(this.getLetCompletion());
+            completions.push(this.getWatchlistCompletion());
             completions.push(...this.getAzureTableCompletions());
             completions.push(...this.getOperatorCompletions());
         } else if (afterRender) {
@@ -86,54 +87,6 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         return completions;
-    }
-
-    /**
-     * Detect the current table being queried by scanning backwards from the cursor position
-     */
-    private detectCurrentTable(document: vscode.TextDocument, position: vscode.Position): string | undefined {
-        // Scan backwards from current position to find the table name
-        for (let lineNum = position.line; lineNum >= 0; lineNum--) {
-            const lineText = document.lineAt(lineNum).text;
-            
-            // Skip empty lines
-            if (lineText.trim() === '') continue;
-            
-            // Skip comment lines
-            if (lineText.trim().startsWith('//') || lineText.trim().startsWith('#')) continue;
-            
-            // Skip markdown headers (query separator)
-            if (/^#{1,6}\s/.test(lineText.trim())) {
-                // Hit a section boundary - no table found
-                return undefined;
-            }
-            
-            // Check if this line starts with a table name (not a pipe)
-            const trimmed = lineText.trim();
-            if (!trimmed.startsWith('|') && !trimmed.startsWith('let ')) {
-                // First word might be a table name
-                const firstWord = trimmed.split(/[\s|]/)[0];
-                
-                // Check if it's a valid table in our schema
-                if (this.validator.validateTableExists(firstWord)) {
-                    return this.validator.getCanonicalTableName(firstWord);
-                }
-                
-                // Check if it looks like a table (PascalCase, no special chars)
-                if (/^[A-Z][a-zA-Z0-9]*$/.test(firstWord)) {
-                    return firstWord;
-                }
-            }
-            
-            // Also check for join statements - extract table from join
-            const joinMatch = lineText.match(/\|\s*join\s+(?:kind\s*=\s*\w+\s+)?\(\s*([A-Za-z][A-Za-z0-9]*)/i);
-            if (joinMatch) {
-                // We found a join - the original table is still valid
-                continue;
-            }
-        }
-        
-        return undefined;
     }
 
     /**
@@ -190,6 +143,9 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         for (const columnName of scope.columns) {
+            if (columnName === '*') {
+                continue;
+            }
             const key = columnName.toLowerCase();
             if (seen.has(key) || (partial && !key.startsWith(partial))) {
                 continue;
@@ -206,6 +162,19 @@ export class KqlCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         return completions;
+    }
+
+    private getWatchlistCompletion(): vscode.CompletionItem {
+        const item = new vscode.CompletionItem('_GetWatchlist', vscode.CompletionItemKind.Function);
+        item.detail = 'Sentinel watchlist table';
+        item.documentation = new vscode.MarkdownString(
+            'Returns rows from a Microsoft Sentinel watchlist.\n\n' +
+            'Always includes `SearchKey` and `LastUpdated`; other columns come from the watchlist schema.\n\n' +
+            '```kql\n_GetWatchlist("HighRiskUsers")\n| where SearchKey == UserPrincipalName\n```'
+        );
+        item.insertText = new vscode.SnippetString('_GetWatchlist(\'${1:WatchlistName}\')');
+        item.sortText = '0__GetWatchlist';
+        return item;
     }
 
     private getLetCompletion(): vscode.CompletionItem {
