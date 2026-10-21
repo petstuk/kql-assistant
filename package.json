@@ -2,7 +2,7 @@
   "name": "kql-assistant",
   "displayName": "KQL Assistant",
   "description": "Offline KQL validation, detection/cost lint, schema packs, analytics-rule export, IntelliSense, and query organization for Azure Log Analytics and Microsoft Sentinel",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "publisher": "petstuk",
   "icon": "icon.png",
   "repository": {

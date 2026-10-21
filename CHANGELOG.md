@@ -2,6 +2,13 @@
 
 All notable changes to **KQL Assistant** are documented here. The [README](README.md) highlights the latest releases for the VS Code Marketplace.
 
+## 0.10.2
+
+**Sentinel YAML query IntelliSense:** completions, hover, signature help, and quick fixes inside a `query: |` block.
+
+- Editor support for a Sentinel analytics-rule or hunting YAML `query: |` scalar uses the same providers as a `.kql` file. Positions outside the query block are unchanged.
+- A blank line between `query: |` and the first KQL line no longer shifts diagnostic and IntelliSense positions.
+
 ## 0.10.1
 
 **Detection-as-code loop and hunt-notebook scope:** YAML lint, CLI config, `let` navigation, and fewer false unknown-column errors in multi-query files.

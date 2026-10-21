@@ -73,7 +73,7 @@ npm run compile
 
 - **Development:** press `F5` in VS Code (Extension Development Host)
 - **VSIX:** `npm run package` then  
-  `code --install-extension kql-assistant-0.10.1.vsix`
+  `code --install-extension kql-assistant-0.10.2.vsix`
 
 ## Quick start
 
@@ -243,6 +243,11 @@ MIT — see [LICENSE](LICENSE).
 Built using Microsoft’s [KQL documentation](https://learn.microsoft.com/en-us/kusto/query/) and community practice for Log Analytics and Sentinel queries.
 
 ## Release notes (recent)
+
+### 0.10.2
+
+- Completions, hover, signature help, and quick fixes inside Sentinel YAML `query: |` blocks
+- Query-block positions stay aligned when a blank line follows `query: |`
 
 ### 0.10.1
 
