@@ -34,6 +34,7 @@ KQL Assistant is a **language support** extension for `.kql` / `.kusto` / `.csl`
 - Optional **custom schema** via `kqlAssistant.userSchemaPath` for tenant-specific tables (merged over bundled data). Convert an Azure CLI table-list JSON with `kql-assistant schema convert` (see CI section).
 - Hover documentation for operators and functions; hover on **table names**, **column names**, **`_GetWatchlist`**, and MITRE `TA####` / `T####` IDs
 - Signature help while typing function arguments
+- Completions, hover, signature help, and quick fixes inside Sentinel YAML `query: |` blocks, using the same query scope as a `.kql` file. Suggestions apply inside the query block and appear alongside the YAML extension
 
 **Detection engineering**
 
@@ -228,7 +229,6 @@ KQL is large; the extension focuses on common **keywords**, **tabular operators*
 - Function parameter **types** are not deeply validated
 - Schemas are not fetched from Azure automatically; convert a local JSON export with `kql-assistant schema convert` and set `kqlAssistant.userSchemaPath`
 - Analytics-rule YAML export infers connectors and entity mappings — still review thresholds before deploy
-- Completions/hover inside Sentinel YAML `query: |` blocks are not injected (CLI and editor still lint those queries)
 
 ## Contributing
 

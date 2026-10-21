@@ -5,8 +5,29 @@ export interface YamlQueryBlock {
     startLine: number;
     /** Leading spaces on KQL content lines in the YAML file */
     indent: number;
-    /** Dedented KQL */
+    /**
+     * Dedented KQL. Line i of this string is YAML line startLine + i,
+     * including blank lines inside the block.
+     */
     text: string;
+}
+
+export interface LineColumn {
+    line: number;
+    character: number;
+}
+
+export interface LineColumnRange {
+    start: LineColumn;
+    end: LineColumn;
+}
+
+export interface QueryBlockHit {
+    block: YamlQueryBlock;
+    /** 0-based line in block.text */
+    kqlLine: number;
+    /** 0-based column in the dedented KQL line */
+    kqlCharacter: number;
 }
 
 export interface ParsedSentinelRule {
@@ -51,7 +72,11 @@ export function extractYamlQueryBlocks(yaml: string): YamlQueryBlock[] {
             const indent = leadingSpaces(line);
 
             if (trimmed === '') {
-                content.push(line);
+                // Leading blanks sit before startLine and must not enter `text`,
+                // or line offsets drift. Blanks after the first content line stay.
+                if (contentIndent !== undefined) {
+                    content.push(line);
+                }
                 continue;
             }
             if (indent <= keyIndent) {
@@ -94,6 +119,49 @@ export function extractYamlQueryBlocks(yaml: string): YamlQueryBlock[] {
     }
 
     return blocks;
+}
+
+/** Query block containing a YAML cursor, or undefined when the cursor is outside one. */
+export function queryBlockAt(yaml: string, line: number, character: number): QueryBlockHit | undefined {
+    for (const block of extractYamlQueryBlocks(yaml)) {
+        const lineCount = block.text.split('\n').length;
+        const endLine = block.startLine + lineCount - 1;
+        if (line < block.startLine || line > endLine) {
+            continue;
+        }
+        return {
+            block,
+            kqlLine: line - block.startLine,
+            kqlCharacter: Math.max(0, character - block.indent)
+        };
+    }
+    return undefined;
+}
+
+export function kqlRangeToYaml(block: YamlQueryBlock, range: LineColumnRange): LineColumnRange {
+    return {
+        start: {
+            line: block.startLine + range.start.line,
+            character: block.indent + range.start.character
+        },
+        end: {
+            line: block.startLine + range.end.line,
+            character: block.indent + range.end.character
+        }
+    };
+}
+
+export function yamlRangeToKql(block: YamlQueryBlock, range: LineColumnRange): LineColumnRange {
+    return {
+        start: {
+            line: range.start.line - block.startLine,
+            character: Math.max(0, range.start.character - block.indent)
+        },
+        end: {
+            line: range.end.line - block.startLine,
+            character: Math.max(0, range.end.character - block.indent)
+        }
+    };
 }
 
 export function parseSentinelAnalyticsYaml(text: string): ParsedSentinelRule | undefined {

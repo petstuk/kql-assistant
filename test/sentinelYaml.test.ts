@@ -2,8 +2,11 @@ import * as assert from 'assert';
 import * as path from 'path';
 import {
     extractYamlQueryBlocks,
+    kqlRangeToYaml,
+    queryBlockAt,
     remapYamlQueryIssues,
-    sentinelYamlToKql
+    sentinelYamlToKql,
+    yamlRangeToKql
 } from '../src/sentinelYaml';
 import { KqlSyntaxChecker } from '../src/syntaxChecker';
 import { SchemaStore } from '../src/schemaStore';
@@ -91,5 +94,67 @@ describe('sentinelYaml', () => {
         const lines = yamlWithUnknownTable.split('\n');
         assert.strictEqual(lines[unknown!.line].includes('NotARealTable123'), true);
         assert.ok(unknown!.column >= blocks[0].indent);
+    });
+
+    it('keeps KQL lines aligned when a blank line follows query: |', () => {
+        const yaml = [
+            'name: Example',
+            'query: |',
+            '',
+            '  SigninLogs',
+            '  | where TimeGenerated > ago(1h)',
+            '',
+            '  | take 5',
+            'entityMappings: []'
+        ].join('\n');
+
+        const blocks = extractYamlQueryBlocks(yaml);
+        assert.strictEqual(blocks.length, 1);
+        assert.strictEqual(
+            blocks[0].text,
+            'SigninLogs\n| where TimeGenerated > ago(1h)\n\n| take 5'
+        );
+        assert.strictEqual(yaml.split('\n')[blocks[0].startLine], '  SigninLogs');
+
+        const whereLine = blocks[0].startLine + 1;
+        const hit = queryBlockAt(yaml, whereLine, 4);
+        assert.ok(hit);
+        assert.strictEqual(hit!.kqlLine, 1);
+        assert.strictEqual(hit!.kqlCharacter, 2);
+        assert.strictEqual(hit!.block.text.split('\n')[hit!.kqlLine], '| where TimeGenerated > ago(1h)');
+
+        const takeLine = blocks[0].startLine + 3;
+        const take = queryBlockAt(yaml, takeLine, 2);
+        assert.ok(take);
+        assert.strictEqual(take!.kqlLine, 3);
+        assert.strictEqual(take!.block.text.split('\n')[3].trim(), '| take 5');
+    });
+
+    it('ignores cursors outside the query block', () => {
+        const yaml = 'name: Example\nquery: |\n  SigninLogs\nkind: Scheduled\n';
+        assert.strictEqual(queryBlockAt(yaml, 0, 0), undefined);
+        assert.strictEqual(queryBlockAt(yaml, 1, 0), undefined);
+        const inside = queryBlockAt(yaml, 2, 2);
+        assert.ok(inside);
+        assert.strictEqual(inside!.kqlLine, 0);
+        assert.strictEqual(inside!.kqlCharacter, 0);
+    });
+
+    it('round-trips a KQL range onto YAML indent and back', () => {
+        const yaml = 'query: |\n  SigninLogs\n  | where TimeGenerated > ago(1h)\n';
+        const hit = queryBlockAt(yaml, 2, 12);
+        assert.ok(hit);
+        const kql = {
+            start: { line: 1, character: 8 },
+            end: { line: 1, character: 21 }
+        };
+        const yamlRange = kqlRangeToYaml(hit!.block, kql);
+        assert.deepStrictEqual(yamlRange, {
+            start: { line: hit!.block.startLine + 1, character: hit!.block.indent + 8 },
+            end: { line: hit!.block.startLine + 1, character: hit!.block.indent + 21 }
+        });
+        assert.deepStrictEqual(yamlRangeToKql(hit!.block, yamlRange), kql);
+        const line = yaml.split('\n')[yamlRange.start.line];
+        assert.strictEqual(line.slice(yamlRange.start.character, yamlRange.end.character), 'TimeGenerated');
     });
 });

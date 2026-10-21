@@ -14,6 +14,12 @@ import { findRuleAtLine } from './ruleMetadata';
 import { buildAnalyticsRuleYaml } from './analyticsRuleExport';
 import { sentinelYamlToKql } from './sentinelYaml';
 import { KqlLetDefinitionProvider, KqlLetReferenceProvider, KqlLetRenameProvider } from './letSymbolProvider';
+import {
+    createYamlCodeActionProvider,
+    createYamlCompletionProvider,
+    createYamlHoverProvider,
+    createYamlSignatureHelpProvider
+} from './yamlQueryHost';
 
 let diagnosticsProvider: KqlDiagnosticsProvider | undefined;
 const DIAGNOSTICS_DEBOUNCE_MS = 250;
@@ -64,6 +70,16 @@ export function activate(context: vscode.ExtensionContext) {
         ' '
     );
     context.subscriptions.push(completionProvider);
+    context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+            { language: 'yaml' },
+            createYamlCompletionProvider(kqlCompletionProvider),
+            '|',
+            '.',
+            '(',
+            ' '
+        )
+    );
 
     const symbolProvider = vscode.languages.registerDocumentSymbolProvider(
         'kql',
@@ -71,19 +87,35 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(symbolProvider);
 
+    const kqlHoverProvider = new KqlHoverProvider(schemaValidator);
     const hoverProvider = vscode.languages.registerHoverProvider(
         'kql',
-        new KqlHoverProvider(schemaValidator)
+        kqlHoverProvider
     );
     context.subscriptions.push(hoverProvider);
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'yaml' },
+            createYamlHoverProvider(kqlHoverProvider)
+        )
+    );
 
+    const kqlSignatureHelpProvider = new KqlSignatureHelpProvider();
     const signatureHelpProvider = vscode.languages.registerSignatureHelpProvider(
         'kql',
-        new KqlSignatureHelpProvider(),
+        kqlSignatureHelpProvider,
         '(',
         ','
     );
     context.subscriptions.push(signatureHelpProvider);
+    context.subscriptions.push(
+        vscode.languages.registerSignatureHelpProvider(
+            { language: 'yaml' },
+            createYamlSignatureHelpProvider(kqlSignatureHelpProvider),
+            '(',
+            ','
+        )
+    );
 
     const formattingProvider = vscode.languages.registerDocumentFormattingEditProvider(
         'kql',
@@ -97,14 +129,24 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(rangeFormattingProvider);
 
+    const kqlCodeActionProvider = new KqlCodeActionProvider();
     const codeActionProvider = vscode.languages.registerCodeActionsProvider(
         'kql',
-        new KqlCodeActionProvider(),
+        kqlCodeActionProvider,
         {
             providedCodeActionKinds: KqlCodeActionProvider.providedCodeActionKinds
         }
     );
     context.subscriptions.push(codeActionProvider);
+    context.subscriptions.push(
+        vscode.languages.registerCodeActionsProvider(
+            { language: 'yaml' },
+            createYamlCodeActionProvider(kqlCodeActionProvider),
+            {
+                providedCodeActionKinds: KqlCodeActionProvider.providedCodeActionKinds
+            }
+        )
+    );
 
     const foldingProvider = vscode.languages.registerFoldingRangeProvider(
         'kql',
